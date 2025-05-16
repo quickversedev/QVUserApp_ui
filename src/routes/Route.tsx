@@ -7,14 +7,14 @@ import {AuthStack} from './AuthStack';
 import {useAuth} from '../contexts/login/AuthProvider';
 
 export const Router = () => {
-  const {authData, loading} = useAuth();
+  const {authData, loading, skipUserLogin} = useAuth();
   console.log('Auth Data:', authData);
   if (loading) {
     return <Text>Loading</Text>;
   }
   return (
     <NavigationContainer>
-      {authData ? <AppStack /> : <AuthStack />}
+      {authData || skipUserLogin ? <AppStack /> : <AuthStack />}
     </NavigationContainer>
   );
 };

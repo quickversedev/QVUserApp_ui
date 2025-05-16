@@ -10,6 +10,7 @@ import {
   Dimensions,
   ImageBackground,
   Image,
+  Platform,
 } from 'react-native';
 
 import {useAuth} from '../../contexts/login/AuthProvider';
@@ -38,6 +39,10 @@ const LoginScreen: React.FC = () => {
     setCallingCode(country.callingCode[0]);
   };
   const auth = useAuth();
+
+  const handleSkipLogin = () => {
+    auth.setSkipLogin(true);
+  };
   const handleLogin = async () => {
     console.log('Login button pressed');
     setLoading(true);
@@ -77,7 +82,14 @@ const LoginScreen: React.FC = () => {
         <Text style={styles.title}>Login</Text>
         <Text style={styles.subtitle}>Log In to your Quickverse account</Text>
 
-        <Text style={{color: '#9CA3AF', marginTop: 36}}>Phone number</Text>
+        <TouchableOpacity
+          style={styles.skipContainer}
+          onPress={handleSkipLogin}>
+          <Text style={{color: '#E5E7EB', fontSize: 14}}>Skip</Text>
+        </TouchableOpacity>
+        <Text style={{color: '#9CA3AF', marginTop: 36, marginBottom: 10}}>
+          Phone number
+        </Text>
         <View style={styles.phoneInputWrapper}>
           <CountryPicker
             withCallingCode
@@ -116,41 +128,47 @@ const LoginScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: '#111827',
+  },
+  container: {
+    flex: 1,
     alignItems: 'center',
+    backgroundColor: '#111827',
   },
   topBackground: {
-    height: height * 0.6,
+    height: height * 0.55,
     width: '100%',
     position: 'absolute',
-    top: -80,
+    top: Platform.OS === 'ios' ? -50 : -80,
   },
   logoContainer: {
     position: 'absolute',
-    top: 70,
+    top: Platform.OS === 'ios' ? 80 : 110,
     alignItems: 'center',
     width: '100%',
   },
   topLogo: {
-    width: 90,
+    width: 100,
+    height: 100,
     resizeMode: 'contain',
   },
   card: {
     width: '90%',
-    height: '50%',
-    marginTop: 150,
+    height: '40%',
     backgroundColor: '#1F2937',
     borderRadius: 16,
     padding: 24,
-    borderWidth: 1,
-    borderColor: 'yellow',
+    // paddingBottom: 32,
+    marginTop: height * 0.28,
     shadowColor: '#FAE588',
     shadowOffset: {width: 0, height: 5},
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15,
     shadowRadius: 10,
-    elevation: 5,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'yellow',
   },
   title: {
     fontSize: 22,
@@ -162,38 +180,41 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#9CA3AF',
     marginTop: 5,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   skipContainer: {
     position: 'absolute',
-    top: 8,
-    right: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
+    top: 12,
+    right: 12,
     backgroundColor: '#4B5563',
-    marginRight: 16,
-    marginTop: 16,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    elevation: 2,
+  },
+  skipText: {
+    color: '#E5E7EB',
+    fontSize: 14,
+  },
+  phoneLabel: {
+    color: '#9CA3AF',
+    fontSize: 14,
+    marginTop: 36,
+    marginBottom: 6,
   },
   phoneInputWrapper: {
+    display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#1F2937',
-    borderColor: '#ccc',
+    borderColor: '#374151',
     borderWidth: 1,
     borderRadius: 8,
-    marginTop: 5,
-    marginBottom: '15%',
     paddingHorizontal: 10,
-    height: 55,
+    height: 50,
   },
   countryPicker: {
-    marginRight: 8,
+    marginRight: 6,
   },
   callingCode: {
     color: 'white',
@@ -202,8 +223,9 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: 'white',
     fontSize: 16,
+    color: 'white',
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
   },
   otpButton: {
     backgroundColor: '#FFE885',
@@ -213,8 +235,10 @@ const styles = StyleSheet.create({
   },
   otpText: {
     fontSize: 16,
-    color: 'black',
+    color: '#000',
     textAlign: 'center',
+    fontWeight: 'bold',
   },
 });
+
 export default LoginScreen;
