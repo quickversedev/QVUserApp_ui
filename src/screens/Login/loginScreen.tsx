@@ -11,6 +11,7 @@ import {
   ImageBackground,
   Image,
   Platform,
+  SafeAreaView,
 } from 'react-native';
 
 import {useAuth} from '../../contexts/login/AuthProvider';
@@ -65,65 +66,67 @@ const LoginScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <ImageBackground
-        source={require('../../assets/images/bg_1.png')}
-        style={styles.topBackground}
-        resizeMode="cover"
-      />
-      <View style={styles.logoContainer}>
-        <Image
-          style={styles.topLogo}
-          source={require('../../assets/images/logo_qv.png')}
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <ImageBackground
+          source={require('../../assets/images/bg_1.png')}
+          style={styles.topBackground}
+          resizeMode="cover"
         />
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.title}>Login</Text>
-        <Text style={styles.subtitle}>Log In to your Quickverse account</Text>
-
-        <TouchableOpacity
-          style={styles.skipContainer}
-          onPress={handleSkipLogin}>
-          <Text style={{color: '#E5E7EB', fontSize: 14}}>Skip</Text>
-        </TouchableOpacity>
-        <Text style={{color: '#9CA3AF', marginTop: 36, marginBottom: 10}}>
-          Phone number
-        </Text>
-        <View style={styles.phoneInputWrapper}>
-          <CountryPicker
-            withCallingCode
-            withFilter
-            countryCode={countryCode}
-            withFlag
-            withEmoji
-            onSelect={onSelect}
-            containerButtonStyle={styles.countryPicker}
-          />
-          <Text style={styles.callingCode}>+{callingCode}</Text>
-          <TextInput
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            placeholder="Enter phone number"
-            keyboardType="number-pad"
-            maxLength={10}
-            style={styles.input}
-            placeholderTextColor="#9CA3AF"
+        <View style={styles.logoContainer}>
+          <Image
+            style={styles.topLogo}
+            source={require('../../assets/images/logo_qv.png')}
           />
         </View>
 
-        <TouchableOpacity
-          style={styles.otpButton}
-          onPress={handleLogin}
-          disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.otpText}>Login</Text>
-          )}
-        </TouchableOpacity>
+        <View style={styles.card}>
+          <Text style={styles.title}>Login</Text>
+          <Text style={styles.subtitle}>Log In to your Quickverse account</Text>
+
+          <TouchableOpacity
+            style={styles.skipContainer}
+            onPress={handleSkipLogin}>
+            <Text style={{color: '#E5E7EB', fontSize: 14}}>Skip</Text>
+          </TouchableOpacity>
+          <Text style={{color: '#9CA3AF', marginTop: 36, marginBottom: 10}}>
+            Phone number
+          </Text>
+          <View style={styles.phoneInputWrapper}>
+            <CountryPicker
+              withCallingCode
+              withFilter
+              countryCode={countryCode}
+              withFlag
+              withEmoji
+              onSelect={onSelect}
+              containerButtonStyle={styles.countryPicker}
+            />
+            <Text style={styles.callingCode}>+{callingCode}</Text>
+            <TextInput
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              placeholder="Enter phone number"
+              keyboardType="number-pad"
+              maxLength={10}
+              style={styles.input}
+              placeholderTextColor="#9CA3AF"
+            />
+          </View>
+
+          <TouchableOpacity
+            style={styles.otpButton}
+            onPress={handleLogin}
+            disabled={loading}>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.otpText}>Login</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
