@@ -10,6 +10,8 @@ import {
   Dimensions,
   Alert,
   ActivityIndicator,
+  Platform,
+  SafeAreaView,
 } from 'react-native';
 
 import {
@@ -103,118 +105,125 @@ const OTPScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <ImageBackground
-        source={require('../../assets/images/bg_1.png')}
-        style={styles.topBackground}
-        resizeMode="cover"
-      />
-
-      <View style={styles.logoContainer}>
-        <Image
-          style={styles.topLogo}
-          source={require('../../assets/images/logo_qv.png')}
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <ImageBackground
+          source={require('../../assets/images/bg_1.png')}
+          style={styles.topBackground}
+          resizeMode="cover"
         />
-      </View>
 
-      <View style={styles.card}>
-        <Text style={styles.title}>Enter Your OTP</Text>
-        <Text style={styles.subtitle}>{`OTP sent to ${phoneNumber}`}</Text>
+        <View style={styles.logoContainer}>
+          <Image
+            style={styles.topLogo}
+            source={require('../../assets/images/logo_qv.png')}
+          />
+        </View>
 
-        <CodeField
-          ref={ref}
-          {...props}
-          value={value}
-          onChangeText={setValue}
-          cellCount={CELL_COUNT}
-          rootStyle={styles.codeFieldRoot}
-          keyboardType="number-pad"
-          textContentType="oneTimeCode"
-          renderCell={({index, symbol, isFocused}) => (
-            <View
-              onLayout={getCellOnLayoutHandler(index)}
-              key={index}
-              style={[styles.cell, isFocused && styles.focusCell]}>
-              <Text style={styles.cellText}>
-                {symbol || (isFocused ? <Cursor /> : null)}
+        <View style={styles.card}>
+          <Text style={styles.title}>Enter Your OTP</Text>
+          <Text style={styles.subtitle}>{`OTP sent to ${phoneNumber}`}</Text>
+
+          <CodeField
+            ref={ref}
+            {...props}
+            value={value}
+            onChangeText={setValue}
+            cellCount={CELL_COUNT}
+            rootStyle={styles.codeFieldRoot}
+            keyboardType="number-pad"
+            textContentType="oneTimeCode"
+            renderCell={({index, symbol, isFocused}) => (
+              <View
+                onLayout={getCellOnLayoutHandler(index)}
+                key={index}
+                style={[styles.cell, isFocused && styles.focusCell]}>
+                <Text style={styles.cellText}>
+                  {symbol || (isFocused ? <Cursor /> : null)}
+                </Text>
+              </View>
+            )}
+          />
+
+          <Text style={styles.subTitle_2}>
+            Didn’t receive the OTP?{' '}
+            {canResend ? (
+              <Text style={styles.link} onPress={handleResendOtp}>
+                Resend Code
               </Text>
-            </View>
-          )}
-        />
+            ) : (
+              <Text style={styles.disabledLink}>
+                Resend Code in {resendTimeout}s
+              </Text>
+            )}
+          </Text>
 
-        <Text style={styles.subTitle_2}>
-          Didn’t receive the OTP?{' '}
-          {canResend ? (
-            <Text style={styles.link} onPress={handleResendOtp}>
-              Resend Code
-            </Text>
-          ) : (
-            <Text style={styles.disabledLink}>
-              Resend Code in {resendTimeout}s
-            </Text>
-          )}
-        </Text>
+          <TouchableOpacity
+            style={{marginTop: 'auto', marginBottom: 15}}
+            onPress={handleChangeNumber}>
+            <Text style={styles.changeNumber}>Change Number</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={{marginTop: 'auto', marginBottom: 15}}
-          onPress={handleChangeNumber}>
-          <Text style={styles.changeNumber}>Change Number</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.otpButton}
-          onPress={verifyOTP}
-          disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.otpText}>Verify and Continue</Text>
-          )}
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.otpButton}
+            onPress={verifyOTP}
+            disabled={loading}>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.otpText}>Verify and Continue</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 export default OTPScreen;
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#111827',
+  },
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#111827',
   },
   topBackground: {
-    height: height * 0.6,
+    height: height * 0.55,
     width: '100%',
     position: 'absolute',
-    top: -80,
+    top: Platform.OS === 'ios' ? -50 : -80,
   },
   logoContainer: {
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
     position: 'absolute',
-    top: 70,
+    top: Platform.OS === 'ios' ? 80 : 110,
+    alignItems: 'center',
+    width: '100%',
   },
-  topLogo: {width: 90, objectFit: 'contain'},
-
+  topLogo: {
+    width: 100,
+    height: 100,
+    resizeMode: 'contain',
+  },
   card: {
     width: '90%',
-    height: '58%',
-    marginTop: 100,
+    height: '40%',
     backgroundColor: '#1F2937',
     borderRadius: 16,
     padding: 24,
-
-    borderWidth: 1,
-    borderColor: 'yellow',
+    // paddingBottom: 32,
+    marginTop: height * 0.28,
     shadowColor: '#FAE588',
     shadowOffset: {width: 0, height: 5},
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15,
     shadowRadius: 10,
-    elevation: 5,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'yellow',
   },
 
   title: {
