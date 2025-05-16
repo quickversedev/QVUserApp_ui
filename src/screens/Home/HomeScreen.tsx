@@ -2,6 +2,7 @@ import React from 'react';
 import {View, StyleSheet, TouchableOpacity} from 'react-native';
 import {useTheme} from '../../theme/ThemeContext';
 import ThemedText from '../../components/common/ThemeText';
+import {storage} from '../../services/localStorage/storage.service';
 
 const HomeScreen = () => {
   const {theme, isLoading, getButtonColor} = useTheme();
@@ -13,7 +14,7 @@ const HomeScreen = () => {
       </View>
     );
   }
-
+  storage.set('alreadyLaunched', true);
   return (
     <View style={[styles.container, {backgroundColor: theme.colors.warning}]}>
       <ThemedText type="h1" color="primary">

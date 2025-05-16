@@ -9,6 +9,10 @@ import {
   PermissionStatus,
 } from 'react-native-permissions';
 import Geolocation from 'react-native-geolocation-service';
+import {
+  getSkipPermission,
+  setSkipPermissions,
+} from '../../services/localStorage/storage.service';
 
 type Location = {
   latitude: number | null;
@@ -93,7 +97,7 @@ export const useLocationPermission = () => {
       setPermissionStatus(result);
       // If user grants permission, reset the skipped flag
       if (result === RESULTS.GRANTED) {
-        setHasSkippedLocation(false);
+        handleSkipPermission();
       }
       return result;
     } catch (error) {
@@ -113,7 +117,7 @@ export const useLocationPermission = () => {
         {
           text: 'Skip',
           onPress: () => {
-            setHasSkippedLocation(true);
+            handleSkipPermission();
             setPermissionStatus(RESULTS.DENIED);
           },
           style: 'cancel',
@@ -127,8 +131,13 @@ export const useLocationPermission = () => {
     );
   };
 
-  const skipLocationPermission = () => {
+  const handleSkipPermission = () => {
+    setSkipPermissions(true);
     setHasSkippedLocation(true);
+  };
+
+  const skipLocationPermission = () => {
+    handleSkipPermission();
     setPermissionStatus(RESULTS.DENIED);
     setLocation({
       latitude: null,
@@ -145,6 +154,10 @@ export const useLocationPermission = () => {
     });
 
     checkLocationPermission();
+    const hasSkippedPermissions = getSkipPermission();
+    if (hasSkippedPermissions) {
+      setHasSkippedLocation(true);
+    }
 
     return () => {
       subscription.remove();
@@ -162,7 +175,7 @@ export const useLocationPermission = () => {
     handleDeniedPermissionModal,
     skipLocationPermission,
     isGranted: permissionStatus === RESULTS.GRANTED,
-    isDenied: permissionStatus === RESULTS.DENIED || hasSkippedLocation,
+    isDenied: permissionStatus === RESULTS.DENIED,
     isBlocked: permissionStatus === RESULTS.BLOCKED,
     isUnavailable: permissionStatus === RESULTS.UNAVAILABLE,
   };

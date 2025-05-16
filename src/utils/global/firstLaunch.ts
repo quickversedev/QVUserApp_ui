@@ -9,7 +9,6 @@ export const useFirstLaunch = () => {
     const checkFirstLaunch = () => {
       const alreadyLaunched = storage.getBoolean('alreadyLaunched');
       if (alreadyLaunched === undefined) {
-        storage.set('alreadyLaunched', true);
         setIsFirstLaunch(true);
       } else {
         setIsFirstLaunch(false);
