@@ -5,12 +5,20 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
-import {storage} from '../../services/localStorage/storage.service';
+import {
+  getAuthToken,
+  getSkipLoginFlow,
+  setAuthToken,
+  setSkipLoginFlow,
+  StorageService,
+} from '../../services/localStorage/storage.service';
 import {authService} from '../../services/api/authService';
 
 type AuthContextData = {
   authData?: string;
   loading: boolean;
+  skipUserLogin?: boolean;
+  setSkipLogin: (skipLogin: boolean) => void;
   sendOtp(phoneNumber: string): Promise<string>;
   verifyOtp(
     phoneNumber: string,
@@ -36,14 +44,19 @@ type AuthProviderProps = {
 const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
   const [authData, setAuthData] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
+  const [skipUserLogin, setSkipUserLogin] = useState<boolean | undefined>(
+    false,
+  );
 
   useEffect(() => {
     const loadStorageData = async () => {
       try {
-        const storedToken = storage.getString('@AuthData');
+        const storedToken = getAuthToken();
         if (storedToken) {
           setAuthData(storedToken);
         }
+        const skipLoginFlow = getSkipLoginFlow();
+        setSkipUserLogin(skipLoginFlow);
       } catch (error) {
         console.error('Failed to load auth data from storage', error);
       } finally {
@@ -54,6 +67,15 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     loadStorageData();
   });
 
+  const setSkipLogin = (skipLogin: boolean): void => {
+    setSkipLoginFlow(skipLogin);
+    setSkipUserLogin(skipLogin);
+  };
+  const resetAuthState = (): void => {
+    setAuthData(undefined);
+    setSkipUserLogin(undefined);
+    StorageService.clearAll();
+  };
   const sendOtp = async (phoneNumber: string): Promise<string> => {
     return await authService.sendOtp(phoneNumber);
   };
@@ -63,17 +85,16 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     otp: string,
     verificationId: string,
   ): Promise<void> => {
-    console.log('response: Inside verify');
     const response = await authService.verifyOtp(
       phoneNumber,
       otp,
       verificationId,
     );
     const token = response?.session?.token;
-    console.log('response:', response);
+
     if (token) {
       setAuthData(token);
-      storage.set('@AuthData', token);
+      setAuthToken(token);
     }
   };
 
@@ -88,9 +109,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
 
   const signOut = (): void => {
     // authService.signOut().catch(console.error);
-    setAuthData(undefined);
-    storage.delete('@AuthData');
-    storage.delete('@selectedCampus');
+    resetAuthState();
   };
 
   return (
@@ -98,6 +117,8 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
       value={{
         authData,
         loading,
+        skipUserLogin,
+        setSkipLogin,
         sendOtp,
         verifyOtp,
         signOut,
