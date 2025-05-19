@@ -5,6 +5,7 @@ import {Text} from 'react-native';
 import AppStack from './AppStack';
 import {AuthStack} from './AuthStack';
 import {useAuth} from '../contexts/login/AuthProvider';
+import ForceUpdateChecker from '../components/common/ForceUpdate';
 
 export const Router = () => {
   const {authData, loading, skipUserLogin} = useAuth();
@@ -14,7 +15,9 @@ export const Router = () => {
   }
   return (
     <NavigationContainer>
-      {authData || skipUserLogin ? <AppStack /> : <AuthStack />}
+      <ForceUpdateChecker>
+        {authData || skipUserLogin ? <AppStack /> : <AuthStack />}
+      </ForceUpdateChecker>
     </NavigationContainer>
   );
 };
