@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Platform,
   SafeAreaView,
+  KeyboardAvoidingView,
 } from 'react-native';
 
 import {
@@ -22,15 +23,20 @@ import {
 } from 'react-native-confirmation-code-field';
 import {LoginStackParamList} from '../../navigation/LoginNavigation';
 import {useAuth} from '../../contexts/login/AuthProvider';
+import {StackNavigationProp} from '@react-navigation/stack';
 
 const {height} = Dimensions.get('window');
 
 const CELL_COUNT = 4;
 type LoginScreenRouteProp = RouteProp<LoginStackParamList, 'OTPScreen'>;
+type OTPScreenNavigationProp = StackNavigationProp<
+  LoginStackParamList,
+  'OTPScreen'
+>;
 const OTPScreen: React.FC = () => {
   const route = useRoute<LoginScreenRouteProp>();
   const {phoneNumber, verificationId} = route.params;
-  const navigation = useNavigation();
+  const navigation = useNavigation<OTPScreenNavigationProp>();
   const [value, setValue] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
@@ -75,6 +81,7 @@ const OTPScreen: React.FC = () => {
     setLoading(true);
     try {
       await auth.verifyOtp(phoneNumber, value, currentVerificationId);
+
       Alert.alert('Success', 'OTP verified successfully');
     } catch (err) {
       console.log('Error:', err);
@@ -106,7 +113,9 @@ const OTPScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}>
         <ImageBackground
           source={require('../../assets/images/bg_1.png')}
           style={styles.topBackground}
@@ -175,7 +184,7 @@ const OTPScreen: React.FC = () => {
             )}
           </TouchableOpacity>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -211,11 +220,11 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '90%',
-    height: '40%',
+    minHeight: '40%',
+    maxHeight: '70%',
     backgroundColor: '#1F2937',
     borderRadius: 16,
     padding: 24,
-    // paddingBottom: 32,
     marginTop: height * 0.28,
     shadowColor: '#FAE588',
     shadowOffset: {width: 0, height: 5},
@@ -224,6 +233,7 @@ const styles = StyleSheet.create({
     elevation: 6,
     borderWidth: 1,
     borderColor: 'yellow',
+    justifyContent: 'space-between',
   },
 
   title: {

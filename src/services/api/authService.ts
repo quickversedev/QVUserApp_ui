@@ -6,7 +6,7 @@ export type AuthData = {
   session: {
     token: string;
     phoneNumber: string;
-
+    newUser: boolean;
     name: string;
     email: string;
   };
@@ -69,6 +69,7 @@ const verifyOtp = async (
           name: 'Lucas Garcez',
           //campus: 'IIM Udaipur',
           email: 'abhilashghope@gmail.com',
+          newUser: true,
         },
       });
     }, 1000);

@@ -4,6 +4,7 @@ import {MMKV} from 'react-native-mmkv';
 // Initialize MMKV
 export const storage = new MMKV();
 const AUTH_DATA_KEY = '@AuthData';
+const NEW_USER_key = '@NewUser';
 const SKIP_LOGIN_KEY = '@skipLogin';
 
 export const setSkipLoginFlow = (skipLogin: boolean): void => {
@@ -35,6 +36,29 @@ export const getAuthToken = (): string | undefined => {
  */
 export const removeAuthToken = (): void => {
   storage.delete(AUTH_DATA_KEY);
+};
+
+/**
+ * Sets auth token string in storage
+ * @param newUser boolean
+ */
+export const setNewUser = (newUser: boolean): void => {
+  storage.set(NEW_USER_key, newUser);
+};
+
+/**
+ * Gets auth token string from storage
+ * @returns string | undefined
+ */
+export const getNewUser = (): boolean | undefined => {
+  return storage.getBoolean(NEW_USER_key) ?? undefined;
+};
+
+/**
+ * Removes auth token from storage
+ */
+export const removeNewUser = (): void => {
+  storage.delete(NEW_USER_key);
 };
 
 export const StorageService = {

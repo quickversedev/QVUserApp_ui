@@ -12,6 +12,7 @@ import {
   Image,
   Platform,
   SafeAreaView,
+  KeyboardAvoidingView,
 } from 'react-native';
 
 import {useAuth} from '../../contexts/login/AuthProvider';
@@ -67,7 +68,9 @@ const LoginScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}>
         <ImageBackground
           source={require('../../assets/images/bg_1.png')}
           style={styles.topBackground}
@@ -125,7 +128,7 @@ const LoginScreen: React.FC = () => {
             )}
           </TouchableOpacity>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -159,11 +162,11 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '90%',
-    height: '40%',
+    minHeight: '55%', // changed from fixed height
+    maxHeight: '70%', // add max height
     backgroundColor: '#1F2937',
     borderRadius: 16,
     padding: 24,
-    // paddingBottom: 32,
     marginTop: height * 0.28,
     shadowColor: '#FAE588',
     shadowOffset: {width: 0, height: 5},
@@ -172,6 +175,7 @@ const styles = StyleSheet.create({
     elevation: 6,
     borderWidth: 1,
     borderColor: 'yellow',
+    justifyContent: 'space-between', // better spacing
   },
   title: {
     fontSize: 22,
