@@ -72,6 +72,7 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+// 
 
 android {
     ndkVersion rootProject.ext.ndkVersion
@@ -111,7 +112,7 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-
+    implementation("androidx.appcompat:appcompat:1.6.1")
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {

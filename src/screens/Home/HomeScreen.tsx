@@ -2,11 +2,16 @@ import React from 'react';
 import {View, StyleSheet, TouchableOpacity} from 'react-native';
 import {useTheme} from '../../theme/ThemeContext';
 import ThemedText from '../../components/common/ThemeText';
+import {useAuth} from '../../contexts/login/AuthProvider';
+import Registration from '../login/Registration';
 import {storage} from '../../services/localStorage/storage.service';
 
 const HomeScreen = () => {
   const {theme, isLoading, getButtonColor} = useTheme();
-
+  const {isNewUser} = useAuth();
+  if (isNewUser) {
+    return <Registration />;
+  }
   if (isLoading) {
     return (
       <View style={styles.container}>

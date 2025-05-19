@@ -7,8 +7,10 @@ import React, {
 } from 'react';
 import {
   getAuthToken,
+  getNewUser,
   getSkipLoginFlow,
   setAuthToken,
+  setNewUser,
   setSkipLoginFlow,
   StorageService,
 } from '../../services/localStorage/storage.service';
@@ -18,6 +20,7 @@ type AuthContextData = {
   authData?: string;
   loading: boolean;
   skipUserLogin?: boolean;
+  isNewUser: boolean;
   setSkipLogin: (skipLogin: boolean) => void;
   sendOtp(phoneNumber: string): Promise<string>;
   verifyOtp(
@@ -44,6 +47,7 @@ type AuthProviderProps = {
 const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
   const [authData, setAuthData] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
+  const [isNewUser, setIsNewUser] = useState<boolean | undefined>();
   const [skipUserLogin, setSkipUserLogin] = useState<boolean | undefined>(
     false,
   );
@@ -57,6 +61,8 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
         }
         const skipLoginFlow = getSkipLoginFlow();
         setSkipUserLogin(skipLoginFlow);
+        const isNewUser = getNewUser();
+        setIsNewUser(isNewUser);
       } catch (error) {
         console.error('Failed to load auth data from storage', error);
       } finally {
@@ -70,6 +76,14 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
   const setSkipLogin = (skipLogin: boolean): void => {
     setSkipLoginFlow(skipLogin);
     setSkipUserLogin(skipLogin);
+  };
+  const setAuth = (token: string): void => {
+    setAuthData(token);
+    setAuthToken(token);
+  };
+  const setNewUserstate = (newUser: boolean): void => {
+    setIsNewUser(newUser);
+    setNewUser(newUser);
   };
   const resetAuthState = (): void => {
     setAuthData(undefined);
@@ -90,12 +104,13 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
       otp,
       verificationId,
     );
-    const token = response?.session?.token;
+    // const token = response?.session?.token;
+    const {token, newUser} = response?.session;
 
     if (token) {
-      setAuthData(token);
-      setAuthToken(token);
+      setAuth(token);
     }
+    if (newUser) setNewUserstate(newUser);
   };
 
   const signUp = async (
@@ -118,6 +133,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
         authData,
         loading,
         skipUserLogin,
+        isNewUser,
         setSkipLogin,
         sendOtp,
         verifyOtp,
