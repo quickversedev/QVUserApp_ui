@@ -5,6 +5,7 @@ import ThemedText from '../../components/common/ThemeText';
 import {useAuth} from '../../contexts/login/AuthProvider';
 import Registration from '../login/Registration';
 
+
 const HomeScreen = () => {
   const {theme, isLoading, getButtonColor} = useTheme();
   const {isNewUser} = useAuth();
@@ -18,7 +19,7 @@ const HomeScreen = () => {
       </View>
     );
   }
-
+  storage.set('alreadyLaunched', true);
   return (
     <View style={[styles.container, {backgroundColor: theme.colors.warning}]}>
       <ThemedText type="h1" color="primary">
