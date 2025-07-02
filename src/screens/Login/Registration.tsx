@@ -1,327 +1,3 @@
-// import React, {useState} from 'react';
-// import {
-//   View,
-//   Text,
-//   TextInput,
-//   TouchableOpacity,
-//   StyleSheet,
-//   Alert,
-//   ActivityIndicator,
-//   Dimensions,
-//   ImageBackground,
-//   Image,
-//   Platform,
-//   SafeAreaView,
-//   ScrollView,
-//   KeyboardAvoidingView,
-//   Keyboard,
-//   TouchableWithoutFeedback,
-// } from 'react-native';
-// import {useAuth} from '../../contexts/login/AuthProvider';
-// import {LoginStackParamList} from '../../navigation/LoginNavigation';
-// import {StackNavigationProp} from '@react-navigation/stack';
-// import {useNavigation} from '@react-navigation/native';
-
-// const {height} = Dimensions.get('window');
-// type LoginScreenNavigationProp = StackNavigationProp<
-//   LoginStackParamList,
-//   'LoginScreen'
-// >;
-
-// const Registration: React.FC = () => {
-//   const navigation = useNavigation<LoginScreenNavigationProp>();
-//   const [fullName, setFullName] = useState('');
-//   const [email, setEmail] = useState('');
-//   const [gender, setGender] = useState('');
-//   const [dateOfBirth, setDateOfBirth] = useState(new Date());
-//   const [showDatePicker, setShowDatePicker] = useState(false);
-//   const [loading, setLoading] = useState(false);
-
-//   const auth = useAuth();
-
-//   const handleSkipLogin = () => {
-//     auth.setSkipLogin(true);
-//   };
-
-//   const handleDateChange = (event: any, selectedDate?: Date) => {
-//     const currentDate = selectedDate || dateOfBirth;
-//     setShowDatePicker(Platform.OS === 'ios');
-//     setDateOfBirth(currentDate);
-//   };
-
-//   const formatDate = (date: Date) => {
-//     return date.toLocaleDateString('en-GB', {
-//       day: '2-digit',
-//       month: '2-digit',
-//       year: 'numeric',
-//     });
-//   };
-
-//   const handleRegister = () => {
-//     if (!fullName || !email) {
-//       Alert.alert('Error', 'Please fill in all required fields');
-//       return;
-//     }
-//     setLoading(true);
-//     // Simulate API call
-//     setTimeout(() => {
-//       setLoading(false);
-//       const userInfo = {
-//         fullName,
-//         email,
-//         gender,
-//         dateOfBirth,
-//       };
-
-//       Alert.alert('Success', 'Registration successful');
-//     }, 1500);
-//   };
-
-//   const dismissKeyboard = () => {
-//     Keyboard.dismiss();
-//   };
-
-//   return (
-//     <SafeAreaView style={styles.safeArea}>
-//       <KeyboardAvoidingView
-//         style={styles.keyboardAvoidingView}
-//         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-//         <TouchableWithoutFeedback onPress={dismissKeyboard}>
-//           <ScrollView
-//             contentContainerStyle={styles.scrollContainer}
-//             keyboardShouldPersistTaps="handled">
-//             <View style={styles.container}>
-//               <ImageBackground
-//                 source={require('../../assets/images/bg_1.png')}
-//                 style={styles.topBackground}
-//                 resizeMode="cover"
-//               />
-//               <View style={styles.logoContainer}>
-//                 <Image
-//                   style={styles.topLogo}
-//                   source={require('../../assets/images/logo_qv.png')}
-//                 />
-//               </View>
-
-//               <View style={styles.card}>
-//                 <Text style={styles.title}>Register</Text>
-//                 <Text style={styles.subtitle}>
-//                   Create your Quickverse account
-//                 </Text>
-
-//                 <TouchableOpacity
-//                   style={styles.skipContainer}
-//                   onPress={handleSkipLogin}>
-//                   <Text style={{color: '#E5E7EB', fontSize: 14}}>Skip</Text>
-//                 </TouchableOpacity>
-
-//                 <Text style={styles.label}>Full Name *</Text>
-//                 <TextInput
-//                   value={fullName}
-//                   onChangeText={setFullName}
-//                   placeholder="Enter your full name"
-//                   style={styles.inputField}
-//                   placeholderTextColor="#9CA3AF"
-//                   returnKeyType="next"
-//                   onSubmitEditing={() => {
-//                     // You can add focus to next field here if needed
-//                   }}
-//                 />
-
-//                 <Text style={styles.label}>Email *</Text>
-//                 <TextInput
-//                   value={email}
-//                   onChangeText={setEmail}
-//                   placeholder="Enter your email"
-//                   keyboardType="email-address"
-//                   style={styles.inputField}
-//                   placeholderTextColor="#9CA3AF"
-//                   returnKeyType="next"
-//                   onSubmitEditing={() => {
-//                     Keyboard.dismiss();
-//                   }}
-//                 />
-
-//                 <Text style={styles.label}>Gender</Text>
-//                 <View style={styles.genderContainer}>
-//                   {['Male', 'Female', 'Other'].map(option => (
-//                     <TouchableOpacity
-//                       key={option}
-//                       style={[
-//                         styles.genderOption,
-//                         gender === option && styles.genderOptionSelected,
-//                       ]}
-//                       onPress={() => setGender(option)}>
-//                       <Text
-//                         style={[
-//                           styles.genderText,
-//                           gender === option && styles.genderTextSelected,
-//                         ]}>
-//                         {option}
-//                       </Text>
-//                     </TouchableOpacity>
-//                   ))}
-//                 </View>
-
-//                 <Text style={styles.label}>Date of Birth</Text>
-//                 <TouchableOpacity
-//                   style={styles.inputField}
-//                   onPress={() => setShowDatePicker(true)}>
-//                   <Text style={{color: dateOfBirth ? '#F3F4F6' : '#9CA3AF'}}>
-//                     {dateOfBirth
-//                       ? formatDate(dateOfBirth)
-//                       : 'Select your date of birth'}
-//                   </Text>
-//                 </TouchableOpacity>
-
-//                 <TouchableOpacity
-//                   style={styles.registerButton}
-//                   onPress={handleRegister}
-//                   disabled={loading}>
-//                   {loading ? (
-//                     <ActivityIndicator color="#fff" />
-//                   ) : (
-//                     <Text style={styles.registerButtonText}>Register</Text>
-//                   )}
-//                 </TouchableOpacity>
-//               </View>
-//             </View>
-//           </ScrollView>
-//         </TouchableWithoutFeedback>
-//       </KeyboardAvoidingView>
-//     </SafeAreaView>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   safeArea: {
-//     flex: 1,
-//     backgroundColor: '#111827',
-//   },
-//   keyboardAvoidingView: {
-//     flex: 1,
-//   },
-//   scrollContainer: {
-//     flexGrow: 1,
-//     paddingBottom: 20, // Add some padding at the bottom for keyboard
-//   },
-//   container: {
-//     flex: 1,
-//     alignItems: 'center',
-//     backgroundColor: '#111827',
-//   },
-//   topBackground: {
-//     height: height * 0.55,
-//     width: '100%',
-//     position: 'absolute',
-//     top: Platform.OS === 'ios' ? -50 : -80,
-//   },
-//   logoContainer: {
-//     position: 'absolute',
-//     top: Platform.OS === 'ios' ? 60 : 80,
-//     alignItems: 'center',
-//     width: '100%',
-//   },
-//   topLogo: {
-//     width: 100,
-//     height: 100,
-//     resizeMode: 'contain',
-//   },
-//   card: {
-//     width: '90%',
-//     minHeight: height * 0.6,
-//     backgroundColor: '#1F2937',
-//     borderRadius: 16,
-//     padding: 24,
-//     marginTop: height * 0.28,
-//     shadowColor: '#FAE588',
-//     shadowOffset: {width: 0, height: 5},
-//     shadowOpacity: 0.15,
-//     shadowRadius: 10,
-//     elevation: 6,
-//     borderWidth: 1,
-//     borderColor: 'yellow',
-//     marginBottom: 20, // Extra margin at bottom for keyboard
-//   },
-//   title: {
-//     fontSize: 22,
-//     color: '#F3F4F6',
-//     fontWeight: 'bold',
-//     textAlign: 'center',
-//   },
-//   subtitle: {
-//     textAlign: 'center',
-//     color: '#9CA3AF',
-//     marginTop: 5,
-//     marginBottom: 20,
-//   },
-//   skipContainer: {
-//     position: 'absolute',
-//     top: 12,
-//     right: 12,
-//     backgroundColor: '#4B5563',
-//     paddingHorizontal: 12,
-//     paddingVertical: 6,
-//     borderRadius: 16,
-//     elevation: 2,
-//   },
-//   label: {
-//     color: '#9CA3AF',
-//     fontSize: 14,
-//     marginTop: 16,
-//     marginBottom: 6,
-//   },
-//   inputField: {
-//     backgroundColor: '#1F2937',
-//     borderColor: '#374151',
-//     borderWidth: 1,
-//     borderRadius: 8,
-//     paddingHorizontal: 12,
-//     paddingVertical: 12,
-//     color: '#F3F4F6',
-//     fontSize: 16,
-//     marginBottom: 16,
-//   },
-//   genderContainer: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     marginBottom: 16,
-//   },
-//   genderOption: {
-//     flex: 1,
-//     marginHorizontal: 4,
-//     paddingVertical: 10,
-//     borderRadius: 8,
-//     borderWidth: 1,
-//     borderColor: '#374151',
-//     alignItems: 'center',
-//   },
-//   genderOptionSelected: {
-//     backgroundColor: '#FFE885',
-//     borderColor: '#FFE885',
-//   },
-//   genderText: {
-//     color: '#F3F4F6',
-//   },
-//   genderTextSelected: {
-//     color: '#000',
-//     fontWeight: 'bold',
-//   },
-//   registerButton: {
-//     backgroundColor: '#FFE885',
-//     borderRadius: 8,
-//     paddingVertical: 14,
-//     marginTop: 16,
-//   },
-//   registerButtonText: {
-//     fontSize: 16,
-//     color: '#000',
-//     textAlign: 'center',
-//     fontWeight: 'bold',
-//   },
-// });
-
-// export default Registration;
 import React, {useState} from 'react';
 import {
   View,
@@ -346,6 +22,7 @@ import {useAuth} from '../../contexts/login/AuthProvider';
 import {LoginStackParamList} from '../../navigation/LoginNavigation';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {useNavigation} from '@react-navigation/native';
+import {useTheme} from '../../theme/ThemeContext';
 
 const {height} = Dimensions.get('window');
 type LoginScreenNavigationProp = StackNavigationProp<
@@ -358,7 +35,7 @@ const Registration: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [gender, setGender] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
+  const [dateOfBirth, setDateOfBirth] = useState<Date>();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({
@@ -369,6 +46,7 @@ const Registration: React.FC = () => {
   });
 
   const auth = useAuth();
+  const {theme} = useTheme();
 
   const handleSkipLogin = () => {
     auth.setSkipLogin(true);
@@ -432,18 +110,17 @@ const Registration: React.FC = () => {
     }
 
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      const userInfo = {
-        fullName,
-        email,
-        gender,
-        dateOfBirth,
-      };
-      console.log('userInfo', userInfo);
-      Alert.alert('Success', 'Registration successful');
-    }, 1500);
+    if (fullName && email && dateOfBirth) {
+      try {
+        auth.signUp(fullName, 'IIMU', email, dateOfBirth.toDateString());
+
+        // Alert.alert('Success', 'Registration successful');
+      } catch (error) {
+        console.log('registration failure');
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   const dismissKeyboard = () => {
@@ -475,6 +152,142 @@ const Registration: React.FC = () => {
     }
     return '';
   };
+
+  const styles = StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    keyboardAvoidingView: {
+      flex: 1,
+    },
+    scrollContainer: {
+      flexGrow: 1,
+      paddingBottom: 20,
+    },
+    container: {
+      flex: 1,
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    topBackground: {
+      height: height * 0.55,
+      width: '100%',
+      position: 'absolute',
+      top: Platform.OS === 'ios' ? 60 : 80,
+    },
+    logoContainer: {
+      position: 'absolute',
+      top: Platform.OS === 'ios' ? 60 : 80,
+      alignItems: 'center',
+      width: '100%',
+    },
+    topLogo: {
+      width: 100,
+      height: 100,
+      resizeMode: 'contain',
+    },
+    card: {
+      width: '90%',
+      minHeight: height * 0.6,
+      backgroundColor: theme.colors.card,
+      borderRadius: theme.borderRadius.md,
+      padding: 24,
+      marginTop: height * 0.24,
+      shadowColor: theme.colors.shadow.color,
+      shadowOffset: theme.colors.shadow.offset,
+      shadowOpacity: theme.colors.shadow.opacity,
+      shadowRadius: theme.colors.shadow.radius,
+      elevation: 6,
+      borderWidth: 1,
+      borderColor: theme.colors.borderHighlight,
+      marginBottom: 20,
+    },
+    title: {
+      fontSize: theme.typography.h2,
+      color: theme.colors.text,
+      fontWeight: 'bold',
+      textAlign: 'center',
+    },
+    subtitle: {
+      textAlign: 'center',
+      color: theme.colors.subText,
+      marginTop: 5,
+      marginBottom: 20,
+    },
+    skipContainer: {
+      position: 'absolute',
+      top: 12,
+      right: 12,
+      backgroundColor: theme.colors.overlay,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: theme.borderRadius.full,
+      elevation: 2,
+    },
+    label: {
+      color: theme.colors.subText,
+      fontSize: theme.typography.caption,
+      marginTop: 16,
+      marginBottom: 6,
+    },
+    inputField: {
+      backgroundColor: theme.colors.card,
+      borderColor: theme.colors.border,
+      borderWidth: 1,
+      borderRadius: theme.borderRadius.sm,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      color: theme.colors.text,
+      fontSize: theme.typography.body,
+      marginBottom: 8,
+    },
+    errorInput: {
+      borderColor: theme.colors.error || '#EF4444',
+    },
+    errorText: {
+      color: theme.colors.error || '#EF4444',
+      fontSize: theme.typography.small,
+      marginBottom: 12,
+    },
+    genderContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 16,
+    },
+    genderOption: {
+      flex: 1,
+      marginHorizontal: 4,
+      paddingVertical: 10,
+      borderRadius: theme.borderRadius.sm,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      alignItems: 'center',
+    },
+    genderOptionSelected: {
+      backgroundColor: theme.colors.secondary,
+      borderColor: theme.colors.secondary,
+    },
+    genderText: {
+      color: theme.colors.text,
+    },
+    genderTextSelected: {
+      color: theme.colors.background,
+      fontWeight: 'bold',
+    },
+    registerButton: {
+      backgroundColor: theme.colors.secondary,
+      borderRadius: theme.borderRadius.sm,
+      paddingVertical: 14,
+      marginTop: 16,
+    },
+    registerButtonText: {
+      fontSize: theme.typography.body,
+      color: theme.colors.background,
+      textAlign: 'center',
+      fontWeight: 'bold',
+    },
+  });
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -571,31 +384,6 @@ const Registration: React.FC = () => {
                   ))}
                 </View>
 
-                {/* <Text style={styles.label}>Date of Birth</Text>
-                <TouchableOpacity
-                  style={styles.inputField}
-                  onPress={() => setShowDatePicker(true)}>
-                  <Text style={{color: dateOfBirth ? '#F3F4F6' : '#9CA3AF'}}>
-                    {dateOfBirth
-                      ? formatDate(dateOfBirth)
-                      : 'Select your date of birth'}
-                  </Text>
-                </TouchableOpacity>
-                {errors.dateOfBirth ? (
-                  <Text style={styles.errorText}>{errors.dateOfBirth}</Text>
-                ) : null}
-
-                {showDatePicker && (
-                  <DateTimePicker
-                    value={dateOfBirth || new Date()}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={handleDateChange}
-                    maximumDate={new Date()}
-                    textColor="#FFFFFF"
-                  />
-                )} */}
-
                 <Text style={styles.label}>Date of Birth</Text>
                 <TouchableOpacity
                   style={styles.inputField}
@@ -638,141 +426,5 @@ const Registration: React.FC = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#111827',
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingBottom: 20,
-  },
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: '#111827',
-  },
-  topBackground: {
-    height: height * 0.55,
-    width: '100%',
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? -50 : -80,
-  },
-  logoContainer: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 60 : 80,
-    alignItems: 'center',
-    width: '100%',
-  },
-  topLogo: {
-    width: 100,
-    height: 100,
-    resizeMode: 'contain',
-  },
-  card: {
-    width: '90%',
-    minHeight: height * 0.6,
-    backgroundColor: '#1F2937',
-    borderRadius: 16,
-    padding: 24,
-    marginTop: height * 0.28,
-    shadowColor: '#FAE588',
-    shadowOffset: {width: 0, height: 5},
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 6,
-    borderWidth: 1,
-    borderColor: 'yellow',
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 22,
-    color: '#F3F4F6',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  subtitle: {
-    textAlign: 'center',
-    color: '#9CA3AF',
-    marginTop: 5,
-    marginBottom: 20,
-  },
-  skipContainer: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: '#4B5563',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    elevation: 2,
-  },
-  label: {
-    color: '#9CA3AF',
-    fontSize: 14,
-    marginTop: 16,
-    marginBottom: 6,
-  },
-  inputField: {
-    backgroundColor: '#1F2937',
-    borderColor: '#374151',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    color: '#F3F4F6',
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  errorInput: {
-    borderColor: '#EF4444',
-  },
-  errorText: {
-    color: '#EF4444',
-    fontSize: 12,
-    marginBottom: 12,
-  },
-  genderContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  genderOption: {
-    flex: 1,
-    marginHorizontal: 4,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#374151',
-    alignItems: 'center',
-  },
-  genderOptionSelected: {
-    backgroundColor: '#FFE885',
-    borderColor: '#FFE885',
-  },
-  genderText: {
-    color: '#F3F4F6',
-  },
-  genderTextSelected: {
-    color: '#000',
-    fontWeight: 'bold',
-  },
-  registerButton: {
-    backgroundColor: '#FFE885',
-    borderRadius: 8,
-    paddingVertical: 14,
-    marginTop: 16,
-  },
-  registerButtonText: {
-    fontSize: 16,
-    color: '#000',
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-});
 
 export default Registration;

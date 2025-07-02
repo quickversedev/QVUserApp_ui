@@ -1,37 +1,65 @@
-import {Theme} from '../../theme/ThemeContext';
+import { Theme } from "../../theme/ThemeContext";
 
-// src/assets/theme/defaultTheme.ts
 export const DefaultTheme: Theme = {
   colors: {
-    primary: '#2A5C8D',
-    secondary: '#5C8D2A',
-    background: '#FFFFFF',
-    text: '#333333',
-    success: '#4CAF50',
-    error: '#F44336',
-    warning: '#FFC107',
+    primary: '#FAE588',            // used in shadowColor
+    secondary: '#FFE885',          // used in otpButton background
+    background: '#111827',         // screen background
+    tabBackground: '#1F2937',
+    card: '#1F2937',               // card + input background
+    border: '#374151',             // input border
+    overlay: '#4B5563',            // skip button background
+    white: '#FFFFFF',
+    black: '#000000',
+    error: '#EF4444',
+    text: '#F3F4F6',               // title text
+    subText: '#9CA3AF',            // subtitle + phoneLabel
+    placeholder: '#9CA3AF',
+
     button: {
       default: {
-        background: '#2A5C8D',
-        text: '#FFFFFF',
+        background: '#FFE885',
+        text: '#000000',
       },
       pressed: {
-        background: '#1E4263',
-        text: '#FFFFFF',
+        background: '#E6D172',
+        text: '#000000',
       },
       disabled: {
         background: '#CCCCCC',
         text: '#666666',
       },
     },
+
+    shadow: {
+      color: '#FAE588',
+      opacity: 0.15,
+      offset: { width: 0, height: 5 },
+      radius: 10,
+    },
+
+    borderHighlight: 'yellow',     // used in card border
   },
+
   typography: {
-    h1: 32,
-    h2: 24,
-    subtitle: 18,
-    body: 16,
-    caption: 12,
     fontFamily: 'System',
     lineHeightMultiplier: 1.4,
+
+    h1: 28,       // for title
+    h2: 22,
+    subtitle: 18, // for subtext
+    body: 16,     // input text, calling code
+    caption: 14,  // skip text, phoneLabel
+    small: 12,
   },
+
+ 
+
+  borderRadius: {
+    sm: 8,
+    md: 15,
+    full: 9999,
+  },
+
+  
 };

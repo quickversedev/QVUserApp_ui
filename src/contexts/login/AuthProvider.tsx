@@ -20,7 +20,7 @@ type AuthContextData = {
   authData?: string;
   loading: boolean;
   skipUserLogin?: boolean;
-  isNewUser: boolean;
+  isNewUser: boolean | undefined;
   setSkipLogin: (skipLogin: boolean) => void;
   sendOtp(phoneNumber: string): Promise<string>;
   verifyOtp(
@@ -119,7 +119,18 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     email: string,
     dob: string,
   ): Promise<void> => {
-    await authService.signUp(fullName, dob, campusId, email);
+    try {
+      // const registration = await authService.signUp(
+      //   fullName,
+      //   dob,
+      //   campusId,
+      //   email,
+      // );
+      // console.log('registration', registration);
+      setNewUserstate(false);
+    } catch (error) {
+      console.error('error while registration', error);
+    }
   };
 
   const signOut = (): void => {

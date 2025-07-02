@@ -1,6 +1,6 @@
 // src/theme/ThemeContext.tsx
-import React, {createContext, useContext, useEffect, useState} from 'react';
-import {DefaultTheme} from '../assets/theme/defaultTheme';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { DefaultTheme } from '../assets/theme/defaultTheme';
 
 type ButtonColors = {
   default: {
@@ -17,39 +17,60 @@ type ButtonColors = {
   };
 };
 
-export type BaseColors = {
+type Shadow = {
+  color: string;
+  opacity: number;
+  offset: { width: number; height: number };
+  radius: number;
+};
+
+export type Colors = {
   primary: string;
   secondary: string;
   background: string;
+  tabBackground: string;
+  card: string;
+  error: string,
+  border: string;
+  overlay: string;
+  white: string;
+  black: string;
   text: string;
-  success: string;
-  error: string;
-  warning: string;
+  subText: string;
+  placeholder: string;
+  button: ButtonColors;
+  shadow: Shadow;
+  borderHighlight: string;
 };
 
-type Colors = BaseColors & {
-  button: ButtonColors;
-};
 type Typography = {
+  fontFamily: string;
+  lineHeightMultiplier: number;
   h1: number;
   h2: number;
   subtitle: number;
   body: number;
   caption: number;
-  fontFamily: string;
-  lineHeightMultiplier: number;
+  small: number;
+};
+
+type BorderRadius = {
+  sm: number;
+  md: number;
+  full: number;
 };
 
 export type Theme = {
   colors: Colors;
   typography: Typography;
+  borderRadius: BorderRadius;
 };
 
 type ThemeContextType = {
   theme: Theme;
   isLoading: boolean;
   error: Error | null;
-  getColor: <T extends keyof BaseColors>(colorKey: T) => BaseColors[T];
+  getColor: <T extends keyof Colors>(colorKey: T) => Colors[T];
   getButtonColor: (
     state: keyof ButtonColors,
     element: 'background' | 'text',
@@ -63,7 +84,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const API_ENDPOINT = 'https://your-api.com/theme-config';
 
-const ThemeProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
+const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(DefaultTheme);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -140,4 +161,4 @@ const useTheme = () => {
   return context;
 };
 
-export {ThemeProvider, useTheme};
+export { ThemeProvider, useTheme };

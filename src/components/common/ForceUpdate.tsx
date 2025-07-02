@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {
   View,
   Image,
@@ -10,122 +10,229 @@ import {
   Platform,
   Linking,
   ActivityIndicator,
+  Animated,
+  Alert,
 } from 'react-native';
 
 import DeviceInfo from 'react-native-device-info';
 import useFetchUpdateData from '../../hooks/useFetchUpdateData';
+import { useTheme, Theme } from '../../theme/ThemeContext';
 
-const {height} = Dimensions.get('window');
+const {height, width} = Dimensions.get('window');
 
 const ForceUpdateChecker: React.FC<{children: React.ReactNode}> = ({
   children,
 }) => {
   const [isUpdateRequired, setIsUpdateRequired] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+  const { theme } = useTheme();
+
+  // Animation refs
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
   // Use the custom hook to fetch update data
   const {updateData, loading, error, retry} = useFetchUpdateData();
+
   console.log('update data ::::::', updateData);
+
   useEffect(() => {
     if (!loading && !error) {
       checkForUpdate();
     }
-  }, [loading, error]);
+  }, [loading, error, updateData]);
+
+  // Animate in when update is required
+  useEffect(() => {
+    if (isUpdateRequired) {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          tension: 100,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 100,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [isUpdateRequired, fadeAnim, slideAnim, scaleAnim]);
 
   const checkForUpdate = async () => {
     try {
+      setIsChecking(true);
       const currentVersion = DeviceInfo.getVersion();
 
+      console.log('Current version:', currentVersion);
+      console.log('Required version:', updateData?.min_required_version);
+
       // Compare versions
-      if (currentVersion < updateData.min_required_version) {
+      if (
+        updateData?.min_required_version &&
+        currentVersion < updateData.min_required_version
+      ) {
         setIsUpdateRequired(true);
+      } else {
+        setIsUpdateRequired(false);
       }
     } catch (err) {
       console.error('Error checking for updates:', err);
+      Alert.alert('Error', 'Failed to check for updates. Please try again.');
+    } finally {
+      setIsChecking(false);
     }
   };
 
-  const handleUpdate = () => {
-    const storeUrl =
-      Platform.OS === 'ios' ? updateData.ios_url : updateData.android_url;
-    Linking.openURL(storeUrl);
+  const handleUpdate = async () => {
+    try {
+      const storeUrl =
+        Platform.OS === 'ios' ? updateData?.ios_url : updateData?.android_url;
+
+      if (!storeUrl) {
+        Alert.alert('Error', 'Store URL not available');
+        return;
+      }
+
+      const supported = await Linking.canOpenURL(storeUrl);
+
+      if (supported) {
+        await Linking.openURL(storeUrl);
+      } else {
+        Alert.alert('Error', 'Cannot open store URL');
+      }
+    } catch (error) {
+      console.error('Error opening store:', error);
+      Alert.alert('Error', 'Failed to open store');
+    }
   };
 
-  if (loading) {
+  const handleRetry = () => {
+    retry();
+    setIsChecking(true);
+  };
+
+  // Loading state
+  if (loading || isChecking) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator size="large" />
+      <View style={getStyles(theme).loadingContainer}>
+        <Image
+          style={getStyles(theme).loadingLogo}
+          source={require('../../assets/images/logo_qv.png')}
+        />
+        <ActivityIndicator
+          size="large"
+          color={theme.colors.secondary}
+          style={getStyles(theme).spinner}
+        />
+        <Text style={getStyles(theme).loadingText}>Checking for updates...</Text>
       </View>
     );
   }
 
+  // Error state
   if (error) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <Text style={styles.errorText}>Failed to fetch update data.</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={retry}>
-          <Text style={styles.retryButtonText}>Retry</Text>
+      <View style={getStyles(theme).errorContainer}>
+        <Image
+          style={getStyles(theme).errorLogo}
+          source={require('../../assets/images/logo_qv.png')}
+        />
+        <Text style={getStyles(theme).errorTitle}>Connection Error</Text>
+        <Text style={getStyles(theme).errorText}>
+          Failed to check for updates. Please check your internet connection.
+        </Text>
+        <TouchableOpacity style={getStyles(theme).retryButton} onPress={handleRetry}>
+          <Text style={getStyles(theme).retryButtonText}>Try Again</Text>
         </TouchableOpacity>
       </View>
     );
   }
-  if (isUpdateRequired) {
+
+  // Update required state
+  if (!isUpdateRequired) {
     return (
-      <View style={styles.container}>
+      <Animated.View
+        style={[
+          getStyles(theme).container,
+          {
+            opacity: fadeAnim,
+          },
+        ]}>
         <ImageBackground
           source={require('../../assets/images/bg_1.png')}
-          style={styles.topBackground}
+          style={getStyles(theme).topBackground}
           resizeMode="cover"
         />
 
-        <View style={styles.logoContainer}>
+        <View style={getStyles(theme).logoContainer}>
           <Image
-            style={styles.topLogo}
+            style={getStyles(theme).topLogo}
             source={require('../../assets/images/logo_qv.png')}
           />
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.title}>Update Required</Text>
-          <Text style={styles.subtitle}>
-            A new version of the app is available. Please update to continue
-            using the app.
-          </Text>
-          {/* <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-          <Modal
-            visible={isModalVisible}
-            transparent={true}
-            animationType="fade">
-            <View style={styles.smallModalContainer}>
-              <View style={styles.modalContainer}>
-                <Text style={styles.title}></Text>
-                <Text style={styles.message}></Text>
-                <TouchableOpacity style={styles.button} onPress={handleUpdate}>
-                  <Text style={styles.buttonText}>Update Now</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
-          <ActivityIndicator size="large" />
-        </View> */}
+        <Animated.View
+          style={[
+            getStyles(theme).card,
+            {
+              transform: [{translateY: slideAnim}, {scale: scaleAnim}],
+            },
+          ]}>
+          <View style={getStyles(theme).updateIconContainer}>
+            <Text style={getStyles(theme).updateIcon}>🔄</Text>
+          </View>
 
-          <TouchableOpacity style={styles.otpButton} onPress={handleUpdate}>
-            <Text style={styles.otpText}>Update Now</Text>
+          <Text style={getStyles(theme).title}>Update Required</Text>
+          <Text style={getStyles(theme).subtitle}>
+            A new version of the app is available with important improvements
+            and bug fixes.
+          </Text>
+
+          <View style={getStyles(theme).versionInfo}>
+            <Text style={getStyles(theme).versionText}>
+              Current Version: {DeviceInfo.getVersion()}
+            </Text>
+            <Text style={getStyles(theme).versionText}>
+              Required Version: {updateData?.min_required_version}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={getStyles(theme).updateButton}
+            onPress={handleUpdate}
+            activeOpacity={0.8}>
+            <Text style={getStyles(theme).updateButtonText}>Update Now</Text>
           </TouchableOpacity>
-        </View>
-      </View>
+
+          <Text style={getStyles(theme).updateNote}>
+            Please update to continue using the app
+          </Text>
+        </Animated.View>
+      </Animated.View>
     );
   }
+
   return children;
 };
 
 export default ForceUpdateChecker;
 
-const styles = StyleSheet.create({
+const getStyles = (theme: Theme) => StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#111827',
+    backgroundColor: theme.colors.background,
   },
   topBackground: {
     height: height * 0.6,
@@ -140,133 +247,146 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 70,
   },
-  topLogo: {width: 90, objectFit: 'contain'},
-
-  card: {
-    width: '90%',
-    height: '40%',
-    marginTop: 100,
-    backgroundColor: '#1F2937',
-    borderRadius: 16,
-    padding: 24,
-
-    borderWidth: 1,
-    borderColor: 'yellow',
-    shadowColor: '#FAE588',
-    shadowOffset: {width: 0, height: 5},
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+  topLogo: {
+    width: 90,
+    height: 90,
+    resizeMode: 'contain',
   },
-
+  card: {
+    width: width * 0.9,
+    maxWidth: 400,
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.borderRadius.md,
+    padding: 32,
+    borderWidth: 1,
+    borderColor: theme.colors.borderHighlight,
+    shadowColor: theme.colors.shadow.color,
+    shadowOffset: theme.colors.shadow.offset,
+    shadowOpacity: theme.colors.shadow.opacity,
+    shadowRadius: theme.colors.shadow.radius,
+    elevation: 8,
+    alignItems: 'center',
+  },
+  updateIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: theme.colors.secondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  updateIcon: {
+    fontSize: 40,
+  },
   title: {
-    fontSize: 22,
-    color: '#F3F4F6',
+    fontSize: theme.typography.h1,
+    color: theme.colors.text,
     fontWeight: 'bold',
     textAlign: 'center',
+    marginBottom: 12,
   },
   subtitle: {
     textAlign: 'center',
-    color: '#9CA3AF',
-    marginTop: 5,
+    color: theme.colors.subText,
+    fontSize: theme.typography.body,
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+  versionInfo: {
+    backgroundColor: theme.colors.border,
+    borderRadius: theme.borderRadius.sm,
+    padding: 16,
+    marginBottom: 24,
+    width: '100%',
+  },
+  versionText: {
+    color: theme.colors.subText,
+    fontSize: theme.typography.caption,
+    textAlign: 'center',
+    marginVertical: 2,
+  },
+  updateButton: {
+    backgroundColor: theme.colors.secondary,
+    borderRadius: theme.borderRadius.sm,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    width: '100%',
     marginBottom: 16,
-  },
-
-  skipContainer: {
-    position: 'absolute',
-    top: 8,
-    right: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-    backgroundColor: '#4B5563',
-    alignSelf: 'flex-end',
-    marginRight: 16,
-    marginTop: 16,
-
-    // Shadow for iOS
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowColor: theme.colors.shadow.color,
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-
-    // Shadow for Android
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
   },
-
-  // button
-  otpButton: {
-    backgroundColor: '#FFE885',
-    borderRadius: 8,
-    paddingVertical: 14,
-    marginTop: 'auto',
-  },
-  otpText: {
-    fontSize: 16,
-    color: 'black',
+  updateButtonText: {
+    fontSize: theme.typography.body,
+    color: theme.colors.background,
     textAlign: 'center',
+    fontWeight: 'bold',
   },
-
-  subTitle_2: {
-    color: 'grey',
+  updateNote: {
+    color: theme.colors.subText,
+    fontSize: theme.typography.caption,
     textAlign: 'center',
-    marginTop: 12,
+    fontStyle: 'italic',
   },
-  link: {
-    color: '#FAE588',
-    // fontWeight: "600",
-  },
-
-  changeNumber: {
-    fontSize: 16,
-    color: '#FAE588',
-    textAlign: 'center',
-    marginTop: 'auto',
-  },
-
-  // otp
-  codeFieldRoot: {
-    marginTop: '12%',
-    marginBottom: '5%',
-    justifyContent: 'space-between',
-    flexDirection: 'row',
-  },
-  cell: {
-    width: 50,
-    height: 50,
-    lineHeight: 48,
-    fontSize: 24,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 10,
-    textAlign: 'center',
+  // Loading styles
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: theme.colors.background,
   },
-  cellText: {
-    fontSize: 22,
-    color: 'white',
+  loadingLogo: {
+    width: 120,
+    height: 120,
+    resizeMode: 'contain',
+    marginBottom: 32,
   },
-  focusCell: {
-    borderColor: '#005EB8',
+  spinner: {
+    marginBottom: 16,
   },
-  disabledLink: {
-    color: '#6B7280',
+  loadingText: {
+    color: theme.colors.subText,
+    fontSize: theme.typography.body,
+  },
+  // Error styles
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background,
+    padding: 24,
+  },
+  errorLogo: {
+    width: 100,
+    height: 100,
+    resizeMode: 'contain',
+    marginBottom: 32,
+  },
+  errorTitle: {
+    fontSize: theme.typography.h2,
+    color: theme.colors.text,
+    fontWeight: 'bold',
+    marginBottom: 12,
   },
   errorText: {
-    fontSize: 16,
-    color: '#FF0000',
-    marginBottom: 20,
+    fontSize: theme.typography.body,
+    color: theme.colors.subText,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 24,
   },
   retryButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
+    backgroundColor: theme.colors.secondary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: theme.borderRadius.sm,
   },
   retryButtonText: {
-    color: 'white',
-    fontSize: 16,
+    color: theme.colors.background,
+    fontSize: theme.typography.body,
     fontWeight: 'bold',
   },
 });
