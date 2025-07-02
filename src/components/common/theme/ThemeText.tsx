@@ -1,11 +1,11 @@
 import React from 'react';
 import {Text, StyleSheet} from 'react-native';
-import {useTheme} from '../../theme/ThemeContext';
+import {useTheme} from '../../../theme/ThemeContext';
 
 type Props = {
   type?: 'h1' | 'h2' | 'subtitle' | 'body' | 'caption';
-  color?: keyof BaseColors; // Only allow base color keys
-  style?: Object;
+  color?: string; // Accept any string for color prop
+  style?: object;
   children: React.ReactNode;
 };
 
@@ -22,7 +22,7 @@ const ThemedText: React.FC<Props> = ({
       style={[
         styles.text,
         {
-          color: getColor(color),
+          color: getColor(color as keyof BaseColors),
           fontSize: getTypography(type),
           fontFamily: 'System',
           lineHeight: getTypography(type) * 1.4,

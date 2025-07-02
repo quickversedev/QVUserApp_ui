@@ -24,6 +24,7 @@ import {
 import {LoginStackParamList} from '../../navigation/LoginNavigation';
 import {useAuth} from '../../contexts/login/AuthProvider';
 import {StackNavigationProp} from '@react-navigation/stack';
+import {useTheme} from '../../theme/ThemeContext';
 
 const {height} = Dimensions.get('window');
 
@@ -52,6 +53,134 @@ const OTPScreen: React.FC = () => {
     setValue,
   });
   const auth = useAuth();
+  const {theme} = useTheme();
+
+  const styles = StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    container: {
+      flex: 1,
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    topBackground: {
+      height: height * 0.55,
+      width: '100%',
+      position: 'absolute',
+      top: Platform.OS === 'ios' ? -50 : -80,
+    },
+    logoContainer: {
+      position: 'absolute',
+      top: 60,
+      alignItems: 'center',
+      width: '100%',
+    },
+    topLogo: {
+      width: 100,
+      height: 100,
+      resizeMode: 'contain',
+    },
+    card: {
+      width: '90%',
+      minHeight: '45%',
+      backgroundColor: theme.colors.card,
+      borderRadius: theme.borderRadius.md,
+      padding: 24,
+      marginTop: height * 0.24,
+      shadowColor: theme.colors.shadow.color,
+      shadowOffset: theme.colors.shadow.offset,
+      shadowOpacity: theme.colors.shadow.opacity,
+      shadowRadius: theme.colors.shadow.radius,
+      elevation: 6,
+      borderWidth: 1,
+      borderColor: theme.colors.borderHighlight,
+      justifyContent: 'space-between',
+    },
+    title: {
+      fontSize: theme.typography.h2,
+      color: theme.colors.text,
+      fontWeight: 'bold',
+      textAlign: 'center',
+    },
+    subtitle: {
+      textAlign: 'center',
+      color: theme.colors.subText,
+      marginTop: 5,
+      marginBottom: 16,
+    },
+    skipContainer: {
+      position: 'absolute',
+      top: 8,
+      right: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: theme.borderRadius.full,
+      backgroundColor: theme.colors.overlay,
+      alignSelf: 'flex-end',
+      marginRight: 16,
+      marginTop: 16,
+      shadowColor: theme.colors.shadow.color,
+      shadowOffset: {width: 0, height: 2},
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    otpButton: {
+      backgroundColor: theme.colors.secondary,
+      borderRadius: theme.borderRadius.sm,
+      paddingVertical: 14,
+    },
+    otpText: {
+      fontSize: theme.typography.body,
+      color: theme.colors.background,
+      textAlign: 'center',
+      fontWeight: 'bold',
+    },
+    subTitle_2: {
+      color: theme.colors.subText,
+      textAlign: 'center',
+      marginTop: 12,
+    },
+    link: {
+      color: theme.colors.primary,
+    },
+    changeNumber: {
+      fontSize: theme.typography.body,
+      color: theme.colors.primary,
+      textAlign: 'center',
+      marginTop: 'auto',
+    },
+    codeFieldRoot: {
+      marginTop: '12%',
+      marginBottom: '5%',
+      justifyContent: 'space-between',
+      flexDirection: 'row',
+    },
+    cell: {
+      width: 50,
+      height: 50,
+      lineHeight: 48,
+      fontSize: theme.typography.h2,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: theme.borderRadius.sm,
+      textAlign: 'center',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    cellText: {
+      fontSize: theme.typography.h2,
+      color: theme.colors.text,
+    },
+    focusCell: {
+      borderColor: theme.colors.primary,
+    },
+    disabledLink: {
+      color: theme.colors.subText,
+    },
+  });
 
   // Timer effect
   useEffect(() => {
@@ -155,7 +284,7 @@ const OTPScreen: React.FC = () => {
           />
 
           <Text style={styles.subTitle_2}>
-            Didn’t receive the OTP?{' '}
+            Didn't receive the OTP?{' '}
             {canResend ? (
               <Text style={styles.link} onPress={handleResendOtp}>
                 Resend Code
@@ -190,144 +319,3 @@ const OTPScreen: React.FC = () => {
 };
 
 export default OTPScreen;
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#111827',
-  },
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: '#111827',
-  },
-  topBackground: {
-    height: height * 0.55,
-    width: '100%',
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? -50 : -80,
-  },
-  logoContainer: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 80 : 110,
-    alignItems: 'center',
-    width: '100%',
-  },
-  topLogo: {
-    width: 100,
-    height: 100,
-    resizeMode: 'contain',
-  },
-  card: {
-    width: '90%',
-    minHeight: '40%',
-    maxHeight: '70%',
-    backgroundColor: '#1F2937',
-    borderRadius: 16,
-    padding: 24,
-    marginTop: height * 0.28,
-    shadowColor: '#FAE588',
-    shadowOffset: {width: 0, height: 5},
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 6,
-    borderWidth: 1,
-    borderColor: 'yellow',
-    justifyContent: 'space-between',
-  },
-
-  title: {
-    fontSize: 22,
-    color: '#F3F4F6',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  subtitle: {
-    textAlign: 'center',
-    color: '#9CA3AF',
-    marginTop: 5,
-    marginBottom: 16,
-  },
-
-  skipContainer: {
-    position: 'absolute',
-    top: 8,
-    right: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-    backgroundColor: '#4B5563',
-    alignSelf: 'flex-end',
-    marginRight: 16,
-    marginTop: 16,
-
-    // Shadow for iOS
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-
-    // Shadow for Android
-    elevation: 3,
-  },
-
-  // button
-  otpButton: {
-    backgroundColor: '#FFE885',
-    borderRadius: 8,
-    paddingVertical: 14,
-    // marginTop: "auto",
-  },
-  otpText: {
-    fontSize: 16,
-    color: 'black',
-    textAlign: 'center',
-  },
-
-  subTitle_2: {
-    color: 'grey',
-    textAlign: 'center',
-    marginTop: 12,
-  },
-  link: {
-    color: '#FAE588',
-    // fontWeight: "600",
-  },
-
-  changeNumber: {
-    fontSize: 16,
-    color: '#FAE588',
-    textAlign: 'center',
-    marginTop: 'auto',
-  },
-
-  // otp
-  codeFieldRoot: {
-    marginTop: '12%',
-    marginBottom: '5%',
-    justifyContent: 'space-between',
-    flexDirection: 'row',
-  },
-  cell: {
-    width: 50,
-    height: 50,
-    lineHeight: 48,
-    fontSize: 24,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 10,
-    textAlign: 'center',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cellText: {
-    fontSize: 22,
-    color: 'white',
-  },
-  focusCell: {
-    borderColor: '#005EB8',
-  },
-  disabledLink: {
-    color: '#6B7280',
-  },
-});

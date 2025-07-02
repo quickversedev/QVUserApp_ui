@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 80 : 110,
+    top: 60,
     alignItems: 'center',
     width: '100%',
   },
@@ -162,12 +162,12 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '90%',
-    minHeight: '55%', // changed from fixed height
-    maxHeight: '70%', // add max height
+    minHeight: '45%', // changed from fixed height
+    // maxHeight: '70%', // add max height
     backgroundColor: '#1F2937',
     borderRadius: 16,
     padding: 24,
-    marginTop: height * 0.28,
+    marginTop: height * 0.24,
     shadowColor: '#FAE588',
     shadowOffset: {width: 0, height: 5},
     shadowOpacity: 0.15,
