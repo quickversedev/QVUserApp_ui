@@ -1,12 +1,11 @@
-import React, {useEffect} from 'react';
-import {AuthProvider} from './src/contexts/login/AuthProvider';
-import {Router} from './src/routes/Route';
-import {ThemeProvider} from './src/theme/ThemeContext';
+import React, { useEffect } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { AuthProvider } from './src/contexts/login/AuthProvider';
+import { useLocationPermission } from './src/hooks/Permissions/usePermissions';
+import { Router } from './src/routes/Route';
 import PermissionsScreen from './src/screens/permission/PermissionsScreen';
-import {useLocationPermission} from './src/hooks/Permissions/usePermissions';
-import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
-import {useFirstLaunch} from './src/utils/global/firstLaunch';
-import {get} from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import { ThemeProvider } from './src/theme/ThemeContext';
+import { useFirstLaunch } from './src/utils/global/firstLaunch';
 
 function App(): React.JSX.Element {
   const {

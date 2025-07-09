@@ -1,5 +1,5 @@
-import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
-import React, {useEffect, useState} from 'react';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Image,
@@ -21,22 +21,19 @@ import {
   useBlurOnFulfill,
   useClearByFocusCell,
 } from 'react-native-confirmation-code-field';
-import {LoginStackParamList} from '../../navigation/LoginNavigation';
-import {useAuth} from '../../contexts/login/AuthProvider';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {useTheme} from '../../theme/ThemeContext';
+import { LoginStackParamList } from '../../navigation/LoginNavigation';
+import { useAuth } from '../../contexts/login/AuthProvider';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useTheme } from '../../theme/ThemeContext';
 
-const {height} = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
 const CELL_COUNT = 4;
 type LoginScreenRouteProp = RouteProp<LoginStackParamList, 'OTPScreen'>;
-type OTPScreenNavigationProp = StackNavigationProp<
-  LoginStackParamList,
-  'OTPScreen'
->;
+type OTPScreenNavigationProp = StackNavigationProp<LoginStackParamList, 'OTPScreen'>;
 const OTPScreen: React.FC = () => {
   const route = useRoute<LoginScreenRouteProp>();
-  const {phoneNumber, verificationId} = route.params;
+  const { phoneNumber, verificationId } = route.params;
   const navigation = useNavigation<OTPScreenNavigationProp>();
   const [value, setValue] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -44,16 +41,15 @@ const OTPScreen: React.FC = () => {
   // Resend OTP Timer
   const [resendTimeout, setResendTimeout] = useState(60);
   const [canResend, setCanResend] = useState(false);
-  const [currentVerificationId, setCurrentVerificationId] =
-    useState(verificationId);
+  const [currentVerificationId, setCurrentVerificationId] = useState(verificationId);
 
-  const ref = useBlurOnFulfill({value, cellCount: CELL_COUNT});
+  const ref = useBlurOnFulfill({ value, cellCount: CELL_COUNT });
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
     value,
     setValue,
   });
   const auth = useAuth();
-  const {theme} = useTheme();
+  const { theme } = useTheme();
 
   const styles = StyleSheet.create({
     safeArea: {
@@ -122,7 +118,7 @@ const OTPScreen: React.FC = () => {
       marginRight: 16,
       marginTop: 16,
       shadowColor: theme.colors.shadow.color,
-      shadowOffset: {width: 0, height: 2},
+      shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 3,
@@ -244,7 +240,8 @@ const OTPScreen: React.FC = () => {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}>
+        style={styles.container}
+      >
         <ImageBackground
           source={require('../../assets/images/bg_1.png')}
           style={styles.topBackground}
@@ -252,10 +249,7 @@ const OTPScreen: React.FC = () => {
         />
 
         <View style={styles.logoContainer}>
-          <Image
-            style={styles.topLogo}
-            source={require('../../assets/images/logo_qv.png')}
-          />
+          <Image style={styles.topLogo} source={require('../../assets/images/logo_qv.png')} />
         </View>
 
         <View style={styles.card}>
@@ -271,14 +265,13 @@ const OTPScreen: React.FC = () => {
             rootStyle={styles.codeFieldRoot}
             keyboardType="number-pad"
             textContentType="oneTimeCode"
-            renderCell={({index, symbol, isFocused}) => (
+            renderCell={({ index, symbol, isFocused }) => (
               <View
                 onLayout={getCellOnLayoutHandler(index)}
                 key={index}
-                style={[styles.cell, isFocused && styles.focusCell]}>
-                <Text style={styles.cellText}>
-                  {symbol || (isFocused ? <Cursor /> : null)}
-                </Text>
+                style={[styles.cell, isFocused && styles.focusCell]}
+              >
+                <Text style={styles.cellText}>{symbol || (isFocused ? <Cursor /> : null)}</Text>
               </View>
             )}
           />
@@ -290,22 +283,18 @@ const OTPScreen: React.FC = () => {
                 Resend Code
               </Text>
             ) : (
-              <Text style={styles.disabledLink}>
-                Resend Code in {resendTimeout}s
-              </Text>
+              <Text style={styles.disabledLink}>Resend Code in {resendTimeout}s</Text>
             )}
           </Text>
 
           <TouchableOpacity
-            style={{marginTop: 'auto', marginBottom: 15}}
-            onPress={handleChangeNumber}>
+            style={{ marginTop: 'auto', marginBottom: 15 }}
+            onPress={handleChangeNumber}
+          >
             <Text style={styles.changeNumber}>Change Number</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.otpButton}
-            onPress={verifyOTP}
-            disabled={loading}>
+          <TouchableOpacity style={styles.otpButton} onPress={verifyOTP} disabled={loading}>
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (

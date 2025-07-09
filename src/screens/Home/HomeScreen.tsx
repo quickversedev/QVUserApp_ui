@@ -1,20 +1,29 @@
-import React, {useEffect, useRef, useContext} from 'react';
-import {View, StyleSheet, TouchableOpacity, Animated, ScrollView, Text, NativeSyntheticEvent, NativeScrollEvent} from 'react-native';
-import {useTheme, Theme} from '../../theme/ThemeContext';
+import React, { useEffect, useRef, useContext } from 'react';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+  ScrollView,
+  Text,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from 'react-native';
+import { useTheme, Theme } from '../../theme/ThemeContext';
 import ThemedText from '../../components/common/theme/ThemeText';
-import {useAuth} from '../../contexts/login/AuthProvider';
+import { useAuth } from '../../contexts/login/AuthProvider';
 import Registration from '../login/Registration';
-import {storage} from '../../services/localStorage/storage.service';
-import {TabBarVisibilityContext} from '../../navigation/TabNavigation';
+import { storage } from '../../services/localStorage/storage.service';
+import { TabBarVisibilityContext } from '../../navigation/TabNavigation';
 
 const HomeScreen = () => {
-  const {theme, isLoading, getButtonColor} = useTheme();
-  const {isNewUser} = useAuth();
+  const { theme, isLoading, getButtonColor } = useTheme();
+  const { isNewUser } = useAuth();
   const modalAnim = useRef(new Animated.Value(0)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
   const tabBarTranslateY = useContext(TabBarVisibilityContext);
   const lastOffset = useRef(0);
- 
+
   if (isNewUser) {
     return <Registration />;
   }
@@ -72,13 +81,15 @@ const HomeScreen = () => {
             backgroundColor: getButtonColor('pressed', 'background'),
             opacity: 1,
           },
-        ]}>
+        ]}
+      >
         <ThemedText
           type="h2"
           style={{
             color: getButtonColor('disabled', 'text'),
             fontWeight: '500',
-          }}>
+          }}
+        >
           hello
         </ThemedText>
       </TouchableOpacity>
@@ -99,48 +110,49 @@ const HomeScreen = () => {
   );
 };
 
-const getStyles = (theme: Theme) => StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: theme.colors.background,
-  },
-  subtitle: {
-    marginVertical: 20,
-  },
-  button: {
-    padding: 15,
-    borderRadius: theme.borderRadius.full,
-    marginTop: 30,
-  },
-  scrollView: {
-    marginTop: 30,
-    width: '100%',
-    flexGrow: 0,
-  },
-  scrollContent: {
-    paddingBottom: 100,
-    alignItems: 'center',
-  },
-  card: {
-    width: '95%',
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.borderRadius.md,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: theme.colors.shadow.color,
-    shadowOffset: theme.colors.shadow.offset,
-    shadowOpacity: theme.colors.shadow.opacity,
-    shadowRadius: theme.colors.shadow.radius,
-    elevation: 2,
-  },
-  cardText: {
-    color: theme.colors.text,
-    fontSize: theme.typography.body,
-    fontWeight: '500',
-  },
-});
+const getStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+      backgroundColor: theme.colors.background,
+    },
+    subtitle: {
+      marginVertical: 20,
+    },
+    button: {
+      padding: 15,
+      borderRadius: theme.borderRadius.full,
+      marginTop: 30,
+    },
+    scrollView: {
+      marginTop: 30,
+      width: '100%',
+      flexGrow: 0,
+    },
+    scrollContent: {
+      paddingBottom: 100,
+      alignItems: 'center',
+    },
+    card: {
+      width: '95%',
+      backgroundColor: theme.colors.card,
+      borderRadius: theme.borderRadius.md,
+      padding: 20,
+      marginBottom: 16,
+      shadowColor: theme.colors.shadow.color,
+      shadowOffset: theme.colors.shadow.offset,
+      shadowOpacity: theme.colors.shadow.opacity,
+      shadowRadius: theme.colors.shadow.radius,
+      elevation: 2,
+    },
+    cardText: {
+      color: theme.colors.text,
+      fontSize: theme.typography.body,
+      fontWeight: '500',
+    },
+  });
 
 export default HomeScreen;

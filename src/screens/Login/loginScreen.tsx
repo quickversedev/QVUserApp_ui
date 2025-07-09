@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -15,20 +15,14 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 
-import {useAuth} from '../../contexts/login/AuthProvider';
-import CountryPicker, {
-  Country,
-  CountryCode,
-} from 'react-native-country-picker-modal';
-import {LoginStackParamList} from '../../navigation/LoginNavigation';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {useNavigation} from '@react-navigation/native';
+import { useAuth } from '../../contexts/login/AuthProvider';
+import CountryPicker, { Country, CountryCode } from 'react-native-country-picker-modal';
+import { LoginStackParamList } from '../../navigation/LoginNavigation';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useNavigation } from '@react-navigation/native';
 
-const {height} = Dimensions.get('window');
-type LoginScreenNavigationProp = StackNavigationProp<
-  LoginStackParamList,
-  'LoginScreen'
->;
+const { height } = Dimensions.get('window');
+type LoginScreenNavigationProp = StackNavigationProp<LoginStackParamList, 'LoginScreen'>;
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const [countryCode, setCountryCode] = useState<CountryCode>('IN');
@@ -61,7 +55,7 @@ const LoginScreen: React.FC = () => {
 
     navigation.navigate({
       name: 'OTPScreen',
-      params: {phoneNumber, verificationId: 'abc'},
+      params: { phoneNumber, verificationId: 'abc' },
     });
     // Add login logic here
   };
@@ -70,31 +64,25 @@ const LoginScreen: React.FC = () => {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}>
+        style={styles.container}
+      >
         <ImageBackground
           source={require('../../assets/images/bg_1.png')}
           style={styles.topBackground}
           resizeMode="cover"
         />
         <View style={styles.logoContainer}>
-          <Image
-            style={styles.topLogo}
-            source={require('../../assets/images/logo_qv.png')}
-          />
+          <Image style={styles.topLogo} source={require('../../assets/images/logo_qv.png')} />
         </View>
 
         <View style={styles.card}>
           <Text style={styles.title}>Login</Text>
           <Text style={styles.subtitle}>Log In to your Quickverse account</Text>
 
-          <TouchableOpacity
-            style={styles.skipContainer}
-            onPress={handleSkipLogin}>
-            <Text style={{color: '#E5E7EB', fontSize: 14}}>Skip</Text>
+          <TouchableOpacity style={styles.skipContainer} onPress={handleSkipLogin}>
+            <Text style={{ color: '#E5E7EB', fontSize: 14 }}>Skip</Text>
           </TouchableOpacity>
-          <Text style={{color: '#9CA3AF', marginTop: 36, marginBottom: 10}}>
-            Phone number
-          </Text>
+          <Text style={{ color: '#9CA3AF', marginTop: 36, marginBottom: 10 }}>Phone number</Text>
           <View style={styles.phoneInputWrapper}>
             <CountryPicker
               withCallingCode
@@ -117,10 +105,7 @@ const LoginScreen: React.FC = () => {
             />
           </View>
 
-          <TouchableOpacity
-            style={styles.otpButton}
-            onPress={handleLogin}
-            disabled={loading}>
+          <TouchableOpacity style={styles.otpButton} onPress={handleLogin} disabled={loading}>
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
@@ -169,7 +154,7 @@ const styles = StyleSheet.create({
     padding: 24,
     marginTop: height * 0.24,
     shadowColor: '#FAE588',
-    shadowOffset: {width: 0, height: 5},
+    shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.15,
     shadowRadius: 10,
     elevation: 6,

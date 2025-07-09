@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useState,
-  useContext,
-  useEffect,
-  ReactNode,
-} from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import {
   getAuthToken,
   getNewUser,
@@ -14,7 +8,7 @@ import {
   setSkipLoginFlow,
   StorageService,
 } from '../../services/localStorage/storage.service';
-import {authService} from '../../services/api/authService';
+import { authService } from '../../services/api/authService';
 
 type AuthContextData = {
   authData?: string;
@@ -23,18 +17,9 @@ type AuthContextData = {
   isNewUser: boolean | undefined;
   setSkipLogin: (skipLogin: boolean) => void;
   sendOtp(phoneNumber: string): Promise<string>;
-  verifyOtp(
-    phoneNumber: string,
-    otp: string,
-    verificationId: string,
-  ): Promise<void>;
+  verifyOtp(phoneNumber: string, otp: string, verificationId: string): Promise<void>;
   signOut(): void;
-  signUp(
-    fullName: string,
-    campusId: string,
-    email: string,
-    dob: string,
-  ): Promise<void>;
+  signUp(fullName: string, campusId: string, email: string, dob: string): Promise<void>;
   setAuthData(token: string): void;
 };
 
@@ -44,13 +29,11 @@ type AuthProviderProps = {
   children: ReactNode;
 };
 
-const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
+const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [authData, setAuthData] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState<boolean | undefined>();
-  const [skipUserLogin, setSkipUserLogin] = useState<boolean | undefined>(
-    false,
-  );
+  const [skipUserLogin, setSkipUserLogin] = useState<boolean | undefined>(false);
 
   useEffect(() => {
     const loadStorageData = async () => {
@@ -97,15 +80,11 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
   const verifyOtp = async (
     phoneNumber: string,
     otp: string,
-    verificationId: string,
+    verificationId: string
   ): Promise<void> => {
-    const response = await authService.verifyOtp(
-      phoneNumber,
-      otp,
-      verificationId,
-    );
+    const response = await authService.verifyOtp(phoneNumber, otp, verificationId);
     // const token = response?.session?.token;
-    const {token, newUser} = response?.session;
+    const { token, newUser } = response?.session;
 
     if (token) {
       setAuth(token);
@@ -117,7 +96,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     fullName: string,
     campusId: string,
     email: string,
-    dob: string,
+    dob: string
   ): Promise<void> => {
     try {
       // const registration = await authService.signUp(
@@ -151,7 +130,8 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
         signOut,
         signUp,
         setAuthData,
-      }}>
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -165,4 +145,4 @@ function useAuth(): AuthContextData {
   return context;
 }
 
-export {AuthProvider, useAuth};
+export { AuthProvider, useAuth };

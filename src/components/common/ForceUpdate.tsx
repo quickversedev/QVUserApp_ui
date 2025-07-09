@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Image,
@@ -18,11 +18,9 @@ import DeviceInfo from 'react-native-device-info';
 import useFetchUpdateData from '../../hooks/useFetchUpdateData';
 import { useTheme, Theme } from '../../theme/ThemeContext';
 
-const {height, width} = Dimensions.get('window');
+const { height, width } = Dimensions.get('window');
 
-const ForceUpdateChecker: React.FC<{children: React.ReactNode}> = ({
-  children,
-}) => {
+const ForceUpdateChecker: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isUpdateRequired, setIsUpdateRequired] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const { theme } = useTheme();
@@ -33,7 +31,7 @@ const ForceUpdateChecker: React.FC<{children: React.ReactNode}> = ({
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
   // Use the custom hook to fetch update data
-  const {updateData, loading, error, retry} = useFetchUpdateData();
+  const { updateData, loading, error, retry } = useFetchUpdateData();
 
   console.log('update data ::::::', updateData);
 
@@ -77,10 +75,7 @@ const ForceUpdateChecker: React.FC<{children: React.ReactNode}> = ({
       console.log('Required version:', updateData?.min_required_version);
 
       // Compare versions
-      if (
-        updateData?.min_required_version &&
-        currentVersion < updateData.min_required_version
-      ) {
+      if (updateData?.min_required_version && currentVersion < updateData.min_required_version) {
         setIsUpdateRequired(true);
       } else {
         setIsUpdateRequired(false);
@@ -95,8 +90,7 @@ const ForceUpdateChecker: React.FC<{children: React.ReactNode}> = ({
 
   const handleUpdate = async () => {
     try {
-      const storeUrl =
-        Platform.OS === 'ios' ? updateData?.ios_url : updateData?.android_url;
+      const storeUrl = Platform.OS === 'ios' ? updateData?.ios_url : updateData?.android_url;
 
       if (!storeUrl) {
         Alert.alert('Error', 'Store URL not available');
@@ -167,7 +161,8 @@ const ForceUpdateChecker: React.FC<{children: React.ReactNode}> = ({
           {
             opacity: fadeAnim,
           },
-        ]}>
+        ]}
+      >
         <ImageBackground
           source={require('../../assets/images/bg_1.png')}
           style={getStyles(theme).topBackground}
@@ -185,17 +180,17 @@ const ForceUpdateChecker: React.FC<{children: React.ReactNode}> = ({
           style={[
             getStyles(theme).card,
             {
-              transform: [{translateY: slideAnim}, {scale: scaleAnim}],
+              transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
             },
-          ]}>
+          ]}
+        >
           <View style={getStyles(theme).updateIconContainer}>
             <Text style={getStyles(theme).updateIcon}>🔄</Text>
           </View>
 
           <Text style={getStyles(theme).title}>Update Required</Text>
           <Text style={getStyles(theme).subtitle}>
-            A new version of the app is available with important improvements
-            and bug fixes.
+            A new version of the app is available with important improvements and bug fixes.
           </Text>
 
           <View style={getStyles(theme).versionInfo}>
@@ -210,13 +205,12 @@ const ForceUpdateChecker: React.FC<{children: React.ReactNode}> = ({
           <TouchableOpacity
             style={getStyles(theme).updateButton}
             onPress={handleUpdate}
-            activeOpacity={0.8}>
+            activeOpacity={0.8}
+          >
             <Text style={getStyles(theme).updateButtonText}>Update Now</Text>
           </TouchableOpacity>
 
-          <Text style={getStyles(theme).updateNote}>
-            Please update to continue using the app
-          </Text>
+          <Text style={getStyles(theme).updateNote}>Please update to continue using the app</Text>
         </Animated.View>
       </Animated.View>
     );
@@ -227,166 +221,167 @@ const ForceUpdateChecker: React.FC<{children: React.ReactNode}> = ({
 
 export default ForceUpdateChecker;
 
-const getStyles = (theme: Theme) => StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  topBackground: {
-    height: height * 0.6,
-    width: '100%',
-    position: 'absolute',
-    top: -80,
-  },
-  logoContainer: {
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    top: 70,
-  },
-  topLogo: {
-    width: 90,
-    height: 90,
-    resizeMode: 'contain',
-  },
-  card: {
-    width: width * 0.9,
-    maxWidth: 400,
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.borderRadius.md,
-    padding: 32,
-    borderWidth: 1,
-    borderColor: theme.colors.borderHighlight,
-    shadowColor: theme.colors.shadow.color,
-    shadowOffset: theme.colors.shadow.offset,
-    shadowOpacity: theme.colors.shadow.opacity,
-    shadowRadius: theme.colors.shadow.radius,
-    elevation: 8,
-    alignItems: 'center',
-  },
-  updateIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: theme.colors.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  updateIcon: {
-    fontSize: 40,
-  },
-  title: {
-    fontSize: theme.typography.h1,
-    color: theme.colors.text,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  subtitle: {
-    textAlign: 'center',
-    color: theme.colors.subText,
-    fontSize: theme.typography.body,
-    lineHeight: 24,
-    marginBottom: 24,
-  },
-  versionInfo: {
-    backgroundColor: theme.colors.border,
-    borderRadius: theme.borderRadius.sm,
-    padding: 16,
-    marginBottom: 24,
-    width: '100%',
-  },
-  versionText: {
-    color: theme.colors.subText,
-    fontSize: theme.typography.caption,
-    textAlign: 'center',
-    marginVertical: 2,
-  },
-  updateButton: {
-    backgroundColor: theme.colors.secondary,
-    borderRadius: theme.borderRadius.sm,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    width: '100%',
-    marginBottom: 16,
-    shadowColor: theme.colors.shadow.color,
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  updateButtonText: {
-    fontSize: theme.typography.body,
-    color: theme.colors.background,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  updateNote: {
-    color: theme.colors.subText,
-    fontSize: theme.typography.caption,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-  // Loading styles
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  loadingLogo: {
-    width: 120,
-    height: 120,
-    resizeMode: 'contain',
-    marginBottom: 32,
-  },
-  spinner: {
-    marginBottom: 16,
-  },
-  loadingText: {
-    color: theme.colors.subText,
-    fontSize: theme.typography.body,
-  },
-  // Error styles
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-    padding: 24,
-  },
-  errorLogo: {
-    width: 100,
-    height: 100,
-    resizeMode: 'contain',
-    marginBottom: 32,
-  },
-  errorTitle: {
-    fontSize: theme.typography.h2,
-    color: theme.colors.text,
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  errorText: {
-    fontSize: theme.typography.body,
-    color: theme.colors.subText,
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 24,
-  },
-  retryButton: {
-    backgroundColor: theme.colors.secondary,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: theme.borderRadius.sm,
-  },
-  retryButtonText: {
-    color: theme.colors.background,
-    fontSize: theme.typography.body,
-    fontWeight: 'bold',
-  },
-});
+const getStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    topBackground: {
+      height: height * 0.6,
+      width: '100%',
+      position: 'absolute',
+      top: -80,
+    },
+    logoContainer: {
+      width: '100%',
+      justifyContent: 'center',
+      alignItems: 'center',
+      position: 'absolute',
+      top: 70,
+    },
+    topLogo: {
+      width: 90,
+      height: 90,
+      resizeMode: 'contain',
+    },
+    card: {
+      width: width * 0.9,
+      maxWidth: 400,
+      backgroundColor: theme.colors.card,
+      borderRadius: theme.borderRadius.md,
+      padding: 32,
+      borderWidth: 1,
+      borderColor: theme.colors.borderHighlight,
+      shadowColor: theme.colors.shadow.color,
+      shadowOffset: theme.colors.shadow.offset,
+      shadowOpacity: theme.colors.shadow.opacity,
+      shadowRadius: theme.colors.shadow.radius,
+      elevation: 8,
+      alignItems: 'center',
+    },
+    updateIconContainer: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: theme.colors.secondary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 24,
+    },
+    updateIcon: {
+      fontSize: 40,
+    },
+    title: {
+      fontSize: theme.typography.h1,
+      color: theme.colors.text,
+      fontWeight: 'bold',
+      textAlign: 'center',
+      marginBottom: 12,
+    },
+    subtitle: {
+      textAlign: 'center',
+      color: theme.colors.subText,
+      fontSize: theme.typography.body,
+      lineHeight: 24,
+      marginBottom: 24,
+    },
+    versionInfo: {
+      backgroundColor: theme.colors.border,
+      borderRadius: theme.borderRadius.sm,
+      padding: 16,
+      marginBottom: 24,
+      width: '100%',
+    },
+    versionText: {
+      color: theme.colors.subText,
+      fontSize: theme.typography.caption,
+      textAlign: 'center',
+      marginVertical: 2,
+    },
+    updateButton: {
+      backgroundColor: theme.colors.secondary,
+      borderRadius: theme.borderRadius.sm,
+      paddingVertical: 16,
+      paddingHorizontal: 32,
+      width: '100%',
+      marginBottom: 16,
+      shadowColor: theme.colors.shadow.color,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    updateButtonText: {
+      fontSize: theme.typography.body,
+      color: theme.colors.background,
+      textAlign: 'center',
+      fontWeight: 'bold',
+    },
+    updateNote: {
+      color: theme.colors.subText,
+      fontSize: theme.typography.caption,
+      textAlign: 'center',
+      fontStyle: 'italic',
+    },
+    // Loading styles
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    loadingLogo: {
+      width: 120,
+      height: 120,
+      resizeMode: 'contain',
+      marginBottom: 32,
+    },
+    spinner: {
+      marginBottom: 16,
+    },
+    loadingText: {
+      color: theme.colors.subText,
+      fontSize: theme.typography.body,
+    },
+    // Error styles
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+      padding: 24,
+    },
+    errorLogo: {
+      width: 100,
+      height: 100,
+      resizeMode: 'contain',
+      marginBottom: 32,
+    },
+    errorTitle: {
+      fontSize: theme.typography.h2,
+      color: theme.colors.text,
+      fontWeight: 'bold',
+      marginBottom: 12,
+    },
+    errorText: {
+      fontSize: theme.typography.body,
+      color: theme.colors.subText,
+      textAlign: 'center',
+      marginBottom: 24,
+      lineHeight: 24,
+    },
+    retryButton: {
+      backgroundColor: theme.colors.secondary,
+      paddingVertical: 12,
+      paddingHorizontal: 24,
+      borderRadius: theme.borderRadius.sm,
+    },
+    retryButtonText: {
+      color: theme.colors.background,
+      fontSize: theme.typography.body,
+      fontWeight: 'bold',
+    },
+  });

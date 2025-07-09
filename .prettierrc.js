@@ -1,7 +1,26 @@
 module.exports = {
+  // Bracket Spacing
+  bracketSpacing: true,
+  bracketSameLine: false,
   arrowParens: 'avoid',
-  bracketSameLine: true,
-  bracketSpacing: false,
+
+  // Quotes and Commas
   singleQuote: true,
-  trailingComma: 'all',
+  quoteProps: 'as-needed',
+  trailingComma: 'es5',
+
+  // Whitespace
+  tabWidth: 2,
+  useTabs: false,
+  semi: true,
+
+  // JSX
+  jsxSingleQuote: false,
+
+  // Line Length
+  printWidth: 100,
+
+  // Special Cases
+  endOfLine: 'auto',
+  embeddedLanguageFormatting: 'auto',
 };

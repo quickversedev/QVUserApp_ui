@@ -14,17 +14,14 @@ import {
 } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
-const {height} = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
 interface PermissionsScreenProps {
   onRequestPermission: () => void;
   onSkip: () => void;
 }
 
-const PermissionsScreen: React.FC<PermissionsScreenProps> = ({
-  onRequestPermission,
-  onSkip,
-}) => {
+const PermissionsScreen: React.FC<PermissionsScreenProps> = ({ onRequestPermission, onSkip }) => {
   const { theme } = useTheme();
   const styles = StyleSheet.create({
     safeArea: {
@@ -154,26 +151,22 @@ const PermissionsScreen: React.FC<PermissionsScreenProps> = ({
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}>
+        style={styles.container}
+      >
         <ImageBackground
           source={require('../../assets/images/bg_1.png')}
           style={styles.topBackground}
           resizeMode="cover"
         />
         <View style={styles.logoContainer}>
-          <Image
-            style={styles.topLogo}
-            source={require('../../assets/images/logo_qv.png')}
-          />
+          <Image style={styles.topLogo} source={require('../../assets/images/logo_qv.png')} />
         </View>
         <View style={styles.card}>
           <TouchableOpacity style={styles.skipContainer} onPress={onSkip}>
-            <Text style={{color: '#E5E7EB', fontSize: 14}}>Skip</Text>
+            <Text style={{ color: '#E5E7EB', fontSize: 14 }}>Skip</Text>
           </TouchableOpacity>
           <Text style={styles.title}>Allow Permissions</Text>
-          <Text style={styles.subtitle}>
-            We need access to give you the{"\n"}best experience.
-          </Text>
+          <Text style={styles.subtitle}>We need access to give you the{'\n'}best experience.</Text>
           <View style={styles.permissionCard}>
             <View style={styles.iconContainer}>
               <Text style={styles.icon}>🔔</Text>
@@ -192,9 +185,7 @@ const PermissionsScreen: React.FC<PermissionsScreenProps> = ({
               <Text style={styles.permissionDesc}>Serve you better, wherever you are.</Text>
             </View>
           </View>
-          <TouchableOpacity
-            style={styles.permissionButton}
-            onPress={onRequestPermission}>
+          <TouchableOpacity style={styles.permissionButton} onPress={onRequestPermission}>
             <Text style={styles.permissionButtonText}>Allow Permissions</Text>
           </TouchableOpacity>
         </View>

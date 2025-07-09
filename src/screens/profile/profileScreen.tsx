@@ -1,11 +1,11 @@
 import React from 'react';
-import {View, StyleSheet, TouchableOpacity, Text, Alert} from 'react-native';
-import {useAuth} from '../../contexts/login/AuthProvider';
-import {useTheme} from '../../theme/ThemeContext';
+import { View, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
+import { useAuth } from '../../contexts/login/AuthProvider';
+import { useTheme } from '../../theme/ThemeContext';
 
 const HomeScreen = () => {
   const auth = useAuth();
-  const {theme} = useTheme();
+  const { theme } = useTheme();
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -77,7 +77,7 @@ const HomeScreen = () => {
           onPress: () => auth.signOut(),
         },
       ],
-      {cancelable: false},
+      { cancelable: false }
     );
   };
   return (
