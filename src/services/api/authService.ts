@@ -56,7 +56,7 @@ const sendOtp = async (phoneNumber: string): Promise<any> => {
 const verifyOtp = async (
   phoneNumber: string,
   otp: string,
-  verificationId: string,
+  verificationId: string
 ): Promise<AuthData> => {
   //   *********************mock****************
   console.log('response: Inside verify otp', otp, verificationId);
@@ -129,7 +129,7 @@ const signUp = async (
   fullName: string,
   dob: string,
   campusId: string,
-  email: string,
+  email: string
 ): Promise<any> => {
   // return new Promise(resolve => {
   //   setTimeout(() => {
@@ -152,19 +152,16 @@ const signUp = async (
         headers: {
           SessionKey: 'token',
         },
-      },
+      }
     )
     .then(response => {
       return response;
     })
     .catch(error => {
-      const {code} = error.response.data.error;
+      const { code } = error.response.data.error;
       if (error.response) {
         // The request was made and the server responded with a status code
-        console.log(
-          'Server responded with non-2xx status:',
-          error.response.status,
-        );
+        console.log('Server responded with non-2xx status:', error.response.status);
         console.log('Response data:', error.response.data);
       } else if (error.request) {
         // The request was made but no response was received
@@ -199,10 +196,7 @@ const signOut = async () => {
     .catch(error => {
       if (error.response) {
         // The request was made and the server responded with a status code
-        console.log(
-          'Server responded with non-2xx status:',
-          error.response.status,
-        );
+        console.log('Server responded with non-2xx status:', error.response.status);
         console.log('Response data:', error.response.data);
       } else if (error.request) {
         // The request was made but no response was received

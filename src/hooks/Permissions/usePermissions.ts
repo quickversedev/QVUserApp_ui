@@ -1,5 +1,5 @@
-import {useEffect, useState} from 'react';
-import {Alert, AppState, Platform} from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, AppState, Platform } from 'react-native';
 import {
   check,
   request,
@@ -9,10 +9,7 @@ import {
   PermissionStatus,
 } from 'react-native-permissions';
 import Geolocation from 'react-native-geolocation-service';
-import {
-  getSkipPermission,
-  setSkipPermissions,
-} from '../../services/localStorage/storage.service';
+import { getSkipPermission, setSkipPermissions } from '../../services/localStorage/storage.service';
 
 type Location = {
   latitude: number | null;
@@ -21,9 +18,7 @@ type Location = {
 };
 
 export const useLocationPermission = () => {
-  const [permissionStatus, setPermissionStatus] = useState<PermissionStatus>(
-    RESULTS.UNAVAILABLE,
-  );
+  const [permissionStatus, setPermissionStatus] = useState<PermissionStatus>(RESULTS.UNAVAILABLE);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [location, setLocation] = useState<Location>({
     latitude: null,
@@ -86,7 +81,7 @@ export const useLocationPermission = () => {
         enableHighAccuracy: true,
         timeout: 15000,
         maximumAge: 10000,
-      },
+      }
     );
   };
 
@@ -124,10 +119,9 @@ export const useLocationPermission = () => {
         },
         {
           text: 'Open Settings',
-          onPress: () =>
-            openSettings().catch(() => console.warn('Cannot open settings')),
+          onPress: () => openSettings().catch(() => console.warn('Cannot open settings')),
         },
-      ],
+      ]
     );
   };
 

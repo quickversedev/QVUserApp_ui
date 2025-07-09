@@ -1,5 +1,5 @@
 // src/hooks/useFetchUpdateData.js
-import {useState, useEffect} from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import globalConfig from '../utils/global/globalConfig';
 
@@ -19,14 +19,11 @@ const useFetchUpdateData = () => {
     setError(null);
 
     try {
-      const response = await axios.get(
-        `${globalConfig.apiBaseUrl}/v1/initialConfig`,
-        {
-          headers: {
-            Authorization: 'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx',
-          },
+      const response = await axios.get(`${globalConfig.apiBaseUrl}/v1/initialConfig`, {
+        headers: {
+          Authorization: 'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx',
         },
-      ); // Replace with your API endpoint
+      }); // Replace with your API endpoint
       // const response = {
       //   data: {
       //     minVersion: '1',
@@ -57,7 +54,7 @@ const useFetchUpdateData = () => {
     fetchUpdateData();
   }, [retryCount]); // Refetch data when retryCount changes
 
-  return {updateData, loading, error, retry};
+  return { updateData, loading, error, retry };
 };
 
 export default useFetchUpdateData;

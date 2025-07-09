@@ -1,34 +1,31 @@
-import React, {useState} from 'react';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
   ActivityIndicator,
   Dimensions,
-  ImageBackground,
   Image,
+  ImageBackground,
+  Keyboard,
+  KeyboardAvoidingView,
   Platform,
   SafeAreaView,
   ScrollView,
-  KeyboardAvoidingView,
-  Keyboard,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
   TouchableWithoutFeedback,
+  View,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import {useAuth} from '../../contexts/login/AuthProvider';
-import {LoginStackParamList} from '../../navigation/LoginNavigation';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {useNavigation} from '@react-navigation/native';
-import {useTheme} from '../../theme/ThemeContext';
+import { useAuth } from '../../contexts/login/AuthProvider';
+import { LoginStackParamList } from '../../navigation/LoginNavigation';
+import { useTheme } from '../../theme/ThemeContext';
 
-const {height} = Dimensions.get('window');
-type LoginScreenNavigationProp = StackNavigationProp<
-  LoginStackParamList,
-  'LoginScreen'
->;
+const { height } = Dimensions.get('window');
+type LoginScreenNavigationProp = StackNavigationProp<LoginStackParamList, 'LoginScreen'>;
 
 const Registration: React.FC = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
@@ -46,7 +43,7 @@ const Registration: React.FC = () => {
   });
 
   const auth = useAuth();
-  const {theme} = useTheme();
+  const { theme } = useTheme();
 
   const handleSkipLogin = () => {
     auth.setSkipLogin(true);
@@ -62,7 +59,7 @@ const Registration: React.FC = () => {
 
     if (event.type === 'set' || event.type === 'dismissed') {
       setDateOfBirth(currentDate);
-      setErrors(prev => ({...prev, dateOfBirth: ''}));
+      setErrors(prev => ({ ...prev, dateOfBirth: '' }));
     }
   };
 
@@ -132,10 +129,7 @@ const Registration: React.FC = () => {
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
 
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
 
@@ -291,13 +285,19 @@ const Registration: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar
+        backgroundColor={theme.colors.background}
+        barStyle="light-content"
+      />
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
         <TouchableWithoutFeedback onPress={dismissKeyboard}>
           <ScrollView
             contentContainerStyle={styles.scrollContainer}
-            keyboardShouldPersistTaps="handled">
+            keyboardShouldPersistTaps="handled"
+          >
             <View style={styles.container}>
               <ImageBackground
                 source={require('../../assets/images/bg_1.png')}
@@ -305,22 +305,15 @@ const Registration: React.FC = () => {
                 resizeMode="cover"
               />
               <View style={styles.logoContainer}>
-                <Image
-                  style={styles.topLogo}
-                  source={require('../../assets/images/logo_qv.png')}
-                />
+                <Image style={styles.topLogo} source={require('../../assets/images/logo_qv.png')} />
               </View>
 
               <View style={styles.card}>
                 <Text style={styles.title}>Register</Text>
-                <Text style={styles.subtitle}>
-                  Create your Quickverse account
-                </Text>
+                <Text style={styles.subtitle}>Create your Quickverse account</Text>
 
-                <TouchableOpacity
-                  style={styles.skipContainer}
-                  onPress={handleSkipLogin}>
-                  <Text style={{color: '#E5E7EB', fontSize: 14}}>Skip</Text>
+                <TouchableOpacity style={styles.skipContainer} onPress={handleSkipLogin}>
+                  <Text style={{ color: '#E5E7EB', fontSize: 14 }}>Skip</Text>
                 </TouchableOpacity>
 
                 <Text style={styles.label}>Full Name *</Text>
@@ -328,26 +321,21 @@ const Registration: React.FC = () => {
                   value={fullName}
                   onChangeText={text => {
                     setFullName(text);
-                    setErrors(prev => ({...prev, fullName: ''}));
+                    setErrors(prev => ({ ...prev, fullName: '' }));
                   }}
                   placeholder="Enter your full name"
-                  style={[
-                    styles.inputField,
-                    errors.fullName && styles.errorInput,
-                  ]}
+                  style={[styles.inputField, errors.fullName && styles.errorInput]}
                   placeholderTextColor="#9CA3AF"
                   returnKeyType="next"
                 />
-                {errors.fullName ? (
-                  <Text style={styles.errorText}>{errors.fullName}</Text>
-                ) : null}
+                {errors.fullName ? <Text style={styles.errorText}>{errors.fullName}</Text> : null}
 
                 <Text style={styles.label}>Email *</Text>
                 <TextInput
                   value={email}
                   onChangeText={text => {
                     setEmail(text);
-                    setErrors(prev => ({...prev, email: ''}));
+                    setErrors(prev => ({ ...prev, email: '' }));
                   }}
                   placeholder="Enter your email"
                   keyboardType="email-address"
@@ -356,9 +344,7 @@ const Registration: React.FC = () => {
                   returnKeyType="next"
                   autoCapitalize="none"
                 />
-                {errors.email ? (
-                  <Text style={styles.errorText}>{errors.email}</Text>
-                ) : null}
+                {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
 
                 <Text style={styles.label}>Gender</Text>
                 <View style={styles.genderContainer}>
@@ -371,13 +357,12 @@ const Registration: React.FC = () => {
                       ]}
                       onPress={() => {
                         setGender(option);
-                        setErrors(prev => ({...prev, gender: ''}));
-                      }}>
+                        setErrors(prev => ({ ...prev, gender: '' }));
+                      }}
+                    >
                       <Text
-                        style={[
-                          styles.genderText,
-                          gender === option && styles.genderTextSelected,
-                        ]}>
+                        style={[styles.genderText, gender === option && styles.genderTextSelected]}
+                      >
                         {option}
                       </Text>
                     </TouchableOpacity>
@@ -385,13 +370,9 @@ const Registration: React.FC = () => {
                 </View>
 
                 <Text style={styles.label}>Date of Birth</Text>
-                <TouchableOpacity
-                  style={styles.inputField}
-                  onPress={() => setShowDatePicker(true)}>
-                  <Text style={{color: dateOfBirth ? '#F3F4F6' : '#9CA3AF'}}>
-                    {dateOfBirth
-                      ? formatDate(dateOfBirth)
-                      : 'Select your date of birth'}
+                <TouchableOpacity style={styles.inputField} onPress={() => setShowDatePicker(true)}>
+                  <Text style={{ color: dateOfBirth ? '#F3F4F6' : '#9CA3AF' }}>
+                    {dateOfBirth ? formatDate(dateOfBirth) : 'Select your date of birth'}
                   </Text>
                 </TouchableOpacity>
                 {errors.dateOfBirth ? (
@@ -411,7 +392,8 @@ const Registration: React.FC = () => {
                 <TouchableOpacity
                   style={styles.registerButton}
                   onPress={handleRegister}
-                  disabled={loading}>
+                  disabled={loading}
+                >
                   {loading ? (
                     <ActivityIndicator color="#fff" />
                   ) : (

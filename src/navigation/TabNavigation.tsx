@@ -2,7 +2,7 @@ import React, { createContext, useRef } from 'react';
 import { Animated, View, StyleSheet } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/Home/HomeScreen';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import ProfileScreen from '../screens/profile/profileScreen';
@@ -53,17 +53,17 @@ const TabNavigation: React.FC = () => {
             name="Home"
             component={HomeScreen}
             options={{
-              tabBarIcon: ({color, size}) => (
+              tabBarIcon: ({ color, size }) => (
                 <MaterialCommunityIcons name="home-outline" color={color} size={30} />
               ),
             }}
           />
-          
+
           <Tab.Screen
             name="Dummy2"
             component={DummyScreen2}
             options={{
-              tabBarIcon: ({color, size}) => (
+              tabBarIcon: ({ color, size }) => (
                 <MaterialCommunityIcons name="heart-outline" color={color} size={28} />
               ),
             }}
@@ -72,21 +72,21 @@ const TabNavigation: React.FC = () => {
             name="Dummy3"
             component={DummyScreen3}
             options={{
-              tabBarIcon: ({color, size}) => (
+              tabBarIcon: ({ color, size }) => (
                 <MaterialCommunityIcons name="earth" color={color} size={28} />
               ),
             }}
           />
           <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          tabBarLabel: 'Settings',
-          tabBarIcon: ({color, size}) => (
-            <MaterialCommunityIcons name="cog" color={color} size={size} />
-          ),
-        }}
-      />
+            name="Profile"
+            component={ProfileScreen}
+            options={{
+              tabBarLabel: 'Settings',
+              tabBarIcon: ({ color, size }) => (
+                <MaterialCommunityIcons name="cog" color={color} size={size} />
+              ),
+            }}
+          />
         </Tab.Navigator>
       </View>
     </TabBarVisibilityContext.Provider>

@@ -24,4 +24,4 @@ const DummyScreen2 = () => {
   );
 };
 
-export default DummyScreen2; 
+export default DummyScreen2;

@@ -30,7 +30,7 @@ export type Colors = {
   background: string;
   tabBackground: string;
   card: string;
-  error: string,
+  error: string;
   border: string;
   overlay: string;
   white: string;
@@ -71,13 +71,8 @@ type ThemeContextType = {
   isLoading: boolean;
   error: Error | null;
   getColor: <T extends keyof Colors>(colorKey: T) => Colors[T];
-  getButtonColor: (
-    state: keyof ButtonColors,
-    element: 'background' | 'text',
-  ) => string;
-  getTypography: (
-    type: keyof Omit<Typography, 'fontFamily' | 'lineHeightMultiplier'>,
-  ) => number;
+  getButtonColor: (state: keyof ButtonColors, element: 'background' | 'text') => string;
+  getTypography: (type: keyof Omit<Typography, 'fontFamily' | 'lineHeightMultiplier'>) => number;
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -112,8 +107,7 @@ const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   const validateTheme = (apiTheme: any): Theme => {
     // Basic validation - expand according to your API contract
-    const isValid =
-      apiTheme?.colors?.button?.default?.background && apiTheme?.typography?.h1;
+    const isValid = apiTheme?.colors?.button?.default?.background && apiTheme?.typography?.h1;
 
     return isValid ? apiTheme : DefaultTheme;
   };
@@ -123,19 +117,13 @@ const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   };
 
   const getTypography = (
-    type: keyof Omit<Typography, 'fontFamily' | 'lineHeightMultiplier'>,
+    type: keyof Omit<Typography, 'fontFamily' | 'lineHeightMultiplier'>
   ): number => {
     return theme.typography[type] || DefaultTheme.typography[type];
   };
 
-  const getButtonColor = (
-    state: keyof ButtonColors,
-    element: 'background' | 'text',
-  ): string => {
-    return (
-      theme.colors.button[state][element] ||
-      DefaultTheme.colors.button[state][element]
-    );
+  const getButtonColor = (state: keyof ButtonColors, element: 'background' | 'text'): string => {
+    return theme.colors.button[state][element] || DefaultTheme.colors.button[state][element];
   };
 
   return (
@@ -147,7 +135,8 @@ const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         getColor,
         getTypography,
         getButtonColor,
-      }}>
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );

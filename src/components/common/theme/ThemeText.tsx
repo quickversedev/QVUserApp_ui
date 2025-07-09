@@ -1,6 +1,6 @@
 import React from 'react';
-import {Text, StyleSheet} from 'react-native';
-import {useTheme} from '../../../theme/ThemeContext';
+import { Text, StyleSheet } from 'react-native';
+import { useTheme } from '../../../theme/ThemeContext';
 
 type Props = {
   type?: 'h1' | 'h2' | 'subtitle' | 'body' | 'caption';
@@ -9,13 +9,8 @@ type Props = {
   children: React.ReactNode;
 };
 
-const ThemedText: React.FC<Props> = ({
-  type = 'body',
-  color = 'text',
-  style,
-  children,
-}) => {
-  const {getColor, getTypography} = useTheme();
+const ThemedText: React.FC<Props> = ({ type = 'body', color = 'text', style, children }) => {
+  const { getColor, getTypography } = useTheme();
 
   return (
     <Text
@@ -28,7 +23,8 @@ const ThemedText: React.FC<Props> = ({
           lineHeight: getTypography(type) * 1.4,
         },
         style,
-      ]}>
+      ]}
+    >
       {children}
     </Text>
   );

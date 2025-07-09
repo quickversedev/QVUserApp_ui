@@ -1,97 +1,213 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# QV User App UI
 
-# Getting Started
+A React Native application with TypeScript, ESLint, and Prettier configuration for consistent code quality.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## 🚀 Getting Started
 
-## Step 1: Start Metro
+### Prerequisites
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+- Node.js (v14 or newer)
+- npm or yarn
+- React Native CLI
+- Android Studio (for Android development)
+- Xcode (for iOS development, macOS only)
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+### Installation
 
-```sh
-# Using npm
+1. Clone the repository:
+
+```bash
+git clone <repository-url>
+cd qvuserapp_ui
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Install iOS dependencies (macOS only):
+
+```bash
+cd ios
+pod install
+cd ..
+```
+
+### Development Dependencies
+
+Install the development dependencies for code quality tools:
+
+```bash
+npm install --save-dev @typescript-eslint/eslint-plugin @typescript-eslint/parser \
+  eslint eslint-config-prettier eslint-plugin-import eslint-plugin-react \
+  eslint-plugin-react-hooks eslint-plugin-react-native prettier
+```
+
+## 🏃‍♂️ Running the Application
+
+### Start Metro Bundler:
+
+```bash
 npm start
-
-# OR using Yarn
+# or
 yarn start
 ```
 
-## Step 2: Build and run your app
+### Run on Android:
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
+```bash
 npm run android
-
-# OR using Yarn
+# or
 yarn android
 ```
 
-### iOS
+### Run on iOS (macOS only):
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
+```bash
 npm run ios
-
-# OR using Yarn
+# or
 yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+## 📝 Code Quality Tools
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+### ESLint and Prettier
 
-## Step 3: Modify your app
+The project uses ESLint for code quality and Prettier for code formatting. Configuration files are:
 
-Now that you have successfully run the app, let's make changes!
+- `.eslintrc.js` - ESLint configuration
+- `.prettierrc.js` - Prettier configuration
+- `.vscode/settings.json` - VS Code editor settings
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+### Available Scripts
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+```bash
+# Lint code
+npm run lint
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+# Lint and automatically fix issues
+npm run lint:fix
 
-## Congratulations! :tada:
+# Format code with Prettier
+npm run format
 
-You've successfully run and modified your React Native App. :partying_face:
+# Check code formatting
+npm run format:check
 
-### Now what?
+# Type checking
+npm run typecheck
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+# Run all checks (lint, format, type)
+npm run validate
+```
 
-# Troubleshooting
+Add these scripts to your `package.json`:
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+```json
+{
+  "scripts": {
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "start": "react-native start",
+    "test": "jest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "typecheck": "tsc --noEmit",
+    "validate": "npm run lint && npm run format:check && npm run typecheck",
+    "prepare": "husky install"
+  }
+}
+```
 
-# Learn More
+## 🔧 VS Code Configuration
 
-To learn more about React Native, take a look at the following resources:
+1. Install recommended extensions:
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+   - ESLint
+   - Prettier
+   - TypeScript and JavaScript Language Features
+
+2. The project includes VS Code settings for:
+   - Format on Save
+   - ESLint auto-fix on save
+   - TypeScript settings
+   - File handling rules
+
+## 📁 Project Structure
+
+```
+qvuserapp_ui/
+├── src/
+│   ├── assets/         # Static assets
+│   ├── components/     # Reusable components
+│   ├── contexts/       # React Context providers
+│   ├── hooks/         # Custom React hooks
+│   ├── navigation/    # Navigation configuration
+│   ├── screens/       # Screen components
+│   ├── services/      # API and other services
+│   ├── theme/         # Theme configuration
+│   └── utils/         # Utility functions
+├── .eslintrc.js       # ESLint configuration
+├── .prettierrc.js     # Prettier configuration
+├── tsconfig.json      # TypeScript configuration
+└── package.json       # Project dependencies
+```
+
+## 🔍 Code Quality Features
+
+- **TypeScript Support**: Strict type checking enabled
+- **ESLint Rules**:
+  - React & React Native best practices
+  - Import/Export organization
+  - TypeScript-specific rules
+  - Code style enforcement
+- **Prettier Configuration**:
+  - Consistent code formatting
+  - Line length limits
+  - JSX formatting rules
+- **VS Code Integration**:
+  - Format on save
+  - Error highlighting
+  - Quick fixes
+  - Import organization
+
+## 🤝 Contributing
+
+1. Branch naming convention:
+
+   - Feature: `feature/feature-name`
+   - Bugfix: `bugfix/bug-name`
+   - Hotfix: `hotfix/fix-name`
+
+2. Commit message format:
+
+   ```
+   type(scope): description
+
+   [optional body]
+   [optional footer]
+   ```
+
+   Types: feat, fix, docs, style, refactor, test, chore
+
+3. Before submitting a PR:
+   ```bash
+   npm run validate
+   ```
+
+## 📚 Additional Resources
+
+- [React Native Documentation](https://reactnative.dev/)
+- [TypeScript Documentation](https://www.typescriptlang.org/)
+- [ESLint Rules](https://eslint.org/docs/rules/)
+- [Prettier Options](https://prettier.io/docs/en/options.html)
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
