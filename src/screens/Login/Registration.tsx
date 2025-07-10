@@ -45,10 +45,6 @@ const Registration: React.FC = () => {
   const auth = useAuth();
   const { theme } = useTheme();
 
-  const handleSkipLogin = () => {
-    auth.setSkipLogin(true);
-  };
-
   const handleDateChange = (event: any, selectedDate?: Date) => {
     const currentDate = selectedDate || dateOfBirth;
 
@@ -168,7 +164,6 @@ const Registration: React.FC = () => {
       height: height * 0.55,
       width: '100%',
       position: 'absolute',
-      top: Platform.OS === 'ios' ? 60 : 80,
     },
     logoContainer: {
       position: 'absolute',
@@ -209,16 +204,7 @@ const Registration: React.FC = () => {
       marginTop: 5,
       marginBottom: 20,
     },
-    skipContainer: {
-      position: 'absolute',
-      top: 12,
-      right: 12,
-      backgroundColor: theme.colors.overlay,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: theme.borderRadius.full,
-      elevation: 2,
-    },
+
     label: {
       color: theme.colors.subText,
       fontSize: theme.typography.caption,
@@ -285,10 +271,7 @@ const Registration: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar
-        backgroundColor={theme.colors.background}
-        barStyle="light-content"
-      />
+      <StatusBar backgroundColor={theme.colors.background} barStyle="light-content" />
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -311,10 +294,6 @@ const Registration: React.FC = () => {
               <View style={styles.card}>
                 <Text style={styles.title}>Register</Text>
                 <Text style={styles.subtitle}>Create your Quickverse account</Text>
-
-                <TouchableOpacity style={styles.skipContainer} onPress={handleSkipLogin}>
-                  <Text style={{ color: '#E5E7EB', fontSize: 14 }}>Skip</Text>
-                </TouchableOpacity>
 
                 <Text style={styles.label}>Full Name *</Text>
                 <TextInput
