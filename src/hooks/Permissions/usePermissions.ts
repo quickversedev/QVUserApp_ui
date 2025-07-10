@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Alert, AppState, Platform } from 'react-native';
+import Geolocation from 'react-native-geolocation-service';
 import {
   check,
-  request,
   openSettings,
   PERMISSIONS,
-  RESULTS,
   PermissionStatus,
+  request,
+  RESULTS,
 } from 'react-native-permissions';
-import Geolocation from 'react-native-geolocation-service';
 import { getSkipPermission, setSkipPermissions } from '../../services/localStorage/storage.service';
 
 type Location = {
@@ -33,12 +33,15 @@ export const useLocationPermission = () => {
       : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION;
 
   const checkLocationPermission = async () => {
-    if (hasSkippedLocation) return RESULTS.DENIED;
-
     setIsLoading(true);
     try {
       const result = await check(locationPermission);
       setPermissionStatus(result);
+      // Reset hasSkippedLocation if permission is granted
+      if (result === RESULTS.GRANTED) {
+        setHasSkippedLocation(false);
+        setSkipPermissions(false);
+      }
       return result;
     } catch (error) {
       console.error('Error checking location permission:', error);

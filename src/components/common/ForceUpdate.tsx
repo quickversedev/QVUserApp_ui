@@ -1,22 +1,22 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Image,
-  Text,
-  StyleSheet,
-  ImageBackground,
-  TouchableOpacity,
-  Dimensions,
-  Platform,
-  Linking,
   ActivityIndicator,
-  Animated,
   Alert,
+  Animated,
+  Dimensions,
+  Image,
+  ImageBackground,
+  Linking,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import DeviceInfo from 'react-native-device-info';
 import useFetchUpdateData from '../../hooks/useFetchUpdateData';
-import { useTheme, Theme } from '../../theme/ThemeContext';
+import { Theme, useTheme } from '../../theme/ThemeContext';
 
 const { height, width } = Dimensions.get('window');
 
@@ -33,10 +33,17 @@ const ForceUpdateChecker: React.FC<{ children: React.ReactNode }> = ({ children 
   // Use the custom hook to fetch update data
   const { updateData, loading, error, retry } = useFetchUpdateData();
 
-  console.log('update data ::::::', updateData);
+  // Mounted ref to prevent state updates after unmount
+  const isMounted = useRef(true);
 
   useEffect(() => {
-    if (!loading && !error) {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!loading && !error && updateData) {
       checkForUpdate();
     }
   }, [loading, error, updateData]);
@@ -44,7 +51,7 @@ const ForceUpdateChecker: React.FC<{ children: React.ReactNode }> = ({ children 
   // Animate in when update is required
   useEffect(() => {
     if (isUpdateRequired) {
-      Animated.parallel([
+      const animations = [
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 500,
@@ -62,29 +69,58 @@ const ForceUpdateChecker: React.FC<{ children: React.ReactNode }> = ({ children 
           friction: 8,
           useNativeDriver: true,
         }),
-      ]).start();
+      ];
+
+      Animated.parallel(animations).start();
+
+      return () => {
+        // Clean up animations
+        animations.forEach(anim => anim.stop());
+      };
     }
   }, [isUpdateRequired, fadeAnim, slideAnim, scaleAnim]);
 
+  const compareVersions = (currentVersion: string, requiredVersion: string): boolean => {
+    const current = currentVersion.split('.').map(Number);
+    const required = requiredVersion.split('.').map(Number);
+
+    for (let i = 0; i < Math.max(current.length, required.length); i++) {
+      const currentPart = current[i] || 0;
+      const requiredPart = required[i] || 0;
+
+      if (currentPart < requiredPart) return true;
+      if (currentPart > requiredPart) return false;
+    }
+
+    return false;
+  };
+
   const checkForUpdate = async () => {
+    if (!isMounted.current) return;
+
     try {
       setIsChecking(true);
       const currentVersion = DeviceInfo.getVersion();
 
-      console.log('Current version:', currentVersion);
-      console.log('Required version:', updateData?.min_required_version);
-
-      // Compare versions
-      if (updateData?.min_required_version && currentVersion < updateData.min_required_version) {
-        setIsUpdateRequired(true);
-      } else {
+      if (!updateData?.min_required_version) {
         setIsUpdateRequired(false);
+        return;
+      }
+
+      const needsUpdate = compareVersions(currentVersion, updateData.min_required_version);
+
+      if (isMounted.current) {
+        setIsUpdateRequired(needsUpdate);
       }
     } catch (err) {
       console.error('Error checking for updates:', err);
-      Alert.alert('Error', 'Failed to check for updates. Please try again.');
+      if (isMounted.current) {
+        Alert.alert('Error', 'Failed to check for updates. Please try again.');
+      }
     } finally {
-      setIsChecking(false);
+      if (isMounted.current) {
+        setIsChecking(false);
+      }
     }
   };
 
@@ -106,17 +142,21 @@ const ForceUpdateChecker: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     } catch (error) {
       console.error('Error opening store:', error);
-      Alert.alert('Error', 'Failed to open store');
+      if (isMounted.current) {
+        Alert.alert('Error', 'Failed to open store');
+      }
     }
   };
 
   const handleRetry = () => {
-    retry();
+    if (!isMounted.current) return;
     setIsChecking(true);
+    retry();
   };
 
   // Loading state
   if (loading || isChecking) {
+    console.log('loading ::::::', loading, isChecking);
     return (
       <View style={getStyles(theme).loadingContainer}>
         <Image
@@ -153,7 +193,7 @@ const ForceUpdateChecker: React.FC<{ children: React.ReactNode }> = ({ children 
   }
 
   // Update required state
-  if (!isUpdateRequired) {
+  if (isUpdateRequired) {
     return (
       <Animated.View
         style={[

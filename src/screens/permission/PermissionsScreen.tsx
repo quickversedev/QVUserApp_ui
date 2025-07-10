@@ -1,28 +1,29 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
-  View,
-  Image,
-  Text,
-  StyleSheet,
-  ImageBackground,
-  TouchableOpacity,
+  ActivityIndicator,
   Dimensions,
-  SafeAreaView,
+  Image,
+  ImageBackground,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { useLocationPermission } from '../../hooks/Permissions/usePermissions';
 import { useTheme } from '../../theme/ThemeContext';
 
 const { height } = Dimensions.get('window');
 
 interface PermissionsScreenProps {
-  onRequestPermission: () => void;
-  onSkip: () => void;
+  onPermissionsComplete: () => void;
 }
 
-const PermissionsScreen: React.FC<PermissionsScreenProps> = ({ onRequestPermission, onSkip }) => {
+const PermissionsScreen: React.FC<PermissionsScreenProps> = ({ onPermissionsComplete }) => {
   const { theme } = useTheme();
+
   const styles = StyleSheet.create({
     safeArea: {
       flex: 1,
@@ -147,6 +148,37 @@ const PermissionsScreen: React.FC<PermissionsScreenProps> = ({ onRequestPermissi
     },
   });
 
+  const {
+    isLoading,
+    isGranted,
+    isDenied,
+    requestLocationPermission,
+    hasSkippedLocation,
+    skipLocationPermission,
+    getCurrentLocation,
+  } = useLocationPermission();
+
+  useEffect(() => {
+    if (!isLoading && !isDenied) {
+      getCurrentLocation();
+    }
+  }, [isDenied, hasSkippedLocation]);
+
+  useEffect(() => {
+    if (isGranted || hasSkippedLocation) {
+      onPermissionsComplete();
+    }
+  }, [isGranted, hasSkippedLocation, onPermissionsComplete]);
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center' }]}>
+        <ActivityIndicator size="large" color={theme.colors.secondary} />
+        <Text style={[styles.subtitle, { marginTop: 16 }]}>Checking permissions...</Text>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -162,7 +194,7 @@ const PermissionsScreen: React.FC<PermissionsScreenProps> = ({ onRequestPermissi
           <Image style={styles.topLogo} source={require('../../assets/images/logo_qv.png')} />
         </View>
         <View style={styles.card}>
-          <TouchableOpacity style={styles.skipContainer} onPress={onSkip}>
+          <TouchableOpacity style={styles.skipContainer} onPress={skipLocationPermission}>
             <Text style={{ color: '#E5E7EB', fontSize: 14 }}>Skip</Text>
           </TouchableOpacity>
           <Text style={styles.title}>Allow Permissions</Text>
@@ -185,7 +217,7 @@ const PermissionsScreen: React.FC<PermissionsScreenProps> = ({ onRequestPermissi
               <Text style={styles.permissionDesc}>Serve you better, wherever you are.</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.permissionButton} onPress={onRequestPermission}>
+          <TouchableOpacity style={styles.permissionButton} onPress={requestLocationPermission}>
             <Text style={styles.permissionButtonText}>Allow Permissions</Text>
           </TouchableOpacity>
         </View>

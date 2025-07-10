@@ -7,6 +7,7 @@ const AUTH_DATA_KEY = '@AuthData';
 const NEW_USER_key = '@NewUser';
 const SKIP_PERMISSIONS = '@SkipPermission';
 const SKIP_LOGIN_KEY = '@skipLogin';
+const ALREADY_LAUNCHED_KEY = '@alreadyLaunched';
 
 export const setSkipLoginFlow = (skipLogin: boolean): void => {
   storage.set(SKIP_LOGIN_KEY, skipLogin);
@@ -82,6 +83,29 @@ export const getNewUser = (): boolean | undefined => {
  */
 export const removeNewUser = (): void => {
   storage.delete(NEW_USER_key);
+};
+
+/**
+ * Sets alreadyLaunched flag in storage
+ * @param launched boolean
+ */
+export const setAlreadyLaunched = (launched: boolean): void => {
+  storage.set(ALREADY_LAUNCHED_KEY, launched);
+};
+
+/**
+ * Gets alreadyLaunched flag from storage
+ * @returns boolean | undefined
+ */
+export const getAlreadyLaunched = (): boolean | undefined => {
+  return storage.getBoolean(ALREADY_LAUNCHED_KEY) ?? undefined;
+};
+
+/**
+ * Removes alreadyLaunched flag from storage
+ */
+export const removeAlreadyLaunched = (): void => {
+  storage.delete(ALREADY_LAUNCHED_KEY);
 };
 
 export const StorageService = {

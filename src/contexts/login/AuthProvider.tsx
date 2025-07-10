@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import authService from '../../services/api/authService';
 import {
   getAuthToken,
   getNewUser,
@@ -8,7 +9,6 @@ import {
   setSkipLoginFlow,
   StorageService,
 } from '../../services/localStorage/storage.service';
-import { authService } from '../../services/api/authService';
 
 type AuthContextData = {
   authData?: string;

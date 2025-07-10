@@ -1,10 +1,23 @@
 // src/hooks/useFetchUpdateData.js
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import globalConfig from '../utils/global/globalConfig';
+import { useEffect, useState } from 'react';
+import axiosInstance, { apiCall } from '../config/api/axios.config';
+
+interface UpdateData {
+  min_required_version: string;
+  ios_url: string;
+  android_url: string;
+  latest_version: string;
+}
+
+interface ApiResponse {
+  minVersion: string;
+  appStoreURL: string;
+  playStoreURL: string;
+  latestVersion: string;
+}
 
 const useFetchUpdateData = () => {
-  const [updateData, setUpdateData] = useState({
+  const [updateData, setUpdateData] = useState<UpdateData>({
     min_required_version: '',
     ios_url: '',
     android_url: '',
@@ -19,24 +32,13 @@ const useFetchUpdateData = () => {
     setError(null);
 
     try {
-      const response = await axios.get(`${globalConfig.apiBaseUrl}/v1/initialConfig`, {
-        headers: {
-          Authorization: 'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx',
-        },
-      }); // Replace with your API endpoint
-      // const response = {
-      //   data: {
-      //     minVersion: '1',
-      //     appStoreURL: 'http://www.google.com',
-      //     playStoreURL: 'http://www.facebook.com',
-      //     latestVersion: '4',
-      //   },
-      // };
+      const data = await apiCall<ApiResponse>(axiosInstance.get('/v1/initialConfig'));
+
       setUpdateData({
-        min_required_version: response.data.minVersion,
-        ios_url: response.data.appStoreURL,
-        android_url: response.data.playStoreURL,
-        latest_version: response.data.latestVersion,
+        min_required_version: data.minVersion,
+        ios_url: data.appStoreURL,
+        android_url: data.playStoreURL,
+        latest_version: data.latestVersion,
       });
     } catch (err) {
       setError(err);

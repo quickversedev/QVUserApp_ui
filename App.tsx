@@ -1,54 +1,30 @@
-import React, { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { AuthProvider } from './src/contexts/login/AuthProvider';
-import { useLocationPermission } from './src/hooks/Permissions/usePermissions';
 import { Router } from './src/routes/Route';
 import PermissionsScreen from './src/screens/permission/PermissionsScreen';
 import { ThemeProvider } from './src/theme/ThemeContext';
-import { useFirstLaunch } from './src/utils/global/firstLaunch';
+import { checkFirstLaunch } from './src/utils/global/checkFirstLaunch';
 
 function App(): React.JSX.Element {
-  const {
-    isLoading,
-    location,
-    isGranted,
-    isDenied,
-    requestLocationPermission,
-    hasSkippedLocation,
-    skipLocationPermission,
-    getCurrentLocation,
-  } = useLocationPermission();
-  useEffect(() => {
-    if (!isLoading && !isDenied) {
-      getCurrentLocation();
-    }
-  }, [isDenied, hasSkippedLocation]);
-  const isFirstLaunch = useFirstLaunch();
+  const [isFirstLaunch, setIsFirstLaunch] = useState<boolean | null>(null);
+  const [permissionsCompleted, setPermissionsCompleted] = useState(false);
 
-  if (isLoading || isFirstLaunch === null) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" />
-        <Text>Checking app permissions...</Text>
-      </View>
-    );
-  }
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        const result = await checkFirstLaunch();
+        setIsFirstLaunch(result);
+      } catch (error) {
+        setIsFirstLaunch(false);
+      }
+    };
+    initializeApp();
+  }, []);
 
   const renderContent = () => {
-    // If permission is granted, show the app
-    if (isGranted || hasSkippedLocation) {
-      return <Router />;
+    if (isFirstLaunch && !permissionsCompleted) {
+      return <PermissionsScreen onPermissionsComplete={() => setPermissionsCompleted(true)} />;
     }
-
-    if (isFirstLaunch) {
-      return (
-        <PermissionsScreen
-          onSkip={skipLocationPermission}
-          onRequestPermission={requestLocationPermission}
-        />
-      );
-    }
-
     return <Router />;
   };
 
@@ -60,16 +36,3 @@ function App(): React.JSX.Element {
 }
 
 export default App;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  statusText: {
-    marginBottom: 20,
-    fontSize: 16,
-  },
-});
