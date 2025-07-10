@@ -132,7 +132,6 @@ Add these scripts to your `package.json`:
 ## 🔧 VS Code Configuration
 
 1. Install required extensions:
-
    - ESLint
    - Prettier
    - TypeScript and JavaScript Language Features

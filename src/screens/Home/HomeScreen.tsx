@@ -16,7 +16,6 @@ import { Theme, useTheme } from '../../theme/ThemeContext';
 
 const HomeScreen = () => {
   const { theme, isLoading, getButtonColor } = useTheme();
-
   const modalAnim = useRef(new Animated.Value(0)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
   const tabBarTranslateY = useContext(TabBarVisibilityContext);

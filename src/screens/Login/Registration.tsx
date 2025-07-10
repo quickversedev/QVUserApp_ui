@@ -294,7 +294,6 @@ const Registration: React.FC = () => {
               <View style={styles.card}>
                 <Text style={styles.title}>Register</Text>
                 <Text style={styles.subtitle}>Create your Quickverse account</Text>
-
                 <Text style={styles.label}>Full Name *</Text>
                 <TextInput
                   value={fullName}
