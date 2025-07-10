@@ -1,32 +1,26 @@
-import React, { useEffect, useRef, useContext } from 'react';
+import React, { useContext, useRef } from 'react';
 import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
   Animated,
-  ScrollView,
-  Text,
-  NativeSyntheticEvent,
   NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useTheme, Theme } from '../../theme/ThemeContext';
 import ThemedText from '../../components/common/theme/ThemeText';
-import { useAuth } from '../../contexts/login/AuthProvider';
-import Registration from '../login/Registration';
-import { storage } from '../../services/localStorage/storage.service';
 import { TabBarVisibilityContext } from '../../navigation/TabNavigation';
+import { storage } from '../../services/localStorage/storage.service';
+import { Theme, useTheme } from '../../theme/ThemeContext';
 
 const HomeScreen = () => {
   const { theme, isLoading, getButtonColor } = useTheme();
-  const { isNewUser } = useAuth();
   const modalAnim = useRef(new Animated.Value(0)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
   const tabBarTranslateY = useContext(TabBarVisibilityContext);
   const lastOffset = useRef(0);
 
-  if (isNewUser) {
-    return <Registration />;
-  }
   if (isLoading) {
     return (
       <View style={getStyles(theme).container}>

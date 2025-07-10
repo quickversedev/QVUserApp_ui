@@ -21,6 +21,6 @@ module.exports = {
   printWidth: 100,
 
   // Special Cases
-  endOfLine: 'auto',
+  endOfLine: 'lf',
   embeddedLanguageFormatting: 'auto',
 };
