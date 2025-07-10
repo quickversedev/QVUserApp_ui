@@ -21,6 +21,6 @@ module.exports = {
   printWidth: 100,
 
   // Special Cases
-  endOfLine: 'lf',
+  endOfLine: 'auto', // Changed from 'lf' to 'auto' for Windows compatibility
   embeddedLanguageFormatting: 'auto',
 };

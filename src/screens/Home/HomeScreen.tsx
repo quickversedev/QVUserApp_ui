@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import ThemedText from '../../components/common/theme/ThemeText';
 import { TabBarVisibilityContext } from '../../navigation/TabNavigation';
-import { storage } from '../../services/localStorage/storage.service';
+import { setAlreadyLaunched } from '../../services/localStorage/storage.service';
 import { Theme, useTheme } from '../../theme/ThemeContext';
 
 const HomeScreen = () => {
@@ -28,7 +28,7 @@ const HomeScreen = () => {
       </View>
     );
   }
-  storage.set('alreadyLaunched', true);
+  setAlreadyLaunched(true);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (!tabBarTranslateY) return;

@@ -72,20 +72,20 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
-// 
+//
 
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.qvuserapp_ui"
+    namespace "com.quickverse"
     defaultConfig {
-        applicationId "com.qvuserapp_ui"
+        applicationId "com.quickverse"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "3.0.0"
     }
     signingConfigs {
         debug {

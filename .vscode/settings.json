@@ -4,7 +4,8 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
-    "source.organizeImports": "explicit"
+    "source.organizeImports": "explicit",
+    "source.fixAll": "explicit"
   },
   "editor.rulers": [100],
   "editor.tabSize": 2,
@@ -18,6 +19,9 @@
   // ESLint Configuration
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
   "eslint.workingDirectories": [{ "mode": "auto" }],
+  "eslint.format.enable": true,
+  "eslint.lintTask.enable": true,
+  "eslint.run": "onType",
 
   // TypeScript Configuration
   "typescript.preferences.importModuleSpecifier": "relative",

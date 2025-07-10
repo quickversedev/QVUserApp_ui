@@ -1,4 +1,4 @@
-package com.qvuserapp_ui
+package com.quickverse
 
 import android.app.Application
 import com.facebook.react.PackageList

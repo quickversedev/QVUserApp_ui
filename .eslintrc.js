@@ -5,24 +5,13 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
+    'plugin:prettier/recommended', // Add this to integrate ESLint with Prettier
     'prettier',
   ],
   parser: '@typescript-eslint/parser',
   plugins: ['react', 'react-native', '@typescript-eslint', 'prettier'],
   rules: {
-    'prettier/prettier': [
-      'error',
-      {
-        bracketSpacing: true,
-        bracketSameLine: false,
-        singleQuote: true,
-        trailingComma: 'es5',
-        printWidth: 100,
-        tabWidth: 2,
-        semi: true,
-        arrowParens: 'avoid',
-      },
-    ],
+    'prettier/prettier': 'error',
     'react/react-in-jsx-scope': 'off',
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'warn',
@@ -33,7 +22,7 @@ module.exports = {
         varsIgnorePattern: '^_',
       },
     ],
-    'no-console': ['warn', { allow: ['warn', 'error'] }],
+    'no-console': ['error', { allow: ['warn', 'error'] }],
   },
   settings: {
     react: {

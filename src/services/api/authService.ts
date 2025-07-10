@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-import globalConfig from '../../utils/global/globalConfig.ts';
+import axiosInstance, { apiCall } from '../../config/api/axios.config';
 
 export type AuthData = {
   session: {
@@ -11,6 +9,7 @@ export type AuthData = {
     email: string;
   };
 };
+
 const sendOtp = async (phoneNumber: string): Promise<any> => {
   //*********************mock****************
   return new Promise(resolve => {
@@ -19,40 +18,17 @@ const sendOtp = async (phoneNumber: string): Promise<any> => {
     }, 1000);
   });
 
-  // return axios
-  //   .post(
-  //     `${globalConfig.apiBaseUrl}/v1/requestOtp`,
-  //     {
-  //       mobile: phoneNumber,
+  // return apiCall(
+  //   axiosInstance.post('/v1/requestOtp', {
+  //     mobile: phoneNumber,
+  //   }, {
+  //     headers: {
+  //       Authorization: 'token',
   //     },
-  //     {
-  //       headers: {
-  //         Authorization: 'token',
-  //       },
-  //     },
-  //   )
-  //   .then(response => {
-  //     return response.data?.response?.verificationId;
   //   })
-  //   .catch(error => {
-  //     if (error?.response) {
-  //       // The request was made and the server responded with a status code
-  //       console.log(
-  //         'Server responded with non-2xx status:',
-  //         error.response.status,
-  //       );
-  //       console.log('Response data:', error.response.data);
-  //     } else if (error.request) {
-  //       // The request was made but no response was received
-  //       console.log('No response received:', error.request);
-  //     } else {
-  //       // Something happened in setting up the request that triggered an Error
-  //       console.log('Error setting up the request:', error.message);
-  //     }
-  //     // Throw the error again to propagate it to the caller
-  //     throw error;
-  //   });
+  // ).then(data => data?.response?.verificationId);
 };
+
 const verifyOtp = async (
   phoneNumber: string,
   otp: string,
@@ -67,81 +43,41 @@ const verifyOtp = async (
           token: JWTTokenMock,
           phoneNumber: phoneNumber,
           name: 'Lucas Garcez',
-          //campus: 'IIM Udaipur',
           email: 'abhilashghope@gmail.com',
           newUser: true,
         },
       });
     }, 1000);
   });
-  //   let token;
-  //   let fcmToken = '';
 
-  //   return axios
-  //     .post(
-  //       `${globalConfig.apiBaseUrl}/v1/login`,
-  //       {
-  //         mobile: phoneNumber,
-  //         otp: otp,
-  //         verificationId: verificationId,
-  //         fcmToken: fcmToken,
-  //       },
-  //       {
-  //         headers: {
-  //           Authorization: token,
-  //         },
-  //       },
-  //     )
-  //     .then(response => {
-  //       const data1 = response.data;
-  //       const data = data1?.session;
-  //       return {
-  //         session: {
-  //           token: data.jwt,
-  //           phoneNumber: data.mobile,
-  //           newUser: data.newUser,
-  //           name: data.userName,
-  //           campus: data.campusId,
-  //           email: data.email,
-  //         },
-  //       };
-  //     })
-  //     .catch(error => {
-  //       if (error?.response) {
-  //         // The request was made and the server responded with a status code
-  //         console.log(
-  //           'Server responded with non-2xx status:',
-  //           error.response.status,
-  //         );
-  //         console.log('Response data:', error.response.data);
-  //       } else if (error.request) {
-  //         // The request was made but no response was received
-  //         console.log('No response received:', error.request);
-  //       } else {
-  //         // Something happened in setting up the request that triggered an Error
-  //         console.log('Error setting up the request:', error.message);
-  //       }
-  //       // Throw the error again to propagate it to the caller
-  //       throw error;
-  //     });
+  // let fcmToken = '';
+  // return apiCall(
+  //   axiosInstance.post('/v1/login', {
+  //     mobile: phoneNumber,
+  //     otp: otp,
+  //     verificationId: verificationId,
+  //     fcmToken: fcmToken,
+  //   })
+  // ).then(data => ({
+  //   session: {
+  //     token: data.session.jwt,
+  //     phoneNumber: data.session.mobile,
+  //     newUser: data.session.newUser,
+  //     name: data.session.userName,
+  //     email: data.session.email,
+  //   },
+  // }));
 };
+
 const signUp = async (
   fullName: string,
   dob: string,
   campusId: string,
   email: string
 ): Promise<any> => {
-  // return new Promise(resolve => {
-  //   setTimeout(() => {
-  //     resolve({
-  //       Response,
-  //     });
-  //   }, 1000);
-  // });
-
-  return axios
-    .post(
-      `${globalConfig.apiBaseUrl}/v1/registerUser`,
+  return apiCall(
+    axiosInstance.post(
+      '/v1/registerUser',
       {
         birthdate: dob,
         campusId: campusId,
@@ -154,68 +90,27 @@ const signUp = async (
         },
       }
     )
-    .then(response => {
-      return response;
-    })
-    .catch(error => {
-      const { code } = error.response.data.error;
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        console.log('Server responded with non-2xx status:', error.response.status);
-        console.log('Response data:', error.response.data);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.log('No response received:', error.request);
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log('Error setting up the request:', error.message);
-      }
-      // Throw the error again to propagate it to the caller
-      throw code;
-    });
+  );
 };
 
-const signOut = async () => {
-  // return new Promise(resolve => {
-  //   setTimeout(() => {
-  //     resolve({
-  //       Response,
-  //     });
-  //   }, 1000);
-  // });
-
-  return axios
-    .delete(`${globalConfig.apiBaseUrl}/v1/logout`, {
+const signOut = async (): Promise<any> => {
+  return apiCall(
+    axiosInstance.delete('/v1/logout', {
       headers: {
         SessionKey: 'token',
       },
     })
-    .then(response => {
-      return response;
-    })
-    .catch(error => {
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        console.log('Server responded with non-2xx status:', error.response.status);
-        console.log('Response data:', error.response.data);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.log('No response received:', error.request);
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log('Error setting up the request:', error.message);
-      }
-      // Throw the error again to propagate it to the caller
-      throw error;
-    });
+  );
 };
 
-export const authService = {
-  verifyOtp,
+const authService = {
   sendOtp,
+  verifyOtp,
   signUp,
   signOut,
 };
+
+export default authService;
 
 const JWTTokenMock =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ikx1Y2FzIEdhcmNleiIsImlhdCI6MTUxNjIzOTAyMn0.oK5FZPULfF-nfZmiumDGiufxf10Fe2KiGe9G5Njoa64';

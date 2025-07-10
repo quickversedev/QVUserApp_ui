@@ -5,15 +5,17 @@ import TabNavigation from '../navigation/TabNavigation';
 import Registration from '../screens/login/Registration';
 
 const AppStack = () => {
-  const { isLoading, location, isDenied, handleDeniedPermissionModal } = useLocationPermission();
-  console.log('Location isDenied:', isLoading, location);
+  const { isDenied, handleDeniedPermissionModal } = useLocationPermission();
   const { isNewUser } = useAuth();
+
+  useEffect(() => {
+    if (isDenied) handleDeniedPermissionModal();
+  }, [handleDeniedPermissionModal, isDenied]);
+
   if (isNewUser) {
     return <Registration />;
   }
-  useEffect(() => {
-    if (isDenied) handleDeniedPermissionModal();
-  }, [isDenied]);
+
   return <TabNavigation />;
 };
 
