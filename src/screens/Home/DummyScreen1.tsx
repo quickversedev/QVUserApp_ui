@@ -1,27 +1,21 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { useTheme } from '../../theme/ThemeContext';
+import { StyleSheet, View } from 'react-native';
+import ThemeText from '../../components/common/theme/ThemeText';
 
 const DummyScreen1 = () => {
-  const { theme } = useTheme();
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: theme.colors.background,
-    },
-    text: {
-      color: theme.colors.text,
-      fontSize: theme.typography.h2,
-      fontWeight: 'bold',
-    },
-  });
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Dummy Screen 1</Text>
+      <ThemeText>Dummy Screen 1</ThemeText>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
 
 export default DummyScreen1;

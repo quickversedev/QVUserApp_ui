@@ -1,96 +1,76 @@
-import React, { createContext, useRef } from 'react';
-import { Animated, View, StyleSheet } from 'react-native';
-import { useTheme } from '../theme/ThemeContext';
-
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import HomeScreen from '../screens/Home/HomeScreen';
+import React, { createContext, useRef } from 'react';
+import { Animated, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import ProfileScreen from '../screens/profile/profileScreen';
 import DummyScreen1 from '../screens/Home/DummyScreen1';
 import DummyScreen2 from '../screens/Home/DummyScreen2';
-import DummyScreen3 from '../screens/Home/DummyScreen3';
-
-const Tab = createBottomTabNavigator();
+import HomeScreen from '../screens/Home/HomeScreen';
+import { useTheme } from '../theme/ThemeContext';
 
 export const TabBarVisibilityContext = createContext<Animated.Value | null>(null);
 
-const TabNavigation: React.FC = () => {
+const Tab = createBottomTabNavigator();
+
+const TabNavigation = () => {
   const tabBarTranslateY = useRef(new Animated.Value(0)).current;
-  const { theme } = useTheme();
+  const { getColor } = useTheme();
 
   return (
     <TabBarVisibilityContext.Provider value={tabBarTranslateY}>
-      <View style={{ flex: 1 }}>
-        <Tab.Navigator
-          initialRouteName="Home"
-          screenOptions={{
-            headerShown: false,
-            tabBarShowLabel: false,
-            tabBarStyle: [
-              {
-                backgroundColor: theme.colors.tabBackground,
-                borderTopLeftRadius: theme.borderRadius.sm,
-                borderTopRightRadius: theme.borderRadius.sm,
-                height: 70,
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                bottom: 0,
-                borderTopWidth: 0,
-                elevation: 12,
-                shadowColor: theme.colors.shadow.color,
-                shadowOffset: theme.colors.shadow.offset,
-                shadowOpacity: theme.colors.shadow.opacity,
-                shadowRadius: theme.colors.shadow.radius,
-                transform: [{ translateY: tabBarTranslateY }],
-              },
-            ],
-            tabBarActiveTintColor: theme.colors.primary,
-            tabBarInactiveTintColor: theme.colors.text,
+      <Tab.Navigator
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: {
+            transform: [{ translateY: tabBarTranslateY }],
+            backgroundColor: getColor('tabBackground'),
+            borderTopColor: getColor('border'),
+            height: 60,
+            paddingBottom: 8,
+            paddingTop: 8,
+          },
+          tabBarActiveTintColor: getColor('primary'),
+          tabBarInactiveTintColor: getColor('subText'),
+          tabBarLabelStyle: styles.tabLabel,
+        }}
+      >
+        <Tab.Screen
+          name="For You"
+          component={HomeScreen}
+          options={{
+            tabBarIcon: ({ color }) => (
+              <MaterialCommunityIcons name="home" color={color} size={24} />
+            ),
           }}
-        >
-          <Tab.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{
-              tabBarIcon: ({ color, size }) => (
-                <MaterialCommunityIcons name="home-outline" color={color} size={30} />
-              ),
-            }}
-          />
-
-          <Tab.Screen
-            name="Dummy2"
-            component={DummyScreen2}
-            options={{
-              tabBarIcon: ({ color, size }) => (
-                <MaterialCommunityIcons name="heart-outline" color={color} size={28} />
-              ),
-            }}
-          />
-          <Tab.Screen
-            name="Dummy3"
-            component={DummyScreen3}
-            options={{
-              tabBarIcon: ({ color, size }) => (
-                <MaterialCommunityIcons name="earth" color={color} size={28} />
-              ),
-            }}
-          />
-          <Tab.Screen
-            name="Profile"
-            component={ProfileScreen}
-            options={{
-              tabBarLabel: 'Settings',
-              tabBarIcon: ({ color, size }) => (
-                <MaterialCommunityIcons name="cog" color={color} size={size} />
-              ),
-            }}
-          />
-        </Tab.Navigator>
-      </View>
+        />
+        <Tab.Screen
+          name="Food"
+          component={DummyScreen1}
+          options={{
+            tabBarIcon: ({ color }) => (
+              <MaterialCommunityIcons name="food" color={color} size={24} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Grocery"
+          component={DummyScreen2}
+          options={{
+            tabBarIcon: ({ color }) => (
+              <MaterialCommunityIcons name="cart" color={color} size={24} />
+            ),
+          }}
+        />
+      </Tab.Navigator>
     </TabBarVisibilityContext.Provider>
   );
 };
+
+const styles = StyleSheet.create({
+  tabLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 4,
+  },
+});
 
 export default TabNavigation;

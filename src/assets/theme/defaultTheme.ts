@@ -42,7 +42,7 @@ export const DefaultTheme: Theme = {
   },
 
   typography: {
-    fontFamily: 'System',
+    fontFamily: 'BricolageGrotesque',
     lineHeightMultiplier: 1.4,
 
     h1: 28, // for title

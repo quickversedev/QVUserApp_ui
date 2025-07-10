@@ -1,29 +1,29 @@
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Image,
-  Text,
-  StyleSheet,
-  ImageBackground,
-  TouchableOpacity,
-  Dimensions,
-  Alert,
   ActivityIndicator,
+  Alert,
+  Dimensions,
+  Image,
+  ImageBackground,
+  KeyboardAvoidingView,
   Platform,
   SafeAreaView,
-  KeyboardAvoidingView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
+import { StackNavigationProp } from '@react-navigation/stack';
 import {
   CodeField,
   Cursor,
   useBlurOnFulfill,
   useClearByFocusCell,
 } from 'react-native-confirmation-code-field';
-import { LoginStackParamList } from '../../navigation/LoginNavigation';
+import { ThemeText } from '../../components/common/theme/ThemeText';
 import { useAuth } from '../../contexts/login/AuthProvider';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { LoginStackParamList } from '../../navigation/LoginNavigation';
 import { useTheme } from '../../theme/ThemeContext';
 
 const { height } = Dimensions.get('window');
@@ -31,6 +31,7 @@ const { height } = Dimensions.get('window');
 const CELL_COUNT = 4;
 type LoginScreenRouteProp = RouteProp<LoginStackParamList, 'OTPScreen'>;
 type OTPScreenNavigationProp = StackNavigationProp<LoginStackParamList, 'OTPScreen'>;
+
 const OTPScreen: React.FC = () => {
   const route = useRoute<LoginScreenRouteProp>();
   const { phoneNumber, verificationId } = route.params;
@@ -50,6 +51,62 @@ const OTPScreen: React.FC = () => {
   });
   const auth = useAuth();
   const { theme } = useTheme();
+
+  // Timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (!canResend && resendTimeout > 0) {
+      interval = setInterval(() => {
+        setResendTimeout(prev => prev - 1);
+      }, 1000);
+    } else if (resendTimeout === 0) {
+      setCanResend(true);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [canResend, resendTimeout]);
+
+  const verifyOTP = async () => {
+    if (value.length !== CELL_COUNT) {
+      Alert.alert('Invalid OTP', 'Please enter a valid 4-digit OTP');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await auth.verifyOtp(phoneNumber, value, currentVerificationId);
+      Alert.alert('Success', 'OTP verified successfully');
+    } catch (err) {
+      Alert.alert('Error', 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!canResend) return;
+
+    try {
+      setLoading(true);
+      const newVerificationId = await auth.sendOtp(phoneNumber);
+      setCurrentVerificationId(newVerificationId);
+      setResendTimeout(60);
+      setCanResend(false);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to resend OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangeNumber = () => {
+    navigation.goBack();
+  };
 
   const styles = StyleSheet.create({
     safeArea: {
@@ -82,7 +139,7 @@ const OTPScreen: React.FC = () => {
       width: '90%',
       minHeight: '45%',
       backgroundColor: theme.colors.card,
-      borderRadius: theme.borderRadius.md,
+      borderRadius: 16,
       padding: 24,
       marginTop: height * 0.24,
       shadowColor: theme.colors.shadow.color,
@@ -95,58 +152,13 @@ const OTPScreen: React.FC = () => {
       justifyContent: 'space-between',
     },
     title: {
-      fontSize: theme.typography.h2,
-      color: theme.colors.text,
       fontWeight: 'bold',
       textAlign: 'center',
     },
     subtitle: {
       textAlign: 'center',
-      color: theme.colors.subText,
       marginTop: 5,
       marginBottom: 16,
-    },
-    skipContainer: {
-      position: 'absolute',
-      top: 8,
-      right: 4,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: theme.borderRadius.full,
-      backgroundColor: theme.colors.overlay,
-      alignSelf: 'flex-end',
-      marginRight: 16,
-      marginTop: 16,
-      shadowColor: theme.colors.shadow.color,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
-    },
-    otpButton: {
-      backgroundColor: theme.colors.secondary,
-      borderRadius: theme.borderRadius.sm,
-      paddingVertical: 14,
-    },
-    otpText: {
-      fontSize: theme.typography.body,
-      color: theme.colors.background,
-      textAlign: 'center',
-      fontWeight: 'bold',
-    },
-    subTitle_2: {
-      color: theme.colors.subText,
-      textAlign: 'center',
-      marginTop: 12,
-    },
-    link: {
-      color: theme.colors.primary,
-    },
-    changeNumber: {
-      fontSize: theme.typography.body,
-      color: theme.colors.primary,
-      textAlign: 'center',
-      marginTop: 'auto',
     },
     codeFieldRoot: {
       marginTop: '12%',
@@ -158,83 +170,51 @@ const OTPScreen: React.FC = () => {
       width: 50,
       height: 50,
       lineHeight: 48,
-      fontSize: theme.typography.h2,
       borderWidth: 1,
-      borderColor: theme.colors.border,
-      borderRadius: theme.borderRadius.sm,
+      borderRadius: 8,
       textAlign: 'center',
       justifyContent: 'center',
       alignItems: 'center',
-    },
-    cellText: {
-      fontSize: theme.typography.h2,
-      color: theme.colors.text,
+      backgroundColor: theme.colors.card,
     },
     focusCell: {
+      borderWidth: 2,
       borderColor: theme.colors.primary,
     },
-    disabledLink: {
-      color: theme.colors.subText,
+    unfocusedCell: {
+      borderColor: theme.colors.border,
+    },
+    subTitle_2: {
+      textAlign: 'center',
+      marginTop: 12,
+    },
+    link: {
+      color: theme.colors.primary,
+      textDecorationLine: 'underline',
+    },
+    otpButton: {
+      backgroundColor: theme.colors.secondary,
+      borderRadius: 8,
+      paddingVertical: 14,
+      marginTop: 'auto',
+    },
+    otpText: {
+      textAlign: 'center',
+      fontWeight: 'bold',
+    },
+    resendContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: 16,
+    },
+    resendText: {
+      marginRight: 4,
+    },
+    timerText: {
+      marginLeft: 4,
     },
   });
-
-  // Timer effect
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    if (!canResend && resendTimeout > 0) {
-      interval = setInterval(() => {
-        setResendTimeout(prev => prev - 1);
-      }, 1000);
-    } else if (resendTimeout === 0) {
-      setCanResend(true);
-    }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [canResend, resendTimeout]);
-
-  const verifyOTP = async () => {
-    if (value.length !== CELL_COUNT) {
-      Alert.alert('Invalid OTP', 'Please enter a valid 4-digit OTP');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await auth.verifyOtp(phoneNumber, value, currentVerificationId);
-
-      Alert.alert('Success', 'OTP verified successfully');
-    } catch (err) {
-      console.log('Error:', err);
-      Alert.alert('Error', 'Login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendOtp = async () => {
-    if (!canResend) return;
-    console.log('Resending OTP...');
-    try {
-      setLoading(true);
-      const newVerificationId = await auth.sendOtp(phoneNumber);
-      setCurrentVerificationId(newVerificationId);
-      setResendTimeout(60);
-      setCanResend(false);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to resend OTP. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleChangeNumber = () => {
-    navigation.goBack();
-  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -247,14 +227,17 @@ const OTPScreen: React.FC = () => {
           style={styles.topBackground}
           resizeMode="cover"
         />
-
         <View style={styles.logoContainer}>
           <Image style={styles.topLogo} source={require('../../assets/images/logo_qv.png')} />
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.title}>Enter Your OTP</Text>
-          <Text style={styles.subtitle}>{`OTP sent to ${phoneNumber}`}</Text>
+          <ThemeText variant="h2" style={styles.title}>
+            Verify OTP
+          </ThemeText>
+          <ThemeText variant="subtitle" color={theme.colors.subText} style={styles.subtitle}>
+            Enter the OTP sent to +91 {phoneNumber}
+          </ThemeText>
 
           <CodeField
             ref={ref}
@@ -267,39 +250,59 @@ const OTPScreen: React.FC = () => {
             textContentType="oneTimeCode"
             renderCell={({ index, symbol, isFocused }) => (
               <View
-                onLayout={getCellOnLayoutHandler(index)}
                 key={index}
-                style={[styles.cell, isFocused && styles.focusCell]}
+                style={[styles.cell, isFocused ? styles.focusCell : styles.unfocusedCell]}
+                onLayout={getCellOnLayoutHandler(index)}
               >
-                <Text style={styles.cellText}>{symbol || (isFocused ? <Cursor /> : null)}</Text>
+                <ThemeText variant="h2" color={theme.colors.text}>
+                  {symbol || (isFocused ? <Cursor /> : null)}
+                </ThemeText>
               </View>
             )}
           />
 
-          <Text style={styles.subTitle_2}>
-            Didn't receive the OTP?{' '}
-            {canResend ? (
-              <Text style={styles.link} onPress={handleResendOtp}>
-                Resend Code
-              </Text>
-            ) : (
-              <Text style={styles.disabledLink}>Resend Code in {resendTimeout}s</Text>
+          <View style={styles.resendContainer}>
+            <ThemeText variant="caption" color={theme.colors.subText} style={styles.resendText}>
+              Didn't receive OTP?
+            </ThemeText>
+            <TouchableOpacity onPress={handleResendOtp} disabled={!canResend || loading}>
+              <ThemeText
+                variant="caption"
+                color={canResend ? theme.colors.primary : theme.colors.subText}
+                style={styles.link}
+              >
+                Resend
+              </ThemeText>
+            </TouchableOpacity>
+            {!canResend && (
+              <ThemeText variant="caption" color={theme.colors.subText} style={styles.timerText}>
+                ({resendTimeout}s)
+              </ThemeText>
             )}
-          </Text>
+          </View>
 
           <TouchableOpacity
-            style={{ marginTop: 'auto', marginBottom: 15 }}
-            onPress={handleChangeNumber}
+            style={[styles.otpButton, loading && { opacity: 0.7 }]}
+            onPress={verifyOTP}
+            disabled={loading || value.length !== CELL_COUNT}
           >
-            <Text style={styles.changeNumber}>Change Number</Text>
+            {loading ? (
+              <ActivityIndicator color={theme.colors.background} />
+            ) : (
+              <ThemeText variant="body" color={theme.colors.background} style={styles.otpText}>
+                Verify OTP
+              </ThemeText>
+            )}
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.otpButton} onPress={verifyOTP} disabled={loading}>
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.otpText}>Verify and Continue</Text>
-            )}
+          <TouchableOpacity onPress={handleChangeNumber}>
+            <ThemeText
+              variant="caption"
+              color={theme.colors.primary}
+              style={[styles.link, { textAlign: 'center' }]}
+            >
+              Change Number
+            </ThemeText>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

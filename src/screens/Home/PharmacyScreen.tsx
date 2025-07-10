@@ -2,10 +2,10 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import ThemeText from '../../components/common/theme/ThemeText';
 
-const DummyScreen3 = () => {
+export const PharmacyScreen = () => {
   return (
     <View style={styles.container}>
-      <ThemeText>Dummy Screen 3</ThemeText>
+      <ThemeText style={styles.text}>Pharmacy Screen</ThemeText>
     </View>
   );
 };
@@ -15,7 +15,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  text: {
+    fontSize: 20,
+    fontWeight: '600',
   },
 });
-
-export default DummyScreen3;

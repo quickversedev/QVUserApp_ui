@@ -1,17 +1,18 @@
-import React from 'react';
 import {
   CardStyleInterpolators,
   createStackNavigator,
   TransitionSpecs,
 } from '@react-navigation/stack';
-import OTPScreen from '../screens/login/OTPScreen';
+import React from 'react';
+import { Platform } from 'react-native';
 import LoginScreen from '../screens/login/loginScreen';
-import Registration from '../screens/login/registration';
-import { Easing, Platform } from 'react-native';
+import OTPScreen from '../screens/login/OTPScreen';
+import Registration from '../screens/login/Registration';
 
 export type LoginStackParamList = {
   LoginScreen: undefined;
   OTPScreen: { phoneNumber: string; verificationId: string };
+  Registration: undefined;
 };
 
 const Stack = createStackNavigator();
@@ -42,6 +43,7 @@ const LoginStackNavigator = () => {
     >
       <Stack.Screen name="LoginScreen" component={LoginScreen} />
       <Stack.Screen name="OTPScreen" component={OTPScreen} />
+      <Stack.Screen name="Registration" component={Registration} />
     </Stack.Navigator>
   );
 };

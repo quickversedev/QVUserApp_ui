@@ -1,23 +1,20 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
 import { Text } from 'react-native';
-
-import AppStack from './AppStack';
-import { AuthStack } from './AuthStack';
-import { useAuth } from '../contexts/login/AuthProvider';
 import ForceUpdateChecker from '../components/common/ForceUpdate';
+import { useAuth } from '../contexts/login/AuthProvider';
+import { AppStack } from './AppStack';
+import { AuthStack } from './AuthStack';
 
-export const Router = () => {
+export const Route = () => {
   const { authData, loading, skipUserLogin } = useAuth();
-  console.log('Auth Data:', authData);
+
   if (loading) {
     return <Text>Loading</Text>;
   }
+
   return (
-    <NavigationContainer>
-      <ForceUpdateChecker>
-        {authData || skipUserLogin ? <AppStack /> : <AuthStack />}
-      </ForceUpdateChecker>
-    </NavigationContainer>
+    <ForceUpdateChecker>
+      {authData || skipUserLogin ? <AppStack /> : <AuthStack />}
+    </ForceUpdateChecker>
   );
 };
