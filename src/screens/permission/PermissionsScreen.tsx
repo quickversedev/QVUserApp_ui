@@ -34,6 +34,17 @@ const PermissionsScreen: React.FC<PermissionsScreenProps> = ({ onPermissionsComp
       alignItems: 'center',
       backgroundColor: theme.colors.background,
     },
+    loadingContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    loadingText: {
+      color: theme.colors.subText,
+      fontSize: theme.typography.body,
+      marginTop: 16,
+    },
     topBackground: {
       height: height * 0.55,
       width: '100%',
@@ -146,6 +157,10 @@ const PermissionsScreen: React.FC<PermissionsScreenProps> = ({ onPermissionsComp
       borderRadius: theme.borderRadius.full,
       elevation: 2,
     },
+    skipText: {
+      color: '#E5E7EB',
+      fontSize: 14,
+    },
   });
 
   const {
@@ -172,9 +187,9 @@ const PermissionsScreen: React.FC<PermissionsScreenProps> = ({ onPermissionsComp
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center' }]}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.colors.secondary} />
-        <Text style={[styles.subtitle, { marginTop: 16 }]}>Checking permissions...</Text>
+        <Text style={styles.loadingText}>Checking permissions...</Text>
       </View>
     );
   }
@@ -195,7 +210,7 @@ const PermissionsScreen: React.FC<PermissionsScreenProps> = ({ onPermissionsComp
         </View>
         <View style={styles.card}>
           <TouchableOpacity style={styles.skipContainer} onPress={skipLocationPermission}>
-            <Text style={{ color: '#E5E7EB', fontSize: 14 }}>Skip</Text>
+            <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
           <Text style={styles.title}>Allow Permissions</Text>
           <Text style={styles.subtitle}>We need access to give you the{'\n'}best experience.</Text>
@@ -205,7 +220,7 @@ const PermissionsScreen: React.FC<PermissionsScreenProps> = ({ onPermissionsComp
             </View>
             <View style={styles.permissionTextContainer}>
               <Text style={styles.permissionTitle}>Enable Notifications</Text>
-              <Text style={styles.permissionDesc}>Don't miss deals and delivery alerts.</Text>
+              <Text style={styles.permissionDesc}>Don&apos;t miss deals and delivery alerts.</Text>
             </View>
           </View>
           <View style={styles.permissionCard}>
