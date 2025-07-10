@@ -270,6 +270,7 @@ export const useNotifications = () => {
   }, []);
 
   const setupNotifeeBackgroundHandler = () => {
+
     try {
       notifee.onBackgroundEvent(async ({ type, detail }: Event) => {
         try {
@@ -319,6 +320,7 @@ export const useNotifications = () => {
     let unsubscribeOpened: (() => void) | undefined;
 
     const setupNotifications = async () => {
+
       try {
         const permissionStatus = await requestPermissions();
 
