@@ -1,12 +1,12 @@
 # QV User App UI
 
-A React Native application with TypeScript, ESLint, and Prettier configuration for consistent code quality.
+A React Native application with TypeScript, ESLint, and Prettier configuration for consistent code quality. The app follows a dark theme design pattern and includes modern mobile app features.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js (v14 or newer)
+- Node.js (v16 or newer)
 - npm or yarn
 - React Native CLI
 - Android Studio (for Android development)
@@ -79,7 +79,7 @@ yarn ios
 
 The project uses ESLint for code quality and Prettier for code formatting. Configuration files are:
 
-- `.eslintrc.js` - ESLint configuration
+- `eslint.config.js` - ESLint configuration
 - `.prettierrc.js` - Prettier configuration
 - `.vscode/settings.json` - VS Code editor settings
 
@@ -94,6 +94,9 @@ npm run lint:fix
 
 # Format code with Prettier
 npm run format
+
+# Format all files
+npm run format:all
 
 # Check code formatting
 npm run format:check
@@ -117,6 +120,7 @@ Add these scripts to your `package.json`:
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "format:all": "prettier --write \"**/*\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "typecheck": "tsc --noEmit",
     "validate": "npm run lint && npm run format:check && npm run typecheck",
@@ -127,7 +131,7 @@ Add these scripts to your `package.json`:
 
 ## 🔧 VS Code Configuration
 
-1. Install recommended extensions:
+1. Install required extensions:
 
    - ESLint
    - Prettier
@@ -144,20 +148,30 @@ Add these scripts to your `package.json`:
 ```
 qvuserapp_ui/
 ├── src/
-│   ├── assets/         # Static assets
+│   ├── assets/         # Static assets (images, theme)
 │   ├── components/     # Reusable components
+│   │   ├── common/     # Common UI components
+│   │   └── modules/    # Feature-specific components
 │   ├── contexts/       # React Context providers
 │   ├── hooks/         # Custom React hooks
-│   ├── navigation/    # Navigation configuration
+│   ├── navigation/    # Navigation configuration (React Navigation v6)
 │   ├── screens/       # Screen components
 │   ├── services/      # API and other services
 │   ├── theme/         # Theme configuration
 │   └── utils/         # Utility functions
-├── .eslintrc.js       # ESLint configuration
+├── eslint.config.js   # ESLint configuration
 ├── .prettierrc.js     # Prettier configuration
 ├── tsconfig.json      # TypeScript configuration
 └── package.json       # Project dependencies
 ```
+
+## 🎨 Theme Configuration
+
+The app uses a dark theme design pattern with specific styling configurations:
+
+- Status bar styling for Android (dark background with light content)
+- Custom theme context for consistent styling
+- Predefined color schemes in theme configuration
 
 ## 🔍 Code Quality Features
 
@@ -171,6 +185,7 @@ qvuserapp_ui/
   - Consistent code formatting
   - Line length limits
   - JSX formatting rules
+  - LF line endings
 - **VS Code Integration**:
   - Format on save
   - Error highlighting
@@ -207,6 +222,7 @@ qvuserapp_ui/
 - [TypeScript Documentation](https://www.typescriptlang.org/)
 - [ESLint Rules](https://eslint.org/docs/rules/)
 - [Prettier Options](https://prettier.io/docs/en/options.html)
+- [React Navigation v6 Documentation](https://reactnavigation.org/docs/6.x/getting-started/)
 
 ## 📄 License
 
