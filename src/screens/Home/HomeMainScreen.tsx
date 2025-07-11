@@ -7,7 +7,6 @@ import { useTheme } from '../../theme/ThemeContext';
 import { FoodContent } from './components/tabs/FoodContent';
 import { ForYouContent } from './components/tabs/ForYouContent';
 import { GroceryContent } from './components/tabs/GroceryContent';
-import { HomeContent } from './components/tabs/HomeContent';
 import { PharmacyContent } from './components/tabs/PharmacyContent';
 
 const HEADER_HEIGHT = 280; // Approximate total header height
@@ -32,8 +31,7 @@ const HomeMainScreen = () => {
         return <GroceryContent {...contentProps} />;
       case 'Pharmacy':
         return <PharmacyContent {...contentProps} />;
-      case 'HomeMain':
-        return <HomeContent {...contentProps} />;
+
       case 'ForYou':
       default:
         return <ForYouContent {...contentProps} />;
