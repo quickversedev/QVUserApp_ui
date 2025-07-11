@@ -1,26 +1,38 @@
 import React from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { Animated, Image, StyleSheet, View } from 'react-native';
 import { NavigationItems } from '../../../screens/Home/components/NavigationItems';
 import { useTheme } from '../../../theme/ThemeContext';
 import { LocationSelector } from './LocationSelector';
 import { ProfileIcon } from './ProfileIcon';
 import { SearchBar } from './SearchBar';
 
-export const Header = () => {
+interface HeaderProps {
+  translateY?: Animated.AnimatedInterpolation<number>;
+  hiddenSectionsOpacity?: Animated.AnimatedInterpolation<number>;
+}
+
+export const Header: React.FC<HeaderProps> = ({ translateY, hiddenSectionsOpacity }) => {
   const { theme } = useTheme();
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.content}>
+    <Animated.View
+      style={[
+        styles.container,
+        { backgroundColor: theme.colors.background },
+        translateY ? { transform: [{ translateY }] } : undefined,
+      ]}
+    >
+      {/* Sections that will be hidden on scroll */}
+      <Animated.View
+        style={[
+          styles.hiddenSections,
+          hiddenSectionsOpacity ? { opacity: hiddenSectionsOpacity } : undefined,
+        ]}
+      >
         {/* Section 1: Top Row */}
         <View style={styles.topRow}>
           <LocationSelector />
           <ProfileIcon />
-        </View>
-
-        {/* Section 2: Search Bar */}
-        <View style={styles.searchSection}>
-          <SearchBar />
         </View>
 
         {/* Section 3: Logo */}
@@ -31,23 +43,39 @@ export const Header = () => {
             resizeMode="contain"
           />
         </View>
-      </View>
+      </Animated.View>
 
-      {/* Section 4: Navigation Tabs */}
-      <View style={[styles.tabContainer, { borderBottomColor: theme.colors.border }]}>
-        <NavigationItems />
+      {/* Sections that will remain visible */}
+      <View style={styles.visibleSections}>
+        {/* Section 2: Search Bar */}
+        <View style={styles.searchSection}>
+          <SearchBar />
+        </View>
+
+        {/* Section 4: Navigation Tabs */}
+        <View style={[styles.tabContainer, { borderBottomColor: theme.colors.border }]}>
+          <NavigationItems />
+        </View>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    position: 'absolute',
+    top: 20,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
   },
-  content: {
+  hiddenSections: {
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 12, // Slightly increased top padding
+  },
+  visibleSections: {
+    width: '100%',
   },
   topRow: {
     flexDirection: 'row',
@@ -57,6 +85,8 @@ const styles = StyleSheet.create({
   },
   searchSection: {
     width: '100%',
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
   logoContainer: {
     alignItems: 'center',

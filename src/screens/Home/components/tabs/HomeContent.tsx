@@ -1,12 +1,15 @@
 import React from 'react';
 import {
+  Animated,
   Dimensions,
   Image,
-  ScrollView,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  ViewStyle,
 } from 'react-native';
 import { ThemeText } from '../../../../components/common/theme/ThemeText';
 import { useTheme } from '../../../../theme/ThemeContext';
@@ -54,11 +57,28 @@ const dummyCategories = [
   { id: '7', name: 'Beverages', icon: '🥤' },
 ];
 
-export const HomeContent = () => {
+interface HomeContentProps {
+  onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  scrollEventThrottle?: number;
+  contentContainerStyle?: ViewStyle;
+  showsVerticalScrollIndicator?: boolean;
+}
+
+export const HomeContent: React.FC<HomeContentProps> = ({
+  onScroll,
+  scrollEventThrottle,
+  contentContainerStyle,
+  showsVerticalScrollIndicator,
+}) => {
   const { theme } = useTheme();
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent}>
+    <Animated.ScrollView
+      onScroll={onScroll}
+      scrollEventThrottle={scrollEventThrottle}
+      contentContainerStyle={contentContainerStyle}
+      showsVerticalScrollIndicator={showsVerticalScrollIndicator}
+    >
       <ThemeText variant="h2" style={styles.sectionTitle}>
         Categories
       </ThemeText>
@@ -100,14 +120,11 @@ export const HomeContent = () => {
           </View>
         </TouchableOpacity>
       ))}
-    </ScrollView>
+    </Animated.ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollContent: {
-    paddingBottom: 20,
-  },
   sectionTitle: {
     marginHorizontal: 16,
     marginTop: 20,

@@ -1,5 +1,15 @@
 import React from 'react';
-import { Dimensions, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  Animated,
+  Dimensions,
+  Image,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  ViewStyle,
+} from 'react-native';
 import { ThemeText } from '../../../../components/common/theme/ThemeText';
 import { useTheme } from '../../../../theme/ThemeContext';
 
@@ -49,11 +59,28 @@ const dummyRecommendations = [
   },
 ];
 
-export const ForYouContent = () => {
+interface ForYouContentProps {
+  onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  scrollEventThrottle?: number;
+  contentContainerStyle?: ViewStyle;
+  showsVerticalScrollIndicator?: boolean;
+}
+
+export const ForYouContent: React.FC<ForYouContentProps> = ({
+  onScroll,
+  scrollEventThrottle,
+  contentContainerStyle,
+  showsVerticalScrollIndicator,
+}) => {
   const { theme } = useTheme();
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent}>
+    <Animated.ScrollView
+      onScroll={onScroll}
+      scrollEventThrottle={scrollEventThrottle}
+      contentContainerStyle={contentContainerStyle}
+      showsVerticalScrollIndicator={showsVerticalScrollIndicator}
+    >
       <ThemeText variant="h2" style={styles.sectionTitle}>
         Recommended For You
       </ThemeText>
@@ -82,14 +109,11 @@ export const ForYouContent = () => {
           </View>
         </TouchableOpacity>
       ))}
-    </ScrollView>
+    </Animated.ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollContent: {
-    paddingBottom: 20,
-  },
   sectionTitle: {
     marginHorizontal: 16,
     marginTop: 20,
