@@ -1,8 +1,8 @@
 import React from 'react';
-import { HomeNavigation } from '../../navigation/HomeNavigation';
+import HomeMainScreen from './HomeMainScreen';
 
 const HomeScreen = () => {
-  return <HomeNavigation />;
+  return <HomeMainScreen />;
 };
 
 export default HomeScreen;

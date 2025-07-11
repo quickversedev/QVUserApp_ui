@@ -2,6 +2,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/contexts/login/AuthProvider';
+import { TabProvider } from './src/contexts/TabContext';
 import { Route } from './src/routes/Route';
 import PermissionsScreen from './src/screens/permission/PermissionsScreen';
 import { ThemeProvider } from './src/theme/ThemeContext';
@@ -31,13 +32,15 @@ function App(): React.JSX.Element {
   };
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <NavigationContainer>
-          <AuthProvider>{renderContent()}</AuthProvider>
-        </NavigationContainer>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <TabProvider>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <NavigationContainer>
+            <AuthProvider>{renderContent()}</AuthProvider>
+          </NavigationContainer>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </TabProvider>
   );
 }
 
