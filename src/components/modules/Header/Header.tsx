@@ -38,9 +38,9 @@ export const Header: React.FC<HeaderProps> = ({ translateY, hiddenSectionsOpacit
         {/* Section 3: Logo */}
         <View style={styles.logoContainer}>
           <Image
-            source={require('../../../assets/images/logo_qv.png')}
+            source={require('../../../assets/images/homeBackground.png')}
             style={styles.logo}
-            resizeMode="contain"
+            resizeMode="cover"
           />
         </View>
       </Animated.View>
@@ -65,14 +65,13 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     position: 'absolute',
-    top: 20,
+    top: 0,
     left: 0,
     right: 0,
     zIndex: 1000,
   },
   hiddenSections: {
     paddingHorizontal: 16,
-    paddingTop: 12, // Slightly increased top padding
   },
   visibleSections: {
     width: '100%',
@@ -81,20 +80,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    // marginBottom: 5,
   },
   searchSection: {
     width: '100%',
     paddingHorizontal: 16,
-    marginBottom: 16,
+    // marginBottom: 16,
   },
   logoContainer: {
-    alignItems: 'center',
-    marginVertical: 20,
+    width: '100%',
+    height: 160,
+    // marginVertical: 5,
+    marginHorizontal: -16, // Compensate for parent padding
+    overflow: 'hidden',
   },
   logo: {
-    width: 200,
-    height: 40,
+    width: '100%',
+    height: '100%',
   },
   tabContainer: {
     borderBottomWidth: 3,

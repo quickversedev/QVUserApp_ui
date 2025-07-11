@@ -4,7 +4,7 @@ import { TabBarVisibilityContext } from '../navigation/TabNavigation';
 
 export const useHeaderAnimation = () => {
   const scrollY = useRef(new Animated.Value(0)).current;
-  const headerHeight = 180; // Approximate height of sections 1 and 3 combined
+  const headerHeight = 210; // Approximate height of sections 1 and 3 combined
   const tabBarContext = useContext(TabBarVisibilityContext);
 
   const translateY = scrollY.interpolate({
