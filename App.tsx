@@ -1,6 +1,9 @@
+import { NavigationContainer } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/contexts/login/AuthProvider';
-import { Router } from './src/routes/Route';
+import { TabProvider } from './src/contexts/TabContext';
+import { Route } from './src/routes/Route';
 import PermissionsScreen from './src/screens/permission/PermissionsScreen';
 import { ThemeProvider } from './src/theme/ThemeContext';
 import { checkFirstLaunch } from './src/utils/global/checkFirstLaunch';
@@ -25,13 +28,19 @@ function App(): React.JSX.Element {
     if (isFirstLaunch && !permissionsCompleted) {
       return <PermissionsScreen onPermissionsComplete={() => setPermissionsCompleted(true)} />;
     }
-    return <Router />;
+    return <Route />;
   };
 
   return (
-    <ThemeProvider>
-      <AuthProvider>{renderContent()}</AuthProvider>
-    </ThemeProvider>
+    <TabProvider>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <NavigationContainer>
+            <AuthProvider>{renderContent()}</AuthProvider>
+          </NavigationContainer>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </TabProvider>
   );
 }
 

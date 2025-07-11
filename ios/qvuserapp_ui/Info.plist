@@ -50,5 +50,9 @@
 	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We need your location to provide this service</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>BricolageGrotesque.ttf</string>
+	</array>
 </dict>
 </plist>

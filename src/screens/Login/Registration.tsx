@@ -4,6 +4,7 @@ import type { StackNavigationProp } from '@react-navigation/stack';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   Image,
   ImageBackground,
@@ -12,14 +13,13 @@ import {
   Platform,
   SafeAreaView,
   ScrollView,
-  StatusBar,
   StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import { ThemeText } from '../../components/common/theme/ThemeText';
 import { useAuth } from '../../contexts/login/AuthProvider';
 import { LoginStackParamList } from '../../navigation/LoginNavigation';
 import { useTheme } from '../../theme/ThemeContext';
@@ -48,7 +48,6 @@ const Registration: React.FC = () => {
   const handleDateChange = (event: any, selectedDate?: Date) => {
     const currentDate = selectedDate || dateOfBirth;
 
-    // Hide the picker on Android after selection
     if (Platform.OS === 'android') {
       setShowDatePicker(false);
     }
@@ -93,6 +92,22 @@ const Registration: React.FC = () => {
       valid = false;
     }
 
+    if (!gender) {
+      newErrors.gender = 'Please select your gender';
+      valid = false;
+    }
+
+    if (!dateOfBirth) {
+      newErrors.dateOfBirth = 'Date of birth is required';
+      valid = false;
+    } else {
+      const dateError = validateDate(dateOfBirth);
+      if (dateError) {
+        newErrors.dateOfBirth = dateError;
+        valid = false;
+      }
+    }
+
     setErrors(newErrors);
     return valid;
   };
@@ -103,13 +118,13 @@ const Registration: React.FC = () => {
     }
 
     setLoading(true);
-    if (fullName && email && dateOfBirth) {
+    if (fullName && email && gender && dateOfBirth) {
       try {
-        auth.signUp(fullName, 'IIMU', email, dateOfBirth.toDateString());
-
-        // Alert.alert('Success', 'Registration successful');
+        auth.signUp(fullName, gender, email, dateOfBirth.toDateString());
       } catch (error) {
-        console.log('registration failure');
+        // Handle error appropriately
+        console.error('Registration error:', error);
+        Alert.alert('Error', 'Failed to create account. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -180,7 +195,7 @@ const Registration: React.FC = () => {
       width: '90%',
       minHeight: height * 0.6,
       backgroundColor: theme.colors.card,
-      borderRadius: theme.borderRadius.md,
+      borderRadius: 16,
       padding: 24,
       marginTop: height * 0.24,
       shadowColor: theme.colors.shadow.color,
@@ -193,77 +208,78 @@ const Registration: React.FC = () => {
       marginBottom: 20,
     },
     title: {
-      fontSize: theme.typography.h2,
-      color: theme.colors.text,
       fontWeight: 'bold',
       textAlign: 'center',
     },
     subtitle: {
       textAlign: 'center',
-      color: theme.colors.subText,
       marginTop: 5,
       marginBottom: 20,
     },
-
-    label: {
-      color: theme.colors.subText,
-      fontSize: theme.typography.caption,
-      marginTop: 16,
-      marginBottom: 6,
+    inputContainer: {
+      marginBottom: 16,
     },
-    inputField: {
+    label: {
+      marginBottom: 8,
+    },
+    input: {
       backgroundColor: theme.colors.card,
       borderColor: theme.colors.border,
       borderWidth: 1,
-      borderRadius: theme.borderRadius.sm,
+      borderRadius: 8,
       paddingHorizontal: 12,
-      paddingVertical: 12,
+      paddingVertical: 10,
       color: theme.colors.text,
       fontSize: theme.typography.body,
-      marginBottom: 8,
+      fontFamily: theme.typography.fontFamily,
     },
-    errorInput: {
-      borderColor: theme.colors.error || '#EF4444',
+    inputFocused: {
+      borderColor: theme.colors.primary,
+      borderWidth: 2,
     },
     errorText: {
-      color: theme.colors.error || '#EF4444',
-      fontSize: theme.typography.small,
-      marginBottom: 12,
+      marginTop: 4,
+    },
+    datePickerButton: {
+      backgroundColor: theme.colors.card,
+      borderColor: theme.colors.border,
+      borderWidth: 1,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    dateText: {
+      flex: 1,
     },
     genderContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      marginBottom: 16,
+      marginTop: 8,
     },
-    genderOption: {
+    genderButton: {
       flex: 1,
-      marginHorizontal: 4,
-      paddingVertical: 10,
-      borderRadius: theme.borderRadius.sm,
-      borderWidth: 1,
+      backgroundColor: theme.colors.card,
       borderColor: theme.colors.border,
+      borderWidth: 1,
+      borderRadius: 8,
+      paddingVertical: 10,
+      marginHorizontal: 4,
       alignItems: 'center',
     },
-    genderOptionSelected: {
-      backgroundColor: theme.colors.secondary,
-      borderColor: theme.colors.secondary,
-    },
-    genderText: {
-      color: theme.colors.text,
-    },
-    genderTextSelected: {
-      color: theme.colors.background,
-      fontWeight: 'bold',
+    genderButtonSelected: {
+      backgroundColor: theme.colors.primary,
+      borderColor: theme.colors.primary,
     },
     registerButton: {
       backgroundColor: theme.colors.secondary,
-      borderRadius: theme.borderRadius.sm,
+      borderRadius: 8,
       paddingVertical: 14,
-      marginTop: 16,
+      marginTop: 24,
     },
-    registerButtonText: {
-      fontSize: theme.typography.body,
-      color: theme.colors.background,
+    registerText: {
       textAlign: 'center',
       fontWeight: 'bold',
     },
@@ -271,16 +287,12 @@ const Registration: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar backgroundColor={theme.colors.background} barStyle="light-content" />
       <KeyboardAvoidingView
-        style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingView}
       >
         <TouchableWithoutFeedback onPress={dismissKeyboard}>
-          <ScrollView
-            contentContainerStyle={styles.scrollContainer}
-            keyboardShouldPersistTaps="handled"
-          >
+          <ScrollView contentContainerStyle={styles.scrollContainer}>
             <View style={styles.container}>
               <ImageBackground
                 source={require('../../assets/images/bg_1.png')}
@@ -292,90 +304,194 @@ const Registration: React.FC = () => {
               </View>
 
               <View style={styles.card}>
-                <Text style={styles.title}>Register</Text>
-                <Text style={styles.subtitle}>Create your Quickverse account</Text>
-                <Text style={styles.label}>Full Name *</Text>
-                <TextInput
-                  value={fullName}
-                  onChangeText={text => {
-                    setFullName(text);
-                    setErrors(prev => ({ ...prev, fullName: '' }));
-                  }}
-                  placeholder="Enter your full name"
-                  style={[styles.inputField, errors.fullName && styles.errorInput]}
-                  placeholderTextColor="#9CA3AF"
-                  returnKeyType="next"
-                />
-                {errors.fullName ? <Text style={styles.errorText}>{errors.fullName}</Text> : null}
+                <ThemeText variant="h2" style={styles.title}>
+                  Create Account
+                </ThemeText>
+                <ThemeText variant="subtitle" color={theme.colors.subText} style={styles.subtitle}>
+                  Fill in your details to create an account
+                </ThemeText>
 
-                <Text style={styles.label}>Email *</Text>
-                <TextInput
-                  value={email}
-                  onChangeText={text => {
-                    setEmail(text);
-                    setErrors(prev => ({ ...prev, email: '' }));
-                  }}
-                  placeholder="Enter your email"
-                  keyboardType="email-address"
-                  style={[styles.inputField, errors.email && styles.errorInput]}
-                  placeholderTextColor="#9CA3AF"
-                  returnKeyType="next"
-                  autoCapitalize="none"
-                />
-                {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+                <View style={styles.inputContainer}>
+                  <ThemeText variant="caption" color={theme.colors.subText} style={styles.label}>
+                    Full Name
+                  </ThemeText>
+                  <TextInput
+                    value={fullName}
+                    onChangeText={text => {
+                      setFullName(text);
+                      setErrors(prev => ({ ...prev, fullName: '' }));
+                    }}
+                    placeholder="Enter your full name"
+                    placeholderTextColor={theme.colors.placeholder}
+                    style={[
+                      styles.input,
+                      errors.fullName ? { borderColor: theme.colors.error } : null,
+                    ]}
+                  />
+                  {errors.fullName ? (
+                    <ThemeText
+                      variant="caption"
+                      color={theme.colors.error}
+                      style={styles.errorText}
+                    >
+                      {errors.fullName}
+                    </ThemeText>
+                  ) : null}
+                </View>
 
-                <Text style={styles.label}>Gender</Text>
-                <View style={styles.genderContainer}>
-                  {['Male', 'Female', 'Other'].map(option => (
+                <View style={styles.inputContainer}>
+                  <ThemeText variant="caption" color={theme.colors.subText} style={styles.label}>
+                    Email
+                  </ThemeText>
+                  <TextInput
+                    value={email}
+                    onChangeText={text => {
+                      setEmail(text);
+                      setErrors(prev => ({ ...prev, email: '' }));
+                    }}
+                    placeholder="Enter your email"
+                    placeholderTextColor={theme.colors.placeholder}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    style={[
+                      styles.input,
+                      errors.email ? { borderColor: theme.colors.error } : null,
+                    ]}
+                  />
+                  {errors.email ? (
+                    <ThemeText
+                      variant="caption"
+                      color={theme.colors.error}
+                      style={styles.errorText}
+                    >
+                      {errors.email}
+                    </ThemeText>
+                  ) : null}
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <ThemeText variant="caption" color={theme.colors.subText} style={styles.label}>
+                    Gender
+                  </ThemeText>
+                  <View style={styles.genderContainer}>
                     <TouchableOpacity
-                      key={option}
                       style={[
-                        styles.genderOption,
-                        gender === option && styles.genderOptionSelected,
+                        styles.genderButton,
+                        gender === 'Male' && styles.genderButtonSelected,
                       ]}
                       onPress={() => {
-                        setGender(option);
+                        setGender('Male');
                         setErrors(prev => ({ ...prev, gender: '' }));
                       }}
                     >
-                      <Text
-                        style={[styles.genderText, gender === option && styles.genderTextSelected]}
+                      <ThemeText
+                        variant="body"
+                        color={gender === 'Male' ? theme.colors.background : theme.colors.text}
                       >
-                        {option}
-                      </Text>
+                        Male
+                      </ThemeText>
                     </TouchableOpacity>
-                  ))}
+                    <TouchableOpacity
+                      style={[
+                        styles.genderButton,
+                        gender === 'Female' && styles.genderButtonSelected,
+                      ]}
+                      onPress={() => {
+                        setGender('Female');
+                        setErrors(prev => ({ ...prev, gender: '' }));
+                      }}
+                    >
+                      <ThemeText
+                        variant="body"
+                        color={gender === 'Female' ? theme.colors.background : theme.colors.text}
+                      >
+                        Female
+                      </ThemeText>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.genderButton,
+                        gender === 'Other' && styles.genderButtonSelected,
+                      ]}
+                      onPress={() => {
+                        setGender('Other');
+                        setErrors(prev => ({ ...prev, gender: '' }));
+                      }}
+                    >
+                      <ThemeText
+                        variant="body"
+                        color={gender === 'Other' ? theme.colors.background : theme.colors.text}
+                      >
+                        Other
+                      </ThemeText>
+                    </TouchableOpacity>
+                  </View>
+                  {errors.gender ? (
+                    <ThemeText
+                      variant="caption"
+                      color={theme.colors.error}
+                      style={styles.errorText}
+                    >
+                      {errors.gender}
+                    </ThemeText>
+                  ) : null}
                 </View>
 
-                <Text style={styles.label}>Date of Birth</Text>
-                <TouchableOpacity style={styles.inputField} onPress={() => setShowDatePicker(true)}>
-                  <Text style={{ color: dateOfBirth ? '#F3F4F6' : '#9CA3AF' }}>
-                    {dateOfBirth ? formatDate(dateOfBirth) : 'Select your date of birth'}
-                  </Text>
-                </TouchableOpacity>
-                {errors.dateOfBirth ? (
-                  <Text style={styles.errorText}>{errors.dateOfBirth}</Text>
-                ) : null}
+                <View style={styles.inputContainer}>
+                  <ThemeText variant="caption" color={theme.colors.subText} style={styles.label}>
+                    Date of Birth
+                  </ThemeText>
+                  <TouchableOpacity
+                    style={[
+                      styles.datePickerButton,
+                      errors.dateOfBirth ? { borderColor: theme.colors.error } : null,
+                    ]}
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <ThemeText
+                      variant="body"
+                      color={dateOfBirth ? theme.colors.text : theme.colors.placeholder}
+                      style={styles.dateText}
+                    >
+                      {dateOfBirth ? formatDate(dateOfBirth) : 'Select your date of birth'}
+                    </ThemeText>
+                  </TouchableOpacity>
+                  {errors.dateOfBirth ? (
+                    <ThemeText
+                      variant="caption"
+                      color={theme.colors.error}
+                      style={styles.errorText}
+                    >
+                      {errors.dateOfBirth}
+                    </ThemeText>
+                  ) : null}
+                </View>
 
                 {showDatePicker && (
                   <DateTimePicker
                     value={dateOfBirth || new Date()}
                     mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    display="default"
                     onChange={handleDateChange}
                     maximumDate={new Date()}
                   />
                 )}
 
                 <TouchableOpacity
-                  style={styles.registerButton}
+                  style={[styles.registerButton, loading && { opacity: 0.7 }]}
                   onPress={handleRegister}
                   disabled={loading}
                 >
                   {loading ? (
-                    <ActivityIndicator color="#fff" />
+                    <ActivityIndicator color={theme.colors.background} />
                   ) : (
-                    <Text style={styles.registerButtonText}>Register</Text>
+                    <ThemeText
+                      variant="body"
+                      color={theme.colors.background}
+                      style={styles.registerText}
+                    >
+                      Create Account
+                    </ThemeText>
                   )}
                 </TouchableOpacity>
               </View>
