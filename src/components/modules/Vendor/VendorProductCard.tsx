@@ -250,7 +250,7 @@ const VendorProductCard: React.FC<VendorProductCardProps> = ({
     offerRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginTop: 2,
+      marginTop: -2,
     },
     offerText: {
       marginLeft: 4,
