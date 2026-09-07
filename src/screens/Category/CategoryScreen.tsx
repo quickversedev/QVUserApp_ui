@@ -38,6 +38,7 @@ import useProductTagsStore from '../../store/tags/productTagsStore';
 import QuickSearchStrip from './components/QuickSearchStrip';
 import BestSellersSection from './components/BestSellersSection';
 import useFeaturedProductsStore from '../../store/products/featuredProductsStore';
+import useVendorCouponsStore from '../../store/coupons/vendorCouponsStore';
 
 type CategoryScreenRouteProp = RouteProp<RootStackParamList, 'Category'>;
 
@@ -97,6 +98,7 @@ const CategoryScreen = () => {
         await useProductTagsStore.getState().fetchTags(categoryName, refreshedShopIds);
       }
       useFeaturedProductsStore.getState().clearCache();
+      useVendorCouponsStore.getState().invalidateCache();
     } catch (error) {
       console.warn('Error refreshing category screen:', error);
     } finally {
@@ -207,6 +209,13 @@ const CategoryScreen = () => {
     };
 
     loadCollections();
+  }, [isGrocery]);
+
+  const getBestCouponText = useVendorCouponsStore(s => s.getBestCouponText);
+
+  useEffect(() => {
+    const serviceType = isGrocery ? 'GROCERY' : 'FOOD';
+    useVendorCouponsStore.getState().fetchCoupons(serviceType);
   }, [isGrocery]);
 
   // Cart Logic
@@ -349,6 +358,7 @@ const CategoryScreen = () => {
                         vendor={top}
                         size={(SCREEN_WIDTH - 32 - 20) / 3}
                         onPress={handleVendorPress}
+                        couponTag={getBestCouponText(top.shopId)}
                       />
                     ) : (
                       // Row 2 can be longer than row 1. Without a spacer the lone bottom
@@ -374,6 +384,7 @@ const CategoryScreen = () => {
                         vendor={bottom}
                         size={(SCREEN_WIDTH - 32 - 20) / 3}
                         onPress={handleVendorPress}
+                        couponTag={getBestCouponText(bottom.shopId)}
                       />
                     )}
                   </View>

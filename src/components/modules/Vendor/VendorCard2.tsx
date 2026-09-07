@@ -24,6 +24,7 @@ interface VendorCardProps {
   isFavorite?: boolean;
   size?: CardSize;
   disabled?: boolean;
+  couponTag?: string | null;
 }
 
 const VendorCard2: React.FC<VendorCardProps> = ({
@@ -33,6 +34,7 @@ const VendorCard2: React.FC<VendorCardProps> = ({
   isFavorite = false,
   size = 'medium',
   disabled = false,
+  couponTag,
 }) => {
   const { getColor, theme } = useTheme();
 
@@ -203,6 +205,20 @@ const VendorCard2: React.FC<VendorCardProps> = ({
     closedCard: {
       opacity: 0.6,
     },
+    couponBadge: {
+      alignSelf: 'flex-start' as const,
+      backgroundColor: '#16A34A',
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+      marginTop: 4,
+      marginHorizontal: 6,
+    },
+    couponText: {
+      fontSize: 8,
+      fontWeight: '700' as const,
+      color: '#fff',
+    },
   });
 
   return (
@@ -249,6 +265,12 @@ const VendorCard2: React.FC<VendorCardProps> = ({
                         />
                     </TouchableOpacity> */}
         </View>
+
+        {!isStoreClosed && couponTag && (
+          <View style={styles.couponBadge}>
+            <ThemeText style={styles.couponText}>{couponTag}</ThemeText>
+          </View>
+        )}
 
         <View style={styles.contentContainer}>
           <ThemeText style={styles.title} numberOfLines={1}>
