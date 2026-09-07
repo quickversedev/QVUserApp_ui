@@ -99,12 +99,15 @@ const CategoryScreen = () => {
       }
       useFeaturedProductsStore.getState().clearCache();
       useVendorCouponsStore.getState().invalidateCache();
+      const serviceType = isGrocery ? 'GROCERY' : 'FOOD';
+      await useVendorCouponsStore.getState().fetchForVendors(refreshedShopIds, serviceType);
+      useVendorCouponsStore.getState().startRotation();
     } catch (error) {
       console.warn('Error refreshing category screen:', error);
     } finally {
       setIsRefreshing(false);
     }
-  }, [categoryName]);
+  }, [categoryName, isGrocery]);
 
   const categoryVendors = React.useMemo(() => {
     return getVendorsByCategory(categoryName).filter(
