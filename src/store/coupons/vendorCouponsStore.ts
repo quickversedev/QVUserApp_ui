@@ -17,18 +17,39 @@ function formatCoupon(c: any): string {
 }
 
 interface VendorCouponsState {
-  couponsByVendor: Record<string, string>;
+  /** shopId → array of all formatted coupon labels */
+  couponsByVendor: Record<string, string[]>;
+  /** Global tick counter — increments every 3s, drives coupon rotation for all cards */
+  tick: number;
   loading: boolean;
   fetchedVendors: Set<string>;
   fetchForVendors: (shopIds: string[], serviceType?: string) => Promise<void>;
-  getBestCouponText: (shopId: string) => string | null;
+  startRotation: () => void;
+  stopRotation: () => void;
   invalidateCache: () => void;
 }
 
+let rotationTimer: ReturnType<typeof setInterval> | null = null;
+
 const useVendorCouponsStore = create<VendorCouponsState>((set, get) => ({
   couponsByVendor: {},
+  tick: 0,
   loading: false,
   fetchedVendors: new Set(),
+
+  startRotation: () => {
+    if (rotationTimer) return;
+    rotationTimer = setInterval(() => {
+      set(s => ({ tick: s.tick + 1 }));
+    }, 3000);
+  },
+
+  stopRotation: () => {
+    if (rotationTimer) {
+      clearInterval(rotationTimer);
+      rotationTimer = null;
+    }
+  },
 
   fetchForVendors: async (shopIds: string[], serviceType = 'FOOD') => {
     const regionId = useConfigStore.getState().getRegionId();
@@ -46,22 +67,22 @@ const useVendorCouponsStore = create<VendorCouponsState>((set, get) => ({
           .getAvailableCoupons(regionId, shopId, serviceType)
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .then((coupons: any[]) => {
-            if (!coupons || coupons.length === 0) return { shopId, label: '' };
-            const label = formatCoupon(coupons[0]);
-            return { shopId, label };
+            if (!coupons || coupons.length === 0) return { shopId, labels: [] as string[] };
+            const labels = coupons.map(formatCoupon).filter(Boolean);
+            return { shopId, labels };
           })
-          .catch(() => ({ shopId, label: '' }))
+          .catch(() => ({ shopId, labels: [] as string[] }))
       )
     );
 
-    const newCoupons: Record<string, string> = {};
+    const newCoupons: Record<string, string[]> = {};
     const newFetched = new Set(alreadyFetched);
 
     for (const result of results) {
-      if (result.status === 'fulfilled' && result.value.label) {
-        newCoupons[result.value.shopId] = result.value.label;
-      }
       if (result.status === 'fulfilled') {
+        if (result.value.labels.length > 0) {
+          newCoupons[result.value.shopId] = result.value.labels;
+        }
         newFetched.add(result.value.shopId);
       }
     }
@@ -73,12 +94,9 @@ const useVendorCouponsStore = create<VendorCouponsState>((set, get) => ({
     }));
   },
 
-  getBestCouponText: (shopId: string) => {
-    return get().couponsByVendor[shopId] ?? null;
-  },
-
   invalidateCache: () => {
-    set({ couponsByVendor: {}, fetchedVendors: new Set(), loading: false });
+    get().stopRotation();
+    set({ couponsByVendor: {}, fetchedVendors: new Set(), loading: false, tick: 0 });
   },
 }));
 

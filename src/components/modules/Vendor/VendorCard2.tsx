@@ -50,6 +50,8 @@ const VendorCard2: React.FC<VendorCardProps> = ({
 
   const isStoreClosed = disabled || !storeStatus.isOpen;
 
+  const activeCoupon = couponTag || null;
+
   const getCardWidth = (): number => {
     switch (size) {
       case 'small':
@@ -262,9 +264,9 @@ const VendorCard2: React.FC<VendorCardProps> = ({
                     </TouchableOpacity> */}
         </View>
 
-        {!isStoreClosed && couponTag && (
+        {!isStoreClosed && activeCoupon && (
           <View style={styles.couponBadge}>
-            <ThemeText style={styles.couponText}>{couponTag}</ThemeText>
+            <ThemeText style={styles.couponText}>{activeCoupon}</ThemeText>
           </View>
         )}
 

@@ -212,13 +212,25 @@ const CategoryScreen = () => {
   }, [isGrocery]);
 
   const couponsByVendor = useVendorCouponsStore(s => s.couponsByVendor);
+  const couponTick = useVendorCouponsStore(s => s.tick);
 
   useEffect(() => {
     const shopIds = categoryVendors.map(v => v.shopId).filter(Boolean);
     if (shopIds.length === 0) return;
     const serviceType = isGrocery ? 'GROCERY' : 'FOOD';
     useVendorCouponsStore.getState().fetchForVendors(shopIds, serviceType);
+    useVendorCouponsStore.getState().startRotation();
+    return () => useVendorCouponsStore.getState().stopRotation();
   }, [isGrocery, categoryVendors]);
+
+  const getActiveCoupon = React.useCallback(
+    (shopId: string): string | null => {
+      const labels = couponsByVendor[shopId];
+      if (!labels || labels.length === 0) return null;
+      return labels[couponTick % labels.length];
+    },
+    [couponsByVendor, couponTick],
+  );
 
   // Cart Logic
 
@@ -360,7 +372,7 @@ const CategoryScreen = () => {
                         vendor={top}
                         size={(SCREEN_WIDTH - 32 - 20) / 3}
                         onPress={handleVendorPress}
-                        couponTag={couponsByVendor[top.shopId]}
+                        couponTag={getActiveCoupon(top.shopId)}
                       />
                     ) : (
                       // Row 2 can be longer than row 1. Without a spacer the lone bottom
@@ -386,7 +398,7 @@ const CategoryScreen = () => {
                         vendor={bottom}
                         size={(SCREEN_WIDTH - 32 - 20) / 3}
                         onPress={handleVendorPress}
-                        couponTag={couponsByVendor[bottom.shopId]}
+                        couponTag={getActiveCoupon(bottom.shopId)}
                       />
                     )}
                   </View>
@@ -397,7 +409,7 @@ const CategoryScreen = () => {
                 initialNumToRender={3}
                 maxToRenderPerBatch={3}
                 windowSize={3}
-                removeClippedSubviews={true}
+                removeClippedSubviews={false}
               />
 
               {bestSellerVendors.length > 0 && (
