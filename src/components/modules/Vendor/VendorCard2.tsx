@@ -206,14 +206,14 @@ const VendorCard2: React.FC<VendorCardProps> = ({
       opacity: 0.6,
     },
     couponBadge: {
-      backgroundColor: '#16A34A',
-      paddingVertical: 3,
+      backgroundColor: 'rgba(22, 163, 74, 0.1)',
+      paddingVertical: 1,
       alignItems: 'center' as const,
     },
     couponText: {
       fontSize: 9,
       fontWeight: '700' as const,
-      color: '#fff',
+      color: '#16A34A',
     },
   });
 
