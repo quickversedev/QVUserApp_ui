@@ -206,16 +206,12 @@ const VendorCard2: React.FC<VendorCardProps> = ({
       opacity: 0.6,
     },
     couponBadge: {
-      alignSelf: 'flex-start' as const,
       backgroundColor: '#16A34A',
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 4,
-      marginTop: 4,
-      marginHorizontal: 6,
+      paddingVertical: 3,
+      alignItems: 'center' as const,
     },
     couponText: {
-      fontSize: 8,
+      fontSize: 9,
       fontWeight: '700' as const,
       color: '#fff',
     },
@@ -250,7 +246,7 @@ const VendorCard2: React.FC<VendorCardProps> = ({
                 style={{ marginRight: 3 }}
               />
               <ThemeText style={styles.timeBadgeText}>
-                {(vendor.preparationTime || '30 mins').replace(/\s*mins?\s*/i, '')}
+                {(vendor.preparationTime || '30 mins').replace(/\s*mins?\s*/i, '')} min
               </ThemeText>
             </View>
           )}
