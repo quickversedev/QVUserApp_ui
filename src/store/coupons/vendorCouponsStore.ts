@@ -1,118 +1,84 @@
 import { create } from 'zustand';
-import axiosInstance, { apiCall, getAuthHeader } from '../../config/api/axios.config';
+import couponApi from '../../services/api/couponSevice';
 import useConfigStore from '../configStore';
 
-interface RawCoupon {
-  code: string;
-  discountValue: number | null;
-  type: 'PERCENTAGE' | 'FIXED' | 'FREE_DELIVERY';
-  uptoValue: number | null;
-  mov: number | null;
-  shopIds: string[] | null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function formatCoupon(c: any): string {
+  if (c.type === 'FREE_DELIVERY') {
+    return c.mov && c.mov > 0 ? `Free delivery above ₹${c.mov}` : 'Free Delivery';
+  }
+  if (c.type === 'FIXED' && c.discountValue != null) {
+    return `₹${c.discountValue} OFF`;
+  }
+  if (c.type === 'PERCENTAGE' && c.discountValue != null) {
+    return `${c.discountValue}% OFF`;
+  }
+  return '';
 }
 
 interface VendorCouponsState {
-  /** shopId → formatted coupon label (e.g. "20% OFF") */
   couponsByVendor: Record<string, string>;
-  /** Best platform-wide coupon label, applied to vendors with nothing vendor-specific */
-  platformCouponText: string | null;
   loading: boolean;
-  lastFetched: Record<string, number>;
-  fetchCoupons: (serviceType?: string) => Promise<void>;
+  fetchedVendors: Set<string>;
+  fetchForVendors: (shopIds: string[], serviceType?: string) => Promise<void>;
   getBestCouponText: (shopId: string) => string | null;
   invalidateCache: () => void;
 }
 
-const CACHE_TTL = 5 * 60 * 1000;
-
-function formatCoupon(coupon: RawCoupon): string {
-  switch (coupon.type) {
-    case 'PERCENTAGE':
-      return `${coupon.discountValue}% OFF`;
-    case 'FIXED':
-      return `₹${coupon.discountValue} OFF`;
-    case 'FREE_DELIVERY':
-      return 'Free Delivery';
-    default:
-      return '';
-  }
-}
-
 const useVendorCouponsStore = create<VendorCouponsState>((set, get) => ({
   couponsByVendor: {},
-  platformCouponText: null,
   loading: false,
-  lastFetched: {},
+  fetchedVendors: new Set(),
 
-  fetchCoupons: async (serviceType = 'FOOD') => {
-    const now = Date.now();
-    const last = get().lastFetched[serviceType] ?? 0;
-    if (now - last < CACHE_TTL) return;
-
+  fetchForVendors: async (shopIds: string[], serviceType = 'FOOD') => {
     const regionId = useConfigStore.getState().getRegionId();
     if (!regionId) return;
 
+    const alreadyFetched = get().fetchedVendors;
+    const toFetch = shopIds.filter(id => !alreadyFetched.has(id));
+    if (toFetch.length === 0) return;
+
     set({ loading: true });
-    try {
-      const authHeader = getAuthHeader();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const data: any = await apiCall(
-        axiosInstance.get('/v3/coupons/available', {
-          params: { regionId, serviceType },
-          headers: { Authorization: authHeader },
-        })
-      );
 
-      const rawCoupons: RawCoupon[] = (data?.response?.data ?? []).map(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (c: any) => ({
-          code: c.code ?? '',
-          discountValue: c.discountValue ?? 0,
-          type: c.type ?? 'FIXED',
-          uptoValue: c.uptoValue ?? null,
-          mov: c.mov ?? 0,
-          shopIds: c.shopIds,
-        })
-      );
+    const results = await Promise.allSettled(
+      toFetch.map(shopId =>
+        couponApi
+          .getAvailableCoupons(regionId, shopId, serviceType)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .then((coupons: any[]) => {
+            if (!coupons || coupons.length === 0) return { shopId, label: '' };
+            const label = formatCoupon(coupons[0]);
+            return { shopId, label };
+          })
+          .catch(() => ({ shopId, label: '' }))
+      )
+    );
 
-      const byVendor: Record<string, string> = {};
-      let platformBest: RawCoupon | null = null;
+    const newCoupons: Record<string, string> = {};
+    const newFetched = new Set(alreadyFetched);
 
-      for (const coupon of rawCoupons) {
-        if (!coupon.shopIds || coupon.shopIds.length === 0) {
-          if (!platformBest || (coupon.discountValue ?? 0) > (platformBest.discountValue ?? 0)) {
-            platformBest = coupon;
-          }
-        } else {
-          const text = formatCoupon(coupon);
-          if (!text) continue;
-          for (const shopId of coupon.shopIds) {
-            if (!byVendor[shopId]) {
-              byVendor[shopId] = text;
-            }
-          }
-        }
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value.label) {
+        newCoupons[result.value.shopId] = result.value.label;
       }
-
-      set({
-        couponsByVendor: byVendor,
-        platformCouponText: platformBest ? formatCoupon(platformBest) : null,
-        loading: false,
-        lastFetched: { ...get().lastFetched, [serviceType]: now },
-      });
-    } catch (error) {
-      console.warn('[vendorCouponsStore] Failed to fetch coupons:', error);
-      set({ loading: false });
+      if (result.status === 'fulfilled') {
+        newFetched.add(result.value.shopId);
+      }
     }
+
+    set(state => ({
+      couponsByVendor: { ...state.couponsByVendor, ...newCoupons },
+      fetchedVendors: newFetched,
+      loading: false,
+    }));
   },
 
   getBestCouponText: (shopId: string) => {
-    const { couponsByVendor, platformCouponText } = get();
-    return couponsByVendor[shopId] ?? platformCouponText;
+    return get().couponsByVendor[shopId] ?? null;
   },
 
   invalidateCache: () => {
-    set({ lastFetched: {} });
+    set({ couponsByVendor: {}, fetchedVendors: new Set(), loading: false });
   },
 }));
 

@@ -211,12 +211,14 @@ const CategoryScreen = () => {
     loadCollections();
   }, [isGrocery]);
 
-  const getBestCouponText = useVendorCouponsStore(s => s.getBestCouponText);
+  const couponsByVendor = useVendorCouponsStore(s => s.couponsByVendor);
 
   useEffect(() => {
+    const shopIds = categoryVendors.map(v => v.shopId).filter(Boolean);
+    if (shopIds.length === 0) return;
     const serviceType = isGrocery ? 'GROCERY' : 'FOOD';
-    useVendorCouponsStore.getState().fetchCoupons(serviceType);
-  }, [isGrocery]);
+    useVendorCouponsStore.getState().fetchForVendors(shopIds, serviceType);
+  }, [isGrocery, categoryVendors]);
 
   // Cart Logic
 
@@ -358,7 +360,7 @@ const CategoryScreen = () => {
                         vendor={top}
                         size={(SCREEN_WIDTH - 32 - 20) / 3}
                         onPress={handleVendorPress}
-                        couponTag={getBestCouponText(top.shopId)}
+                        couponTag={couponsByVendor[top.shopId]}
                       />
                     ) : (
                       // Row 2 can be longer than row 1. Without a spacer the lone bottom
@@ -384,7 +386,7 @@ const CategoryScreen = () => {
                         vendor={bottom}
                         size={(SCREEN_WIDTH - 32 - 20) / 3}
                         onPress={handleVendorPress}
-                        couponTag={getBestCouponText(bottom.shopId)}
+                        couponTag={couponsByVendor[bottom.shopId]}
                       />
                     )}
                   </View>
