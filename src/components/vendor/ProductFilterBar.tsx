@@ -44,8 +44,14 @@ export interface ProductSortDef {
 
 /** Minimum discount for the offers chip, as a percentage. */
 const MIN_DISCOUNT = 30;
-/** Minimum rating for the well-rated chip. */
-const MIN_RATING = 4;
+/**
+ * Minimum rating for the well-rated chip.
+ *
+ * 4.2 rather than 4.0 because the seeded ratings span 3.9-4.3: at 4.0 the chip matched
+ * 88% of the catalogue, which divides nothing. 4.2 splits it roughly 38/62 and is still
+ * a defensible "well rated" bar if the spread widens later.
+ */
+const MIN_RATING = 4.2;
 /** Below this many priced items a "cheap" band is not a meaningful division. */
 const MIN_PRODUCTS_FOR_PRICE_BAND = 4;
 

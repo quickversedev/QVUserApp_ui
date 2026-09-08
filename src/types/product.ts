@@ -1,7 +1,11 @@
 export interface Product {
   name: string;
   mrp: number;
-  rating: number;
+  /**
+   * Absent when the product has never been rated — the server omits the field rather
+   * than sending 0, so a missing value must not be read as a zero-star rating.
+   */
+  rating?: number | null;
   discount: number;
   /**
    * Tri-state: true = vegetarian, false = non-vegetarian, absent/null = not classified.

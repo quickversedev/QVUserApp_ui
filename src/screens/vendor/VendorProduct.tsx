@@ -1300,7 +1300,8 @@ const VendorProductComponent: React.FC = () => {
                 key={product.sku}
                 product={product}
                 size="big"
-                rating={product.rating}
+                // null means unrated; ProductCard's default of 0 then suppresses the badge
+                rating={product.rating ?? undefined}
                 quantity={getProductQuantity(product.sku)}
                 onAdd={() => handleAddToCart(product)}
                 onIncrement={() => handleIncrement(product.sku)}
