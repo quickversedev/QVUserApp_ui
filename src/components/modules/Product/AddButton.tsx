@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import { useTheme } from '../../../theme/ThemeContext';
 import { triggerAddToCartHaptic } from '../../../utils/haptics';
@@ -11,6 +11,23 @@ interface AddButtonProps {
   numberOfVariants?: number;
   showVariantsCount?: boolean;
   disabled?: boolean;
+  /**
+   * Overrides on the root container, mirroring QuantitySelector's prop of the same
+   * name. The default style absolutely positions this bottom-right inside a
+   * ProductCard image; pass this to re-place it elsewhere (the PLP grid puts it
+   * inline at the right of the price row).
+   */
+  containerStyle?: StyleProp<ViewStyle>;
+  /**
+   * Overrides the border/text/icon colour, which otherwise follows the theme's
+   * primary. The PLP grid uses it for the QV PLP design's green treatment.
+   */
+  tintColor?: string;
+  /**
+   * The trailing "+" glyph beside the ADD label. The QV PLP design's button is the
+   * word alone, so the grid turns it off.
+   */
+  showPlusIcon?: boolean;
 }
 
 const AddButton: React.FC<AddButtonProps> = ({
@@ -19,8 +36,12 @@ const AddButton: React.FC<AddButtonProps> = ({
   numberOfVariants = 1,
   showVariantsCount = false,
   disabled = false,
+  containerStyle,
+  tintColor,
+  showPlusIcon = true,
 }) => {
   const { getColor, getTypography, theme } = useTheme();
+  const tint = tintColor ?? getColor('primary');
 
   const hasMultipleVariants = numberOfVariants > 1;
   const shouldShowBadge = (size === 'small' || size === 'xs') && hasMultipleVariants;
@@ -44,7 +65,7 @@ const AddButton: React.FC<AddButtonProps> = ({
       right: 2,
       bottom: 2,
       borderWidth: 1.5,
-      borderColor: getColor('primary'),
+      borderColor: tint,
       borderRadius: theme.borderRadius.sm,
       minWidth: buttonWidth,
       height: buttonHeight,
@@ -65,7 +86,7 @@ const AddButton: React.FC<AddButtonProps> = ({
       height: 'auto',
     },
     addButtonText: {
-      color: getColor('primary'),
+      color: tint,
       fontWeight: '600',
       marginLeft: 2,
     },
@@ -73,7 +94,7 @@ const AddButton: React.FC<AddButtonProps> = ({
       marginLeft: 0,
     },
     addButtonTextXs: {
-      color: getColor('primary'),
+      color: tint,
       fontWeight: '700',
       fontSize: getTypography('small') - 2,
       marginLeft: 1,
@@ -119,8 +140,8 @@ const AddButton: React.FC<AddButtonProps> = ({
   if (shouldShowBadge) {
     return (
       <>
-        <TouchableOpacity style={styles.addButton} onPress={handleSafePress}>
-          <MaterialCommunityIcons name="plus" size={18} color={getColor('primary')} />
+        <TouchableOpacity style={[styles.addButton, containerStyle]} onPress={handleSafePress}>
+          <MaterialCommunityIcons name="plus" size={18} color={tint} />
           <View style={styles.badge}>
             <ThemeText variant="small" color={getColor('white')} style={styles.badgeText}>
               {numberOfVariants}
@@ -136,12 +157,12 @@ const AddButton: React.FC<AddButtonProps> = ({
     return (
       <>
         <TouchableOpacity
-          style={[styles.addButton, styles.addButtonWithVariants]}
+          style={[styles.addButton, styles.addButtonWithVariants, containerStyle]}
           onPress={handleSafePress}
         >
           <ThemeText
             variant="caption"
-            color={getColor('primary')}
+            color={tint}
             style={[styles.addButtonText, styles.addButtonTextWithVariants]}
           >
             ADD
@@ -156,22 +177,22 @@ const AddButton: React.FC<AddButtonProps> = ({
   // Default buttons (no variants or single variant)
   return (
     <>
-      <TouchableOpacity style={styles.addButton} onPress={handleSafePress}>
+      <TouchableOpacity style={[styles.addButton, containerStyle]} onPress={handleSafePress}>
         {size === 'xs' ? (
           <>
-            <MaterialCommunityIcons name="plus" size={13} color={getColor('primary')} />
-            <ThemeText variant="caption" color={getColor('primary')} style={styles.addButtonTextXs}>
+            <MaterialCommunityIcons name="plus" size={13} color={tint} />
+            <ThemeText variant="caption" color={tint} style={styles.addButtonTextXs}>
               Add
             </ThemeText>
           </>
         ) : size === 'small' ? (
-          <MaterialCommunityIcons name="plus" size={18} color={getColor('primary')} />
+          <MaterialCommunityIcons name="plus" size={18} color={tint} />
         ) : (
           <>
-            <ThemeText variant="caption" color={getColor('primary')} style={styles.addButtonText}>
+            <ThemeText variant="caption" color={tint} style={styles.addButtonText}>
               ADD
             </ThemeText>
-            <MaterialCommunityIcons name="plus" size={16} color={getColor('primary')} />
+            {showPlusIcon && <MaterialCommunityIcons name="plus" size={16} color={tint} />}
           </>
         )}
       </TouchableOpacity>

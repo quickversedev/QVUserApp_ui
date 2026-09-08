@@ -15,6 +15,13 @@ interface QuantitySelectorProps {
    * (ProductDetailModal uses it as a centred pill straddling the hero's edge).
    */
   containerStyle?: StyleProp<ViewStyle>;
+  /**
+   * Overrides the border and +/- colour (theme primary by default). The PLP grid
+   * passes white, since there the stepper is a filled green pill.
+   */
+  tintColor?: string;
+  /** Overrides the quantity numeral's colour (theme text by default). */
+  quantityColor?: string;
 }
 
 const QuantitySelector: React.FC<QuantitySelectorProps> = ({
@@ -24,8 +31,12 @@ const QuantitySelector: React.FC<QuantitySelectorProps> = ({
   size = 'regular',
   disabled = false,
   containerStyle,
+  tintColor,
+  quantityColor,
 }) => {
   const { getColor, theme } = useTheme();
+  const tint = tintColor ?? getColor('primary');
+  const numeral = quantityColor ?? getColor('text');
 
   const styles = StyleSheet.create({
     quantitySelector: {
@@ -33,7 +44,7 @@ const QuantitySelector: React.FC<QuantitySelectorProps> = ({
       right: 2,
       bottom: 2,
       borderWidth: 1.5,
-      borderColor: getColor('primary'),
+      borderColor: tint,
       borderRadius: theme.borderRadius.sm,
       // xs matches AddButton's 52x24 so the card doesn't resize on first add
       minWidth: size === 'xs' ? 52 : size === 'small' ? 64 : 72,
@@ -60,14 +71,14 @@ const QuantitySelector: React.FC<QuantitySelectorProps> = ({
     },
     qtyText: {
       fontSize: size === 'xs' ? 16 : size === 'small' ? 18 : 20,
-      color: getColor('primary'),
+      color: tint,
       fontWeight: '600',
       textAlign: 'center',
       includeFontPadding: false,
       textAlignVertical: 'center',
     },
     qtyNum: {
-      color: getColor('text'),
+      color: numeral,
       fontWeight: '600',
       marginHorizontal: size === 'xs' ? 2 : size === 'small' ? 4 : 6,
       minWidth: size === 'xs' ? 14 : size === 'small' ? 16 : 20,
@@ -89,7 +100,7 @@ const QuantitySelector: React.FC<QuantitySelectorProps> = ({
         <ThemeText
           variant={getVariant()}
           style={[styles.qtyText, disabled && { opacity: 0.5 }]}
-          color={getColor('primary')}
+          color={tint}
         >
           -
         </ThemeText>
@@ -97,7 +108,7 @@ const QuantitySelector: React.FC<QuantitySelectorProps> = ({
       <ThemeText
         variant={getVariant()}
         style={[styles.qtyNum, disabled && { opacity: 0.5 }]}
-        color={getColor('text')}
+        color={numeral}
       >
         {quantity}
       </ThemeText>
@@ -105,7 +116,7 @@ const QuantitySelector: React.FC<QuantitySelectorProps> = ({
         <ThemeText
           variant={getVariant()}
           style={[styles.qtyText, disabled && { opacity: 0.5 }]}
-          color={getColor('primary')}
+          color={tint}
         >
           +
         </ThemeText>

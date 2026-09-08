@@ -19,11 +19,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Images } from '../../assets';
 import CartBar from '../../components/common/Cart/CartBar';
-import HorizontalProductCard from '../../components/modules/Product/HorizontalProductCard';
+import ProductCard from '../../components/modules/Product/ProductCard';
 import ProductDetailModal from '../../components/modules/Product/ProductDetailModal';
 import VariantsModal from '../../components/modules/Product/VariantsModal';
 import VendorProductSkeleton from '../../components/modules/Vendor/VendorProductSkeleton';
 import CategoryHeader from '../../components/vendor/CategoryHeader';
+import ProductFilterBar, {
+  buildProductFilters,
+  buildProductSorts,
+} from '../../components/vendor/ProductFilterBar';
 import CategoryTabs, { CategoryItem } from '../../components/vendor/CategoryTabs';
 import VendorHeaderCard from '../../components/vendor/VendorHeaderCard';
 import { useAuth } from '../../contexts/login/AuthProvider';
@@ -55,7 +59,10 @@ type VendorProductRouteProp = RouteProp<
 const { width } = Dimensions.get('window');
 
 // Constants for better performance
-const NUM_COLUMNS = 1;
+// Two-up grid beside the category rail, matching the "QV PLP" design. ProductCard's
+// 'big' size is measured for exactly this (screen width minus the 85px sidebar, split
+// in two), so the column count and the card width have to stay in step.
+const NUM_COLUMNS = 2;
 const CATEGORY_WIDTH = 120;
 const SCROLL_DELAY = 100;
 const ANIMATION_DURATION = 300;
@@ -67,11 +74,41 @@ const getRowBasedProductList = (
   products: Product[],
   numColumns: number,
   /** Pinned to the top of its category — the product the user arrived here searching for. */
-  focusedSku?: string
+  focusedSku?: string,
+  /**
+   * Ordering chosen in the filter bar, applied within each category. The caller ranks
+   * the categories by the same comparator before passing them in, so the best product
+   * overall still lands first while the category structure the rail needs survives.
+   */
+  compare?: (a: Product, b: Product) => number
 ) => {
   const rows: Array<
     { type: 'header'; category: Category } | { type: 'products'; products: Product[] }
   > = [];
+
+  /**
+   * A chosen ordering applies to the whole catalogue, not to each category in turn.
+   *
+   * Sorting inside the groups — even with the groups themselves ranked — still puts a
+   * category's undiscounted items above the next category's discounted ones, so
+   * "Discount" appeared to surface a single product and then a run of full-price ones.
+   * While a sort is active the grouping is therefore dropped and the products run in
+   * one flat, globally ordered list; clearing the sort restores the categories.
+   */
+  if (compare) {
+    const sorted = [...products].sort((a, b) => {
+      if (focusedSku) {
+        if (a.sku === focusedSku) return -1;
+        if (b.sku === focusedSku) return 1;
+      }
+      if (a.inStock !== b.inStock) return a.inStock ? -1 : 1;
+      return compare(a, b);
+    });
+    for (let i = 0; i < sorted.length; i += numColumns) {
+      rows.push({ type: 'products', products: sorted.slice(i, i + numColumns) });
+    }
+    return rows;
+  }
 
   // Create a Map for O(1) product lookup by division
   const productsByDivision = new Map<string, Product[]>();
@@ -110,8 +147,10 @@ const getRowBasedProductList = (
         if (a.sku === focusedSku) return -1;
         if (b.sku === focusedSku) return 1;
       }
-      if (a.inStock === b.inStock) return 0;
-      return a.inStock ? -1 : 1;
+      // Out-of-stock last. No chosen ordering to apply here: an active sort takes the
+      // flat path above, so this grouped path only runs with `compare` undefined.
+      if (a.inStock !== b.inStock) return a.inStock ? -1 : 1;
+      return 0;
     });
 
     for (let i = 0; i < sortedCatProducts.length; i += numColumns) {
@@ -323,6 +362,38 @@ const VendorProductComponent: React.FC = () => {
     return searchQuery ? filteredProducts : products;
   }, [focusedProduct, searchQuery, filteredProducts, products]);
 
+  // --- Filter bar state -----------------------------------------------------
+  const [activeFilterIds, setActiveFilterIds] = useState<string[]>([]);
+  const [activeSortId, setActiveSortId] = useState<string | null>(null);
+
+  const handleToggleFilter = useCallback((id: string) => {
+    setActiveFilterIds(current =>
+      current.includes(id) ? current.filter(f => f !== id) : [...current, id]
+    );
+  }, []);
+
+  /**
+   * Built from the unfiltered list so the chip set — and the derived price band — stay
+   * put as the user toggles filters, rather than rewriting themselves each tap.
+   */
+  const productFilters = useMemo(() => buildProductFilters(productsToShow), [productsToShow]);
+  const productSorts = useMemo(() => buildProductSorts(productsToShow), [productsToShow]);
+
+  /**
+   * Chips combine with AND: "Veg" plus "Under ₹50" means both, which is what stacking
+   * filters is normally taken to mean.
+   */
+  const visibleProducts = useMemo(() => {
+    const active = productFilters.filter(f => activeFilterIds.includes(f.id));
+    if (active.length === 0) return productsToShow;
+    return productsToShow.filter(product => active.every(f => f.matches(product)));
+  }, [productsToShow, productFilters, activeFilterIds]);
+
+  const activeCompare = useMemo(
+    () => productSorts.find(s => s.id === activeSortId)?.compare,
+    [productSorts, activeSortId]
+  );
+
   // Map categories to CategoryTabs items; use store category imageURLs when available (regular mode or after fetch in collection mode).
   // Grocery shops typically return empty imageURLs, so fall back to the
   // first in-division product image so each tab shows a real thumbnail.
@@ -353,28 +424,28 @@ const VendorProductComponent: React.FC = () => {
   const filteredCategories: Category[] = useMemo(() => {
     // Get categories that have products
     const categoriesWithProducts = categoriesForTabs.filter(cat =>
-      productsToShow.some(product => product.division === cat.id)
+      visibleProducts.some(product => product.division === cat.id)
     );
 
     // Find uncategorized products (products without division or with division not matching any category)
-    const uncategorizedProducts = productsToShow.filter(product => {
+    const uncategorizedProducts = visibleProducts.filter(product => {
       const hasValidDivision = product.division && product.division.trim() !== '';
       const divisionMatchesCategory = categoriesForTabs.some(cat => cat.id === product.division);
       return !hasValidDivision || !divisionMatchesCategory;
     });
 
     // If there are uncategorized products, add an "Other" category
-    if (uncategorizedProducts.length > 0) {
-      const otherCategory: Category = {
-        id: 'other',
-        name: 'Other',
-        icon: Images.bg1,
-      };
-      return [...categoriesWithProducts, otherCategory];
-    }
+    const withOther =
+      uncategorizedProducts.length > 0
+        ? [...categoriesWithProducts, { id: 'other', name: 'Other', icon: Images.bg1 } as Category]
+        : categoriesWithProducts;
 
-    return categoriesWithProducts;
-  }, [categoriesForTabs, productsToShow]);
+    // Category order is left alone. Ranking categories by their best product was an
+    // attempt to make sorting read correctly while keeping the grouping, but it still
+    // left each category's undiscounted items above the next category's discounted
+    // ones. An active sort now flattens the list instead — see rowProductList.
+    return withOther;
+  }, [categoriesForTabs, visibleProducts]);
 
   // Cart store integration
   const { addToCart, increment, decrement, setActiveCart, carts } = useCartStore();
@@ -489,8 +560,14 @@ const VendorProductComponent: React.FC = () => {
   // Memoized row product list with optimized dependencies
   const rowProductList = useMemo(
     () =>
-      getRowBasedProductList(filteredCategories, productsToShow, NUM_COLUMNS, focusedProduct?.sku),
-    [filteredCategories, productsToShow, focusedProduct]
+      getRowBasedProductList(
+        filteredCategories,
+        visibleProducts,
+        NUM_COLUMNS,
+        focusedProduct?.sku,
+        activeCompare
+      ),
+    [filteredCategories, visibleProducts, focusedProduct, activeCompare]
   );
 
   // Memoized product quantity map for O(1) lookup
@@ -510,6 +587,34 @@ const VendorProductComponent: React.FC = () => {
     | { type: 'products'; products: Product[] };
 
   const flatListRef = useRef<FlatList<RowProductListItem> | null>(null);
+
+  /**
+   * Return to the top whenever the ordering or the filters change.
+   *
+   * The list is rebuilt underneath whatever offset the user had already scrolled to,
+   * so without this they are dropped into the middle of a result they have never seen
+   * the start of — tapping "Discount" from halfway down the page shows neither the
+   * biggest discounts nor anything they recognise.
+   */
+  const filtersSettledRef = useRef(false);
+  useEffect(() => {
+    // Skip the first run: the list is already at the top on mount, and scrolling then
+    // would fight the focused-product jump that arriving from search performs.
+    if (!filtersSettledRef.current) {
+      filtersSettledRef.current = true;
+      return;
+    }
+    // Keep the rail from flashing through categories on the way up.
+    isProgrammaticScrollRef.current = true;
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    // onMomentumScrollEnd normally clears the lock, but it never fires when the list is
+    // already at offset 0 — the scroll is a no-op. Without this the lock would stick and
+    // the rail would stop following the scroll for the rest of the visit.
+    const release = setTimeout(() => {
+      isProgrammaticScrollRef.current = false;
+    }, ANIMATION_DURATION);
+    return () => clearTimeout(release);
+  }, [activeSortId, activeFilterIds]);
 
   // Map category id to index in flatProductList for scrollToIndex
   const categoryIndexMap = useMemo(() => {
@@ -559,6 +664,11 @@ const VendorProductComponent: React.FC = () => {
   const handleCategorySelect = useCallback(
     (catId: string) => {
       setSelectedCategory(catId);
+
+      // A sort flattens the list, so there is no category header to jump to. Picking a
+      // category is an unambiguous request to see that category, so it wins over the
+      // ordering; the chips deselect and the grouped list comes back.
+      setActiveSortId(null);
 
       // Lock viewability updates so intermediate categories don't flash
       isProgrammaticScrollRef.current = true;
@@ -991,9 +1101,15 @@ const VendorProductComponent: React.FC = () => {
           fontSize: getTypography('h2'),
           letterSpacing: 1,
         },
+        // One grid row. flex-start on the main axis so a trailing odd product keeps the
+        // first column's width instead of stretching across; stretch on the cross axis
+        // so both cards take the height of the taller one. Paired with the price row's
+        // marginTop:'auto', that lands the prices and ADD buttons on the same line even
+        // when one product's name wraps to two lines and its neighbour's does not.
         productRow: {
           flexDirection: 'row',
           justifyContent: 'flex-start',
+          alignItems: 'stretch',
         },
         emptyProductCell: {
           flex: 1,
@@ -1159,8 +1275,8 @@ const VendorProductComponent: React.FC = () => {
     return `row-${idx}`;
   }, []);
 
-  // Memoized HorizontalProductCard component for better performance
-  const MemoizedHorizontalProductCard = useMemo(() => React.memo(HorizontalProductCard), []);
+  // Memoized ProductCard component for better performance
+  const MemoizedProductCard = useMemo(() => React.memo(ProductCard), []);
   //  Memoize render item for FlatList
   const renderItem = useCallback(
     ({ item, index }: { item: RowProductListItem; index: number }) => {
@@ -1168,11 +1284,13 @@ const VendorProductComponent: React.FC = () => {
         return <CategoryHeader title={item.category.name} isFirst={index === 0} />;
       } else if (item.type === 'products') {
         return (
-          <View>
+          <View style={styles.productRow}>
             {item.products.map((product: Product) => (
-              <MemoizedHorizontalProductCard
+              <MemoizedProductCard
                 key={product.sku}
                 product={product}
+                size="big"
+                rating={product.rating}
                 quantity={getProductQuantity(product.sku)}
                 onAdd={() => handleAddToCart(product)}
                 onIncrement={() => handleIncrement(product.sku)}
@@ -1180,7 +1298,13 @@ const VendorProductComponent: React.FC = () => {
                 disabled={!isStoreActive || !product.inStock}
                 showVariantsCount={true}
                 onPress={() => handleProductPress(product)}
-                isHighlighted={product.sku === focusedProduct?.sku}
+                isStoreClosed={!isStoreActive}
+                // The product the user arrived here searching for. The row sort already
+                // pins it to the top of its category; this keeps it visually findable now
+                // that the grid has no room for the old left accent bar.
+                backgroundColor={
+                  product.sku === focusedProduct?.sku ? `${getColor('primary')}14` : undefined
+                }
               />
             ))}
           </View>
@@ -1196,7 +1320,9 @@ const VendorProductComponent: React.FC = () => {
       isStoreActive,
       handleProductPress,
       focusedProduct,
-      MemoizedHorizontalProductCard,
+      MemoizedProductCard,
+      styles.productRow,
+      getColor,
     ]
   );
 
@@ -1332,70 +1458,107 @@ const VendorProductComponent: React.FC = () => {
               </View>
             )}
 
-          {/* Main Content: Categories + Products - Hide when search yields no results */}
+          {/* Filter + sort chips. Operates on the already-fetched catalogue, so it is
+              only meaningful once products exist. */}
           {products.length > 0 && !(searchQuery && filteredProducts.length === 0) && (
-            <View style={styles.mainContent}>
-              {/* Category List (absolute overlay with animation) - store timing hidden for now */}
-
-              {/* Horizontal layout: Categories on left, Products on right */}
-              <View style={styles.categoryProductContainer}>
-                <CategoryTabs
-                  categories={filteredCategories}
-                  selectedCategoryId={selectedCategory}
-                  onSelect={handleCategorySelect}
-                  iconOpacity={categoryImageOpacity}
-                  iconSize={categoryImageHeight}
-                  disabled={!isStoreActive}
-                />
-                {/* Product List with headers */}
-                <Animated.View style={[styles.productList, { flex: 1 }]}>
-                  <Animated.FlatList
-                    ref={flatListRef}
-                    data={rowProductList}
-                    keyExtractor={keyExtractor}
-                    renderItem={renderItem}
-                    numColumns={1}
-                    key={'row-based'}
-                    showsVerticalScrollIndicator={false}
-                    removeClippedSubviews={true}
-                    maxToRenderPerBatch={rowProductList.length}
-                    updateCellsBatchingPeriod={50}
-                    initialNumToRender={10}
-                    windowSize={10}
-                    onScroll={handleScroll}
-                    scrollEventThrottle={16}
-                    onViewableItemsChanged={onViewableItemsChanged}
-                    onMomentumScrollEnd={() => {
-                      // Clear programmatic-scroll lock when scrolling finishes
-                      isProgrammaticScrollRef.current = false;
-                    }}
-                    viewabilityConfig={viewabilityConfig}
-                    onScrollToIndexFailed={info => {
-                      console.warn('Scroll failed', info);
-
-                      // If scrollToIndex failed, perform a programmatic fallback
-                      // and keep the programmatic lock until momentum ends.
-                      isProgrammaticScrollRef.current = true;
-
-                      // scroll to the nearest rendered index instead
-                      flatListRef.current?.scrollToOffset({
-                        offset: info.averageItemLength * info.index,
-                        animated: true,
-                      });
-
-                      // retry after a short delay
-                      setTimeout(() => {
-                        if (rowProductList.length > 0) {
-                          isProgrammaticScrollRef.current = true;
-                          flatListRef.current?.scrollToIndex({ index: info.index, animated: true });
-                        }
-                      }, 100);
-                    }}
-                  />
-                </Animated.View>
-              </View>
-            </View>
+            <ProductFilterBar
+              activeFilterIds={activeFilterIds}
+              onToggleFilter={handleToggleFilter}
+              activeSortId={activeSortId}
+              onChangeSort={setActiveSortId}
+              filters={productFilters}
+              sorts={productSorts}
+              disabled={!isStoreActive}
+            />
           )}
+
+          {/* Every product filtered out. Without this the grid would just render blank,
+              with no hint that a chip caused it. */}
+          {products.length > 0 &&
+            !(searchQuery && filteredProducts.length === 0) &&
+            visibleProducts.length === 0 && (
+              <View style={styles.emptyStateMessageContainer}>
+                <Text style={styles.emptyStateMessage}>
+                  No products match the selected filters.
+                </Text>
+                <TouchableOpacity
+                  style={styles.clearSearchButton}
+                  onPress={() => setActiveFilterIds([])}
+                >
+                  <Text style={styles.clearSearchButtonText}>Clear Filters</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+          {/* Main Content: Categories + Products - Hide when search yields no results */}
+          {products.length > 0 &&
+            !(searchQuery && filteredProducts.length === 0) &&
+            visibleProducts.length > 0 && (
+              <View style={styles.mainContent}>
+                {/* Category List (absolute overlay with animation) - store timing hidden for now */}
+
+                {/* Horizontal layout: Categories on left, Products on right */}
+                <View style={styles.categoryProductContainer}>
+                  <CategoryTabs
+                    categories={filteredCategories}
+                    selectedCategoryId={selectedCategory}
+                    onSelect={handleCategorySelect}
+                    iconOpacity={categoryImageOpacity}
+                    iconSize={categoryImageHeight}
+                    disabled={!isStoreActive}
+                  />
+                  {/* Product List with headers */}
+                  <Animated.View style={[styles.productList, { flex: 1 }]}>
+                    <Animated.FlatList
+                      ref={flatListRef}
+                      data={rowProductList}
+                      keyExtractor={keyExtractor}
+                      renderItem={renderItem}
+                      numColumns={1}
+                      key={'row-based'}
+                      showsVerticalScrollIndicator={false}
+                      removeClippedSubviews={true}
+                      maxToRenderPerBatch={rowProductList.length}
+                      updateCellsBatchingPeriod={50}
+                      initialNumToRender={10}
+                      windowSize={10}
+                      onScroll={handleScroll}
+                      scrollEventThrottle={16}
+                      onViewableItemsChanged={onViewableItemsChanged}
+                      onMomentumScrollEnd={() => {
+                        // Clear programmatic-scroll lock when scrolling finishes
+                        isProgrammaticScrollRef.current = false;
+                      }}
+                      viewabilityConfig={viewabilityConfig}
+                      onScrollToIndexFailed={info => {
+                        console.warn('Scroll failed', info);
+
+                        // If scrollToIndex failed, perform a programmatic fallback
+                        // and keep the programmatic lock until momentum ends.
+                        isProgrammaticScrollRef.current = true;
+
+                        // scroll to the nearest rendered index instead
+                        flatListRef.current?.scrollToOffset({
+                          offset: info.averageItemLength * info.index,
+                          animated: true,
+                        });
+
+                        // retry after a short delay
+                        setTimeout(() => {
+                          if (rowProductList.length > 0) {
+                            isProgrammaticScrollRef.current = true;
+                            flatListRef.current?.scrollToIndex({
+                              index: info.index,
+                              animated: true,
+                            });
+                          }
+                        }, 100);
+                      }}
+                    />
+                  </Animated.View>
+                </View>
+              </View>
+            )}
           {/* CartBar at the bottom */}
           {itemCount > 0 && (
             <CartBar
