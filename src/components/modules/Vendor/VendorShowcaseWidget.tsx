@@ -524,7 +524,7 @@ const VendorShowcaseWidget: React.FC<VendorShowcaseWidgetProps> = ({
           price: product.sellingPrice,
           mrp: product.mrp,
           image: product.imageUrl || '',
-          veg: product.veg,
+          veg: product.veg ?? false,
         },
         authData?.jwt || '',
         authData?.phone || ''

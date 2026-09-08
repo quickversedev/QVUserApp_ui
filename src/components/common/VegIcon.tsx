@@ -4,10 +4,16 @@ import { StyleSheet, View } from 'react-native';
 interface VegIconProps {
   veg: boolean;
   size?: 'xs' | 'small' | 'regular';
+  /**
+   * Fills the mark's interior instead of letting the background show through. Needed
+   * when it sits on a photo — over food imagery a transparent interior leaves the
+   * border and dot competing with whatever is behind them.
+   */
+  filled?: boolean;
 }
 
 // eslint-disable-next-line react/prop-types
-const VegIcon: React.FC<VegIconProps> = memo(({ veg, size = 'regular' }) => {
+const VegIcon: React.FC<VegIconProps> = memo(({ veg, size = 'regular', filled = false }) => {
   const styles = StyleSheet.create({
     container: {
       width: size === 'xs' ? 14 : 18,
@@ -15,7 +21,7 @@ const VegIcon: React.FC<VegIconProps> = memo(({ veg, size = 'regular' }) => {
       borderWidth: 1.5,
       borderRadius: 4,
       borderColor: veg ? '#4CAF50' : '#FF6B6B',
-      backgroundColor: 'transparent',
+      backgroundColor: filled ? '#FFFFFF' : 'transparent',
       marginRight: size === 'xs' ? 4 : 6,
       justifyContent: 'center',
       alignItems: 'center',
@@ -29,6 +35,9 @@ const VegIcon: React.FC<VegIconProps> = memo(({ veg, size = 'regular' }) => {
     nonVegTriangle: {
       width: 0,
       height: 0,
+      // Always transparent: the triangle is drawn from this element's borders, so a
+      // fill here would sit behind the shape rather than inside the mark. `filled`
+      // belongs on the container, which is the box the mark actually occupies.
       backgroundColor: 'transparent',
       borderStyle: 'solid',
       borderLeftWidth: size === 'xs' ? 3 : 4,

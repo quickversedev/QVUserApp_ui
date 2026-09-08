@@ -11,6 +11,7 @@ import {
 import { useTheme } from '../../../theme/ThemeContext';
 import { Product } from '../../../types/product';
 import { BadgeTag } from '../../common';
+import VegIcon from '../../common/VegIcon';
 import RatingBadge from '../../common/badges/RatingBadge';
 import AddButton from './AddButton';
 import QuantitySelector from './QuantitySelector';
@@ -164,6 +165,42 @@ const createStyles = (
      */
     cardFill: {
       flexGrow: 1,
+    },
+    topRight: {
+      position: 'absolute',
+      top: 6,
+      right: 6,
+      zIndex: 2,
+      alignItems: 'flex-end',
+      gap: 4,
+      // Never let a long server-defined label run under the discount badge opposite.
+      maxWidth: '62%',
+    },
+    tagChip: {
+      backgroundColor: getColor('primary'),
+      borderRadius: 3,
+      paddingHorizontal: 5,
+      paddingVertical: 2,
+    },
+    tagChipText: {
+      color: getColor('white'),
+      fontSize: 9,
+      lineHeight: 12,
+      fontWeight: '800',
+      letterSpacing: 0.4,
+      textTransform: 'uppercase',
+    },
+    vegBadge: {
+      position: 'absolute',
+      right: 4,
+      bottom: 4,
+      zIndex: 2,
+      // The mark is opaque via VegIcon's `filled`, which fills inside its own border.
+      // An outer tile behind it instead read as a halo, because the icon already draws
+      // a rounded bordered box of its own.
+      // Its trailing margin is for sitting next to text, so pull that back to sit
+      // flush in the corner.
+      marginRight: -4,
     },
     // ADD: green on white. The design's button carries no border — only a shadow —
     // so the 1.5px stroke both controls inherit is zeroed out here.
@@ -360,7 +397,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   }, [image]);
 
   const styles = useMemo(
-    () => createStyles(size, getColor, getTypography, theme, veg, backgroundColor),
+    () => createStyles(size, getColor, getTypography, theme, veg === true, backgroundColor),
     [size, getColor, getTypography, theme, veg, backgroundColor]
   );
 
@@ -381,6 +418,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
    * override drops the fixed height when the stack is showing.
    */
   const showsVariantStack = controlSize === 'regular' && showVariantsCount && numberOfVariants > 1;
+
+  /**
+   * The product's merchandising tag, e.g. "Best Seller".
+   *
+   * Server-driven: the vocabulary lives in qv.product_tag, so a new tag appears here
+   * without an app release, which is why the label is rendered as given rather than
+   * mapped to a bundled string or icon. Only one is shown — a 138px card has room for
+   * a single chip, and the payload carries no ordering to choose a second by.
+   */
+  const tagLabel = useMemo(() => {
+    const first = product.tags?.[0];
+    return first?.label?.trim() || first?.tagName?.trim() || null;
+  }, [product.tags]);
 
   const showUnit = useMemo(
     () => size === 'big' && !!product.attributes?.unit?.trim(),
@@ -447,13 +497,30 @@ const ProductCard: React.FC<ProductCardProps> = ({
           // Add loading indicator
         />
 
-        {showRating && (
-          <View style={styles.ratingBadge}>
-            <RatingBadge
-              rating={rating}
-              size={size === 'regular' ? 'medium' : size === 'xs' ? 'small' : 'medium'}
-            />
+        {isGrid ? (
+          /* One stack in the top-right corner rather than two elements competing for
+             it. RatingBadge returns null at 0 — and no product currently carries a
+             rating — so today only the tag shows; stacking means a rating arriving
+             later pushes the tag down instead of landing on top of it. */
+          <View style={styles.topRight}>
+            {rating > 0 ? <RatingBadge rating={rating} size="medium" /> : null}
+            {tagLabel ? (
+              <View style={styles.tagChip}>
+                <Text style={styles.tagChipText} numberOfLines={1}>
+                  {tagLabel}
+                </Text>
+              </View>
+            ) : null}
           </View>
+        ) : (
+          showRating && (
+            <View style={styles.ratingBadge}>
+              <RatingBadge
+                rating={rating}
+                size={size === 'regular' ? 'medium' : size === 'xs' ? 'small' : 'medium'}
+              />
+            </View>
+          )
         )}
 
         {showDiscount && (
@@ -476,6 +543,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
           /* The PLP grid moves the control down into the price row, as in the QV PLP
              design; every other size keeps it overlaying the image. */
           !isGrid && cartControl
+        )}
+
+        {/* Bottom-right of the photo — the corner the cart control vacated when it
+            moved into the price row. Three states, not two: undefined/null means
+            nobody has classified this product, and no mark at all is the only honest
+            rendering for it. Only an explicit true or false draws the green circle or
+            the red triangle. */}
+        {isGrid && typeof veg === 'boolean' && (
+          <View style={styles.vegBadge}>
+            <VegIcon veg={veg} size="xs" filled />
+          </View>
         )}
       </View>
 

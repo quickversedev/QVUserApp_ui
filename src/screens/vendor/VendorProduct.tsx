@@ -366,18 +366,28 @@ const VendorProductComponent: React.FC = () => {
   const [activeFilterIds, setActiveFilterIds] = useState<string[]>([]);
   const [activeSortId, setActiveSortId] = useState<string | null>(null);
 
-  const handleToggleFilter = useCallback((id: string) => {
-    setActiveFilterIds(current =>
-      current.includes(id) ? current.filter(f => f !== id) : [...current, id]
-    );
-  }, []);
-
   /**
    * Built from the unfiltered list so the chip set — and the derived price band — stay
    * put as the user toggles filters, rather than rewriting themselves each tap.
    */
   const productFilters = useMemo(() => buildProductFilters(productsToShow), [productsToShow]);
   const productSorts = useMemo(() => buildProductSorts(productsToShow), [productsToShow]);
+
+  const handleToggleFilter = useCallback(
+    (id: string) => {
+      setActiveFilterIds(current => {
+        if (current.includes(id)) return current.filter(f => f !== id);
+        // Turning on a grouped filter switches off its siblings: Veg and Non-veg are
+        // exclusive, so stacking them could only ever produce an empty list.
+        const group = productFilters.find(f => f.id === id)?.group;
+        const kept = group
+          ? current.filter(f => productFilters.find(d => d.id === f)?.group !== group)
+          : current;
+        return [...kept, id];
+      });
+    },
+    [productFilters]
+  );
 
   /**
    * Chips combine with AND: "Veg" plus "Under ₹50" means both, which is what stacking
@@ -794,7 +804,7 @@ const VendorProductComponent: React.FC = () => {
           price: product.sellingPrice,
           mrp: product.mrp,
           image: typeof product.imageUrl === 'string' ? product.imageUrl : '',
-          veg: product.veg,
+          veg: product.veg ?? false,
         },
         authData?.jwt || '',
         authData?.phone || ''

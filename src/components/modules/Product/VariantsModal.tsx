@@ -79,7 +79,7 @@ const VariantsModal: React.FC<VariantsModalProps> = ({
         price: variant.sellingPrice,
         mrp: variant.mrp,
         image: product.imageUrl || '',
-        veg: product.veg,
+        veg: product.veg ?? false,
       },
       authData?.jwt || '',
       authData?.phone || ''
@@ -355,7 +355,7 @@ const VariantsModal: React.FC<VariantsModalProps> = ({
                 {product.name}
               </ThemeText>
               <View style={styles.vegIconContainer}>
-                <VegIcon veg={product.veg} size="regular" />
+                {typeof product.veg === 'boolean' && <VegIcon veg={product.veg} size="regular" />}
               </View>
             </View>
 

@@ -165,7 +165,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         price: displayPrice,
         mrp: displayMrp,
         image: displayImageUrl,
-        veg: product.veg,
+        veg: product.veg ?? false,
       },
       authData?.jwt || '',
       authData?.phone || ''

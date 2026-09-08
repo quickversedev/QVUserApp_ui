@@ -3,7 +3,12 @@ export interface Product {
   mrp: number;
   rating: number;
   discount: number;
-  veg: boolean;
+  /**
+   * Tri-state: true = vegetarian, false = non-vegetarian, absent/null = not classified.
+   * The server omits the field entirely when it does not know (@JsonInclude(NON_NULL)),
+   * so never treat a missing value as non-veg.
+   */
+  veg?: boolean | null;
   sellingPrice: number;
   sku: string;
   shopId: string;

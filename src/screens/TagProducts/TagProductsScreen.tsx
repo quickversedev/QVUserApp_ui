@@ -202,7 +202,7 @@ const TagProductsScreen: React.FC = () => {
           price: product.sellingPrice,
           mrp: product.mrp,
           image: typeof product.imageUrl === 'string' ? product.imageUrl : '',
-          veg: product.veg,
+          veg: product.veg ?? false,
         },
         authData?.jwt || '',
         authData?.phone || ''

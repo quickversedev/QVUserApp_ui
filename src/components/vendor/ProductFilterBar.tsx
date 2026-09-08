@@ -26,6 +26,11 @@ export interface ProductFilterDef {
   id: string;
   label: string;
   matches: (product: Product) => boolean;
+  /**
+   * Filters sharing a group are mutually exclusive — nothing is both vegetarian and
+   * not, so letting the two stack would only ever empty the list.
+   */
+  group?: string;
 }
 
 export interface ProductSortDef {
@@ -64,7 +69,10 @@ const niceCeiling = (value: number): number => {
  */
 export const buildProductFilters = (products: Product[]): ProductFilterDef[] => {
   const candidates: ProductFilterDef[] = [
-    { id: 'veg', label: 'Veg', matches: p => p.veg === true },
+    // Explicit true/false only. An unclassified product (null/undefined) belongs in
+    // neither bucket, so it is excluded from both rather than defaulting to one.
+    { id: 'veg', label: 'Veg', matches: p => p.veg === true, group: 'diet' },
+    { id: 'non-veg', label: 'Non-veg', matches: p => p.veg === false, group: 'diet' },
     {
       id: 'discounted',
       label: `${MIN_DISCOUNT}%+ OFF`,

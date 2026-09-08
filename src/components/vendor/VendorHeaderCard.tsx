@@ -1,12 +1,16 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Image, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
 import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
 import { Images } from '../../assets';
 import { useTheme } from '../../theme/ThemeContext';
 import { Vendor } from '../../types/vendor';
+import useVendorCouponsStore from '../../store/coupons/vendorCouponsStore';
 import { getStoreStatus } from '../../utils/storeUtils';
 import { ThemeText } from '../common/theme/ThemeText';
+
+/** Same green the category screens' vendor coupon badges use, kept in step by hand. */
+const COUPON_ACCENT = '#16A34A';
 
 interface VendorHeaderCardProps {
   vendor: Vendor;
@@ -25,6 +29,30 @@ const VendorHeaderCard: React.FC<VendorHeaderCardProps> = ({
   const navigation = useNavigation();
   const scale = useRef(new Animated.Value(1)).current;
   const [logoError, setLogoError] = useState(false);
+
+  /**
+   * This vendor's offers, cycling one at a time.
+   *
+   * The rotation rides vendorCouponsStore's shared 3s tick rather than a timer of its
+   * own, so this label changes in step with the vendor cards on the category screens
+   * instead of drifting against them.
+   */
+  const couponsByVendor = useVendorCouponsStore(s => s.couponsByVendor);
+  const couponTick = useVendorCouponsStore(s => s.tick);
+
+  useEffect(() => {
+    if (!vendor.shopId) return;
+    const serviceType = vendor.category?.toUpperCase() === 'GROCERY' ? 'GROCERY' : 'FOOD';
+    useVendorCouponsStore.getState().fetchForVendors([vendor.shopId], serviceType);
+    useVendorCouponsStore.getState().startRotation();
+    return () => useVendorCouponsStore.getState().stopRotation();
+  }, [vendor.shopId, vendor.category]);
+
+  const activeCoupon = useMemo(() => {
+    const labels = couponsByVendor[vendor.shopId];
+    if (!labels || labels.length === 0) return null;
+    return labels[couponTick % labels.length];
+  }, [couponsByVendor, couponTick, vendor.shopId]);
 
   const storeStatus = getStoreStatus({
     storeActive: vendor.storeActive,
@@ -49,6 +77,15 @@ const VendorHeaderCard: React.FC<VendorHeaderCardProps> = ({
       alignItems: 'center',
       paddingLeft: 0,
       paddingRight: 0,
+    },
+    couponRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 2,
+    },
+    couponText: {
+      marginLeft: 3,
+      fontWeight: '700',
     },
     logo: {
       width: 48,
@@ -157,6 +194,18 @@ const VendorHeaderCard: React.FC<VendorHeaderCardProps> = ({
                 • {formatAddress()}
               </ThemeText>
             </View>
+            {activeCoupon ? (
+              <View style={styles.couponRow}>
+                <MaterialCommunityIcons
+                  name="ticket-percent-outline"
+                  size={13}
+                  color={COUPON_ACCENT}
+                />
+                <ThemeText variant="small" color={COUPON_ACCENT} style={styles.couponText}>
+                  {activeCoupon}
+                </ThemeText>
+              </View>
+            ) : null}
           </View>
           <View style={styles.chevronContainer}>
             <MaterialCommunityIcons name="chevron-right" size={22} color={getColor('primary')} />

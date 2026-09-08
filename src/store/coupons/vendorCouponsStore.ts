@@ -30,6 +30,15 @@ interface VendorCouponsState {
 }
 
 let rotationTimer: ReturnType<typeof setInterval> | null = null;
+/**
+ * How many mounted screens currently want the rotation running.
+ *
+ * The timer is shared, so an unconditional stop on one screen's unmount would freeze
+ * the coupon labels on every other screen still showing them — leaving a category
+ * screen stuck on whichever offer happened to be visible when the user opened a
+ * vendor. The interval is only torn down once the last consumer has gone.
+ */
+let rotationSubscribers = 0;
 
 const useVendorCouponsStore = create<VendorCouponsState>((set, get) => ({
   couponsByVendor: {},
@@ -38,6 +47,7 @@ const useVendorCouponsStore = create<VendorCouponsState>((set, get) => ({
   fetchedVendors: new Set(),
 
   startRotation: () => {
+    rotationSubscribers += 1;
     if (rotationTimer) return;
     rotationTimer = setInterval(() => {
       set(s => ({ tick: s.tick + 1 }));
@@ -45,6 +55,8 @@ const useVendorCouponsStore = create<VendorCouponsState>((set, get) => ({
   },
 
   stopRotation: () => {
+    rotationSubscribers = Math.max(0, rotationSubscribers - 1);
+    if (rotationSubscribers > 0) return;
     if (rotationTimer) {
       clearInterval(rotationTimer);
       rotationTimer = null;
