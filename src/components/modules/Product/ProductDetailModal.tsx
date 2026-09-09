@@ -15,6 +15,7 @@ import { CATALOGUE_ACCENT } from '../../../constants/catalogue';
 import { useAuth } from '../../../contexts/login/AuthProvider';
 import productDetailsService from '../../../services/productDetailsService';
 import useCartStore from '../../../store/cart/cartStore';
+import { useProductsStore } from '../../../store/products/productsStore';
 import { useTheme } from '../../../theme/ThemeContext';
 import { Product } from '../../../types/product';
 import { Vendor } from '../../../types/vendor';
@@ -90,6 +91,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const [variantsError, setVariantsError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { addToCart, increment, decrement, carts } = useCartStore();
+  const categories = useProductsStore(state => state.categories);
 
   // Create vendor-specific cart ID
   const cartId = `vendor_${vendor.shopId}`;
@@ -138,6 +140,27 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
    * product_attributes row. Each stays conditional so it lights up if data arrives
    * rather than needing another change here.
    */
+  /**
+   * Category breadcrumb, as the design pairs with the rating.
+   *
+   * `product.category` and `product.division` are both opaque UUIDs; the readable
+   * name lives on the categories the vendor screen already loads, where
+   * `Category.id` is the product's `division` (productsStore documents that
+   * mapping). Resolved through the store rather than added to this modal's props,
+   * since every caller already populates it. Renders `PARENT • CHILD` when the
+   * category has a parent, otherwise the single name, and nothing when the id
+   * resolves to no category — which is what happens in collection mode, where the
+   * division ids come from SmartPOS rather than the QuickVerse catalogue.
+   */
+  const breadcrumb = useMemo(() => {
+    const own = categories.find(c => c.id === product.division);
+    if (!own) return '';
+    const parent = own.parentCategory
+      ? categories.find(c => c.id === own.parentCategory)
+      : undefined;
+    return [parent?.name, own.name].filter(Boolean).join(' • ');
+  }, [categories, product.division]);
+
   const displayDiscount = selectedVariant?.discount ?? product.discount ?? 0;
   const savings = Math.max(0, Math.round((displayMrp ?? 0) - (displayPrice ?? 0)));
   const tagLabel = product.tags?.[0]?.label?.trim() || product.tags?.[0]?.tagName?.trim() || null;
@@ -403,18 +426,15 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       },
 
       /* ---- QV PDP design: badges over the hero ---------------------------- */
-      heroBadgesLeft: {
-        position: 'absolute',
-        top: insets.top + HEADER_BTN + 12,
-        left: 16,
-        gap: 6,
-        alignItems: 'flex-start',
-      },
+      // Discount above tag, both right-aligned. The back button owns the top-left
+      // corner, so stacking them here keeps either badge clear of it.
       heroBadgeRight: {
         position: 'absolute',
         top: insets.top + HEADER_BTN + 12,
         right: 16,
         maxWidth: '55%',
+        gap: 6,
+        alignItems: 'flex-end',
       },
       // Inset far enough to clear the hero's bottom-right corner radius.
       heroBadgeVeg: {
@@ -444,12 +464,21 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       // Title and rating share a line. The design pairs the rating with a category
       // breadcrumb on the left; with no readable category the badge would otherwise
       // float alone against the right edge.
-      titleRow: {
+      crumbRow: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         gap: 10,
+        marginBottom: 6,
       },
-      titleFlex: { flex: 1 },
+      crumbText: {
+        flex: 1,
+        fontSize: 11,
+        fontWeight: '600',
+        letterSpacing: 0.6,
+        textTransform: 'uppercase',
+        color: getColor('subText'),
+      },
       // Price on the left, tax note trailing on the right, as the design has them.
       priceLine: {
         flexDirection: 'row',
@@ -677,17 +706,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             />
           </View>
 
-          <View style={styles.heroBadgesLeft} pointerEvents="none">
-            {displayDiscount > 0 ? (
-              <View style={[styles.pill, styles.pillDiscount]}>
-                <MaterialCommunityIcons name="tag" size={11} color={getColor('white')} />
-                <ThemeText style={[styles.pillLabel, { color: getColor('white') }]}>
-                  {Math.round(displayDiscount)}% OFF
-                </ThemeText>
-              </View>
-            ) : null}
-          </View>
-
           {/* Bottom-right of the photo, the same corner the PLP grid card uses for
               this marker, so the two screens agree on where to look for it. */}
           {typeof product.veg === 'boolean' ? (
@@ -708,17 +726,27 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </View>
           ) : null}
 
-          {tagLabel ? (
+          {displayDiscount > 0 || tagLabel ? (
             <View style={styles.heroBadgeRight} pointerEvents="none">
-              <View style={[styles.pill, styles.pillTag]}>
-                <MaterialCommunityIcons name="trending-up" size={11} color={getColor('white')} />
-                <ThemeText
-                  style={[styles.pillLabel, { color: getColor('white') }]}
-                  numberOfLines={1}
-                >
-                  {tagLabel}
-                </ThemeText>
-              </View>
+              {displayDiscount > 0 ? (
+                <View style={[styles.pill, styles.pillDiscount]}>
+                  <MaterialCommunityIcons name="tag" size={11} color={getColor('white')} />
+                  <ThemeText style={[styles.pillLabel, { color: getColor('white') }]}>
+                    {Math.round(displayDiscount)}% OFF
+                  </ThemeText>
+                </View>
+              ) : null}
+              {tagLabel ? (
+                <View style={[styles.pill, styles.pillTag]}>
+                  <MaterialCommunityIcons name="trending-up" size={11} color={getColor('white')} />
+                  <ThemeText
+                    style={[styles.pillLabel, { color: getColor('white') }]}
+                    numberOfLines={1}
+                  >
+                    {tagLabel}
+                  </ThemeText>
+                </View>
+              ) : null}
             </View>
           ) : null}
 
@@ -729,23 +757,28 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
         <View style={styles.body}>
           <View style={styles.sheet}>
-            {/* The design pairs a category breadcrumb with the rating on this line.
-                The breadcrumb is omitted — `category` and `division` are UUIDs and
-                `subDivision` is null across the catalogue — so the title takes its
-                place and the rating keeps its position on the right. */}
-            <View style={styles.titleRow}>
-              <ThemeText
-                variant="h2"
-                color={getColor('text')}
-                style={[styles.productName, styles.titleFlex]}
-                numberOfLines={2}
-              >
-                {displayName}
-              </ThemeText>
-              {(product.rating ?? 0) > 0 ? (
-                <RatingBadge rating={product.rating as number} size="medium" />
-              ) : null}
-            </View>
+            {/* Breadcrumb and rating share a line above the title, as the design has
+                them. The row still renders for the rating alone when the division
+                resolves to no category. */}
+            {breadcrumb || (product.rating ?? 0) > 0 ? (
+              <View style={styles.crumbRow}>
+                <ThemeText style={styles.crumbText} numberOfLines={1}>
+                  {breadcrumb}
+                </ThemeText>
+                {(product.rating ?? 0) > 0 ? (
+                  <RatingBadge rating={product.rating as number} size="medium" />
+                ) : null}
+              </View>
+            ) : null}
+
+            <ThemeText
+              variant="h2"
+              color={getColor('text')}
+              style={styles.productName}
+              numberOfLines={2}
+            >
+              {displayName}
+            </ThemeText>
 
             {subtitle ? (
               <ThemeText variant="small" color={getColor('subText')} style={styles.subtitle}>
