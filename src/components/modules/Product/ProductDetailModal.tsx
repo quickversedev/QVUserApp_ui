@@ -320,8 +320,9 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       priceRow: {
         flexDirection: 'row',
         alignItems: 'flex-end',
-        marginTop: 12,
-        marginBottom: 18,
+        // Spaces price / MRP / Save uniformly. Previously only the MRP carried a
+        // marginLeft, so "MRP ₹130" and "Save ₹30" ran together with no gap.
+        gap: 10,
       },
       priceText: {
         fontSize: 28,
@@ -331,7 +332,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       mrpText: {
         color: getColor('subText'),
         textDecorationLine: 'line-through',
-        marginLeft: 10,
         marginBottom: 4,
       },
       sectionHeading: {
@@ -466,6 +466,8 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         alignItems: 'flex-end',
         justifyContent: 'space-between',
         gap: 10,
+        marginTop: 12,
+        marginBottom: 18,
       },
       saveRow: {
         flexDirection: 'row',
