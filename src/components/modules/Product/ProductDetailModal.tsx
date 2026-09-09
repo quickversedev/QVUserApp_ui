@@ -441,6 +441,13 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           gap: 10,
         },
         titleFlex: { flex: 1 },
+        // Price on the left, tax note trailing on the right, as the design has them.
+        priceLine: {
+          flexDirection: 'row',
+          alignItems: 'flex-end',
+          justifyContent: 'space-between',
+          gap: 10,
+        },
         saveRow: {
           flexDirection: 'row',
           alignItems: 'baseline',
@@ -449,13 +456,16 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           marginTop: 2,
         },
         saveLabel: { fontSize: 13, fontWeight: '700', color: CATALOGUE_ACCENT },
-        taxNote: { marginTop: 4 },
+        taxNote: { paddingBottom: 3 },
         /* ---- delivery ETA banner -------------------------------------------- */
         etaBanner: {
           flexDirection: 'row',
           alignItems: 'center',
           gap: 10,
-          backgroundColor: getColor('overlay'),
+          // Tinted with the delivery accent at low alpha rather than the flat grey
+          // `overlay`. The design uses a tinted surface here; the theme has no such
+          // token, and grey read as a disabled panel beside the green icon.
+          backgroundColor: `${CATALOGUE_ACCENT}12`,
           borderRadius: 12,
           padding: 12,
           marginTop: 16,
@@ -707,19 +717,22 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </ThemeText>
             ) : null}
 
-            <View style={styles.priceRow}>
-              <ThemeText style={styles.priceText}>₹{displayPrice}</ThemeText>
-              {displayMrp !== displayPrice && (
-                <ThemeText variant="caption" color={getColor('subText')} style={styles.mrpText}>
-                  MRP ₹{displayMrp}
-                </ThemeText>
-              )}
-              {savings > 0 ? <ThemeText style={styles.saveLabel}>Save ₹{savings}</ThemeText> : null}
+            <View style={styles.priceLine}>
+              <View style={styles.priceRow}>
+                <ThemeText style={styles.priceText}>₹{displayPrice}</ThemeText>
+                {displayMrp !== displayPrice && (
+                  <ThemeText variant="caption" color={getColor('subText')} style={styles.mrpText}>
+                    MRP ₹{displayMrp}
+                  </ThemeText>
+                )}
+                {savings > 0 ? (
+                  <ThemeText style={styles.saveLabel}>Save ₹{savings}</ThemeText>
+                ) : null}
+              </View>
+              <ThemeText variant="small" color={getColor('subText')} style={styles.taxNote}>
+                (Inclusive of all taxes)
+              </ThemeText>
             </View>
-
-            <ThemeText variant="small" color={getColor('subText')} style={styles.taxNote}>
-              (Inclusive of all taxes)
-            </ThemeText>
 
             {/* Pack sizes only exist for a multi-variant product. Every Beed product
                 currently reports numberOfVariants = 1, so this stays collapsed until
