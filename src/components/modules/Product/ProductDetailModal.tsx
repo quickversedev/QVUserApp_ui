@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
+import { CATALOGUE_ACCENT } from '../../../constants/catalogue';
 import { useAuth } from '../../../contexts/login/AuthProvider';
 import productDetailsService from '../../../services/productDetailsService';
 import useCartStore from '../../../store/cart/cartStore';
@@ -21,6 +22,7 @@ import { triggerAddToCartHaptic } from '../../../utils/haptics';
 import { cleanHtmlText } from '../../../utils/htmlUtils';
 import { getStoreStatus } from '../../../utils/storeUtils';
 import { ThemeText } from '../../common/theme/ThemeText';
+import RatingBadge from '../../common/badges/RatingBadge';
 import ProductImageCarousel from './ProductImageCarousel';
 import ProductInfo from './ProductInfo';
 import QuantitySelector from './QuantitySelector';
@@ -119,6 +121,21 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
    * has this in an effect dependency array.
    */
   const excludeSkus = useMemo(() => [displaySku, product.sku], [displaySku, product.sku]);
+
+  /**
+   * Everything below is rendered only when the catalogue actually carries it. For the
+   * Beed vendors today that means the discount, veg marker, tag and rating appear;
+   * pack sizes, gallery dots, a breadcrumb and a description do not, because no
+   * product has more than one variant, additional images, a readable category or any
+   * product_attributes row. Each stays conditional so it lights up if data arrives
+   * rather than needing another change here.
+   */
+  const displayDiscount = selectedVariant?.discount ?? product.discount ?? 0;
+  const savings = Math.max(0, Math.round((displayMrp ?? 0) - (displayPrice ?? 0)));
+  const tagLabel = product.tags?.[0]?.label?.trim() || product.tags?.[0]?.tagName?.trim() || null;
+  // From the `variants` state, not the derived productVariants list further down —
+  // that is declared after this point and reading it here is a use-before-declaration.
+  const hasPackSizes = variants.length > 1;
 
   useEffect(() => {
     if (visible) {
@@ -377,6 +394,94 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         retryButtonText: {
           color: getColor('white'),
         },
+
+        /* ---- QV PDP design: badges over the hero ---------------------------- */
+        heroBadgesLeft: {
+          position: 'absolute',
+          top: insets.top + HEADER_BTN + 12,
+          left: 16,
+          gap: 6,
+          alignItems: 'flex-start',
+        },
+        heroBadgeRight: {
+          position: 'absolute',
+          top: insets.top + HEADER_BTN + 12,
+          right: 16,
+          maxWidth: '55%',
+        },
+        pill: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 4,
+          paddingHorizontal: 8,
+          paddingVertical: 4,
+          borderRadius: 6,
+        },
+        pillDiscount: { backgroundColor: getColor('primary') },
+        pillVeg: { backgroundColor: getColor('white') },
+        pillTag: { backgroundColor: getColor('primary') },
+        pillLabel: {
+          fontSize: 10,
+          lineHeight: 12,
+          fontWeight: '800',
+          letterSpacing: 0.4,
+          textTransform: 'uppercase',
+        },
+        /* ---- info card ------------------------------------------------------ */
+        infoTopRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          marginBottom: 6,
+        },
+        saveRow: {
+          flexDirection: 'row',
+          alignItems: 'baseline',
+          flexWrap: 'wrap',
+          gap: 8,
+          marginTop: 2,
+        },
+        saveLabel: { fontSize: 13, fontWeight: '700', color: CATALOGUE_ACCENT },
+        taxNote: { marginTop: 4 },
+        /* ---- delivery ETA banner -------------------------------------------- */
+        etaBanner: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 10,
+          backgroundColor: getColor('overlay'),
+          borderRadius: 12,
+          padding: 12,
+          marginTop: 16,
+        },
+        etaIcon: {
+          width: 34,
+          height: 34,
+          borderRadius: 17,
+          backgroundColor: CATALOGUE_ACCENT,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        etaTitle: { fontSize: 14, fontWeight: '700', color: CATALOGUE_ACCENT },
+        /* ---- trust badges ---------------------------------------------------- */
+        trustRow: {
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          gap: 8,
+          marginTop: 16,
+        },
+        trustPill: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 5,
+          borderWidth: 1,
+          borderColor: getColor('border'),
+          borderRadius: 999,
+          paddingHorizontal: 10,
+          paddingVertical: 5,
+        },
+        /* ---- sticky purchase bar -------------------------------------------- */
+        ctaPriceBlock: { flex: 1 },
+        ctaPrice: { fontSize: 18, fontWeight: '800', color: getColor('text') },
       }),
     [getColor, getButtonColor, theme, insets.top, insets.bottom]
   );
@@ -508,6 +613,48 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             />
           </View>
 
+          <View style={styles.heroBadgesLeft} pointerEvents="none">
+            {displayDiscount > 0 ? (
+              <View style={[styles.pill, styles.pillDiscount]}>
+                <MaterialCommunityIcons name="tag" size={11} color={getColor('white')} />
+                <ThemeText style={[styles.pillLabel, { color: getColor('white') }]}>
+                  {Math.round(displayDiscount)}% OFF
+                </ThemeText>
+              </View>
+            ) : null}
+            {typeof product.veg === 'boolean' ? (
+              <View style={[styles.pill, styles.pillVeg]}>
+                <MaterialCommunityIcons
+                  name="circle"
+                  size={9}
+                  color={product.veg ? CATALOGUE_ACCENT : getColor('error')}
+                />
+                <ThemeText
+                  style={[
+                    styles.pillLabel,
+                    { color: product.veg ? CATALOGUE_ACCENT : getColor('error') },
+                  ]}
+                >
+                  {product.veg ? '100% Veg' : 'Non-veg'}
+                </ThemeText>
+              </View>
+            ) : null}
+          </View>
+
+          {tagLabel ? (
+            <View style={styles.heroBadgeRight} pointerEvents="none">
+              <View style={[styles.pill, styles.pillTag]}>
+                <MaterialCommunityIcons name="trending-up" size={11} color={getColor('white')} />
+                <ThemeText
+                  style={[styles.pillLabel, { color: getColor('white') }]}
+                  numberOfLines={1}
+                >
+                  {tagLabel}
+                </ThemeText>
+              </View>
+            </View>
+          ) : null}
+
           {currentQuantity > 0 && (
             <View style={styles.stepperFloat} pointerEvents="box-none">
               <QuantitySelector
@@ -524,6 +671,16 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
         <View style={styles.body}>
           <View style={styles.sheet}>
+            {/* The design pairs a category breadcrumb with the rating here. The
+                breadcrumb is omitted: `category` and `division` are UUIDs and
+                `subDivision` is null across the catalogue, so there is nothing
+                readable to show. */}
+            {(product.rating ?? 0) > 0 ? (
+              <View style={styles.infoTopRow}>
+                <RatingBadge rating={product.rating as number} size="medium" />
+              </View>
+            ) : null}
+
             <ThemeText
               variant="h2"
               color={getColor('text')}
@@ -546,13 +703,23 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   MRP ₹{displayMrp}
                 </ThemeText>
               )}
+              {savings > 0 ? <ThemeText style={styles.saveLabel}>Save ₹{savings}</ThemeText> : null}
             </View>
 
-            <ProductInfo
-              variants={productVariants}
-              selectedVariantId={selectedVariant?.sku || product.sku}
-              onVariantSelect={handleVariantSelect}
-            />
+            <ThemeText variant="small" color={getColor('subText')} style={styles.taxNote}>
+              (Inclusive of all taxes)
+            </ThemeText>
+
+            {/* Pack sizes only exist for a multi-variant product. Every Beed product
+                currently reports numberOfVariants = 1, so this stays collapsed until
+                the catalogue carries real variants. */}
+            {hasPackSizes ? (
+              <ProductInfo
+                variants={productVariants}
+                selectedVariantId={selectedVariant?.sku || product.sku}
+                onVariantSelect={handleVariantSelect}
+              />
+            ) : null}
 
             {description ? (
               <>
@@ -572,6 +739,56 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 </ThemeText>
               </>
             ) : null}
+          </View>
+
+          {/* Real values only: the ETA is the vendor's own preparationTime and the
+              store is the vendor being ordered from. The design also names the
+              delivery address here; that lives in the address store, not on this
+              modal's props, so it is left out rather than invented. */}
+          {vendor.preparationTime ? (
+            <View style={styles.etaBanner}>
+              <View style={styles.etaIcon}>
+                <MaterialCommunityIcons name="flash" size={18} color={getColor('white')} />
+              </View>
+              <View style={styles.ctaPriceBlock}>
+                <ThemeText style={styles.etaTitle}>
+                  Delivering in {vendor.preparationTime}
+                </ThemeText>
+                {vendor.name ? (
+                  <ThemeText variant="small" color={getColor('subText')}>
+                    from {vendor.name}
+                  </ThemeText>
+                ) : null}
+              </View>
+            </View>
+          ) : null}
+
+          {/* Written out rather than mapped over a list of icon names: the name prop
+              is a union of valid glyphs, and casting to satisfy a loop would let a
+              typo compile and then render nothing at all. */}
+          <View style={styles.trustRow}>
+            <View style={styles.trustPill}>
+              <MaterialCommunityIcons
+                name="shield-check-outline"
+                size={13}
+                color={CATALOGUE_ACCENT}
+              />
+              <ThemeText variant="small" color={getColor('subText')}>
+                Genuine kirana stock
+              </ThemeText>
+            </View>
+            <View style={styles.trustPill}>
+              <MaterialCommunityIcons name="clock-fast" size={13} color={CATALOGUE_ACCENT} />
+              <ThemeText variant="small" color={getColor('subText')}>
+                Fast local delivery
+              </ThemeText>
+            </View>
+            <View style={styles.trustPill}>
+              <MaterialCommunityIcons name="cash-multiple" size={13} color={CATALOGUE_ACCENT} />
+              <ThemeText variant="small" color={getColor('subText')}>
+                Pay on delivery
+              </ThemeText>
+            </View>
           </View>
 
           <SuggestedItems
@@ -597,6 +814,16 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             Out of stock
           </ThemeText>
         )}
+        {!isUnavailable ? (
+          <View style={styles.ctaPriceBlock}>
+            <ThemeText style={styles.ctaPrice}>₹{displayPrice}</ThemeText>
+            {savings > 0 ? (
+              <ThemeText variant="small" style={styles.saveLabel}>
+                Save ₹{savings}
+              </ThemeText>
+            ) : null}
+          </View>
+        ) : null}
         <TouchableOpacity
           style={[styles.ctaButton, isUnavailable && styles.ctaButtonDisabled]}
           disabled={isUnavailable}

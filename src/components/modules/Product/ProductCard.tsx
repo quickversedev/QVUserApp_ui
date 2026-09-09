@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { CATALOGUE_ACCENT, ON_CATALOGUE_ACCENT } from '../../../constants/catalogue';
 import { useTheme } from '../../../theme/ThemeContext';
 import { Product } from '../../../types/product';
 import { BadgeTag } from '../../common';
@@ -29,11 +30,10 @@ const CARD_WIDTH_SMALL = CARD_WIDTH * 0.8;
 const EXTRA_SMALL_CARD_WIDTH = (SCREEN_WIDTH - CARD_MARGIN * 6) / 3.7;
 const CARD_WIDTH_BIG = (AVAILABLE_WIDTH - CARD_MARGIN * 3) / 2; // 2 cards per row with sidebar
 
-// The QV PLP design's cart-control accent (its `secondary` / `on-secondary` pair).
-// Hardcoded because the theme carries no green — `main` and `secondary` are both
-// amber — and the design pairs a green-on-white ADD with a white-on-green stepper.
-const PLP_ACCENT = '#006D30';
-const PLP_ON_ACCENT = '#FFFFFF';
+// The design pairs a green-on-white ADD with a white-on-green stepper. The value is
+// shared with the PDP, so it lives in constants/catalogue.ts rather than here.
+const PLP_ACCENT = CATALOGUE_ACCENT;
+const PLP_ON_ACCENT = ON_CATALOGUE_ACCENT;
 
 /**
  * The PLP grid drops a whole rupee value's ".00", as the design does. The row there
