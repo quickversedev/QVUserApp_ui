@@ -39,8 +39,14 @@ const { height, width } = Dimensions.get('window');
 const HERO_HEIGHT = Math.min(width, Math.round(height * 0.45));
 const HERO_RADIUS = 28;
 const HEADER_BTN = 40;
-const STEPPER_H = 38;
 const CTA_H = 54;
+/**
+ * Width of the bar's right-hand control. Shared by the Add-to-cart button and the
+ * stepper that replaces it, so adding the first unit swaps the control in place.
+ * Fixed rather than flex: with both sides on `flex: 1` yoga sized the stepper by its
+ * content and split the bar 124/254 instead of evenly.
+ */
+const CTA_CONTROL_W = 160;
 
 interface SuggestedItem {
   id: string;
@@ -262,7 +268,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       scrollContent: {
         paddingBottom: barHeight + 20,
       },
-      // Must never get overflow:'hidden' — the stepper pill overhangs its edge.
       heroWrap: {
         position: 'relative',
         zIndex: 2,
@@ -279,27 +284,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         borderBottomRightRadius: HERO_RADIUS,
         backgroundColor: getColor('card'),
       },
-      stepperFloat: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        bottom: -(STEPPER_H / 2),
-        alignItems: 'center',
-      },
-      stepperPill: {
-        position: 'relative',
-        right: undefined,
-        bottom: undefined,
-        height: STEPPER_H,
-        borderRadius: STEPPER_H / 2,
-        paddingHorizontal: 6,
-        backgroundColor: getColor('card'),
-        borderWidth: 1,
-        borderColor: getColor('border'),
-        // Load-bearing on Android: the sheet is a later sibling and would
-        // otherwise paint over the pill's overhang.
-        elevation: 6,
-      },
       // Everything below the hero sits on the page background, so the card colour
       // on `screen` only ever shows above/behind the hero.
       body: {
@@ -307,9 +291,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       },
       sheet: {
         paddingHorizontal: 20,
-        // Clears the pill's lower half plus breathing room. Constant whether or
-        // not the pill renders, so nothing shifts on first add.
-        paddingTop: STEPPER_H / 2 + 18,
+        paddingTop: 16,
       },
       productName: {
         fontWeight: '700',
@@ -368,7 +350,8 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         gap: 14,
       },
       ctaButton: {
-        flex: 1,
+        minWidth: CTA_CONTROL_W,
+        flexShrink: 0,
         height: CTA_H,
         borderRadius: 14,
         backgroundColor: getColor('primary'),
@@ -379,10 +362,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       },
       ctaButtonDisabled: {
         backgroundColor: getButtonColor('disabled', 'background'),
-      },
-      ctaLabel: {
-        fontWeight: '700',
-        fontSize: 17,
       },
       storeClosedText: {
         textAlign: 'center',
@@ -469,13 +448,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         marginTop: 12,
         marginBottom: 18,
       },
-      saveRow: {
-        flexDirection: 'row',
-        alignItems: 'baseline',
-        flexWrap: 'wrap',
-        gap: 8,
-        marginTop: 2,
-      },
       saveLabel: { fontSize: 13, fontWeight: '700', color: CATALOGUE_ACCENT },
       taxNote: { paddingBottom: 3 },
       /* ---- delivery ETA banner -------------------------------------------- */
@@ -520,6 +492,40 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       /* ---- sticky purchase bar -------------------------------------------- */
       ctaPriceBlock: { flex: 1 },
       ctaPrice: { fontSize: 18, fontWeight: '800', color: getColor('text') },
+      // Price and struck MRP on one line, store and ETA beneath — the design's
+      // purchase bar carries both, and the vendor supplies them.
+      ctaPriceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
+      ctaMrp: {
+        textDecorationLine: 'line-through',
+        color: getColor('subText'),
+      },
+      ctaStoreRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 },
+      // The design's call to action is the green secondary, not the amber primary.
+      ctaButtonAccent: { backgroundColor: CATALOGUE_ACCENT },
+      ctaLabelOnAccent: {
+        fontWeight: '800',
+        fontSize: 15,
+        letterSpacing: 0.5,
+        textTransform: 'uppercase',
+      },
+      /**
+       * Takes the button's exact footprint via the shared CTA_CONTROL_W, so adding
+       * the first unit swaps the control in place instead of resizing it.
+       * position/right/bottom undo QuantitySelector's default, which absolutely
+       * positions itself inside a ProductCard image.
+       */
+      ctaStepper: {
+        position: 'relative',
+        right: 0,
+        bottom: 0,
+        width: CTA_CONTROL_W,
+        height: CTA_H,
+        minWidth: 0,
+        borderRadius: 14,
+        backgroundColor: CATALOGUE_ACCENT,
+        borderColor: CATALOGUE_ACCENT,
+        paddingHorizontal: 0,
+      },
     });
   }, [getColor, getButtonColor, theme, insets.top, insets.bottom]);
 
@@ -697,18 +703,9 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </View>
           ) : null}
 
-          {currentQuantity > 0 && (
-            <View style={styles.stepperFloat} pointerEvents="box-none">
-              <QuantitySelector
-                quantity={currentQuantity}
-                onIncrement={handleIncrement}
-                onDecrement={handleDecrement}
-                size="regular"
-                disabled={isUnavailable}
-                containerStyle={styles.stepperPill}
-              />
-            </View>
-          )}
+          {/* The quantity control lives in the sticky bar now, which is the design's
+              single purchase control. A second pill over the hero showed the same
+              number twice. */}
         </View>
 
         <View style={styles.body}>
@@ -861,34 +858,70 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         <View style={styles.ctaRow}>
           {!isUnavailable ? (
             <View style={styles.ctaPriceBlock}>
-              <ThemeText style={styles.ctaPrice}>₹{displayPrice}</ThemeText>
-              {savings > 0 ? (
-                <ThemeText variant="small" style={styles.saveLabel}>
-                  Save ₹{savings}
-                </ThemeText>
+              <View style={styles.ctaPriceRow}>
+                <ThemeText style={styles.ctaPrice}>₹{displayPrice}</ThemeText>
+                {displayMrp !== displayPrice ? (
+                  <ThemeText variant="small" style={styles.ctaMrp}>
+                    MRP ₹{displayMrp}
+                  </ThemeText>
+                ) : null}
+              </View>
+              {vendor.name ? (
+                <View style={styles.ctaStoreRow}>
+                  <MaterialCommunityIcons
+                    name="storefront-outline"
+                    size={12}
+                    color={getColor('subText')}
+                  />
+                  <ThemeText variant="small" color={getColor('subText')}>
+                    {vendor.name}
+                    {vendor.preparationTime ? ` (${vendor.preparationTime})` : ''}
+                  </ThemeText>
+                </View>
               ) : null}
             </View>
           ) : null}
-          <TouchableOpacity
-            style={[styles.ctaButton, isUnavailable && styles.ctaButtonDisabled]}
-            disabled={isUnavailable}
-            activeOpacity={0.85}
-            onPress={handleCtaPress}
-            accessibilityRole="button"
-          >
-            <MaterialCommunityIcons
-              name="cart-outline"
-              size={20}
-              color={isUnavailable ? getButtonColor('disabled', 'text') : getColor('text')}
+          {currentQuantity > 0 && !isUnavailable ? (
+            /* Already in the cart: the bar shows the count and adjusts it, rather than
+               offering "Add to cart" again. addToCart does increment an existing line,
+               so the old always-add button was not wrong — it just never showed how
+               many were in there. */
+            <QuantitySelector
+              quantity={currentQuantity}
+              onIncrement={handleIncrement}
+              onDecrement={handleDecrement}
+              size="regular"
+              disabled={isUnavailable}
+              containerStyle={styles.ctaStepper}
+              tintColor={getColor('white')}
+              quantityColor={getColor('white')}
             />
-            <ThemeText
-              variant="body"
-              color={isUnavailable ? getButtonColor('disabled', 'text') : getColor('text')}
-              style={styles.ctaLabel}
+          ) : (
+            <TouchableOpacity
+              style={[
+                styles.ctaButton,
+                styles.ctaButtonAccent,
+                isUnavailable && styles.ctaButtonDisabled,
+              ]}
+              disabled={isUnavailable}
+              activeOpacity={0.85}
+              onPress={handleCtaPress}
+              accessibilityRole="button"
             >
-              {isOutOfStock ? 'Out of stock' : 'Add to cart'}
-            </ThemeText>
-          </TouchableOpacity>
+              <MaterialCommunityIcons
+                name="basket-outline"
+                size={19}
+                color={isUnavailable ? getButtonColor('disabled', 'text') : getColor('white')}
+              />
+              <ThemeText
+                variant="body"
+                color={isUnavailable ? getButtonColor('disabled', 'text') : getColor('white')}
+                style={styles.ctaLabelOnAccent}
+              >
+                {isOutOfStock ? 'Out of stock' : 'Add to cart'}
+              </ThemeText>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </>
