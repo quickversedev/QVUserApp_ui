@@ -166,14 +166,22 @@ const createStyles = (
     cardFill: {
       flexGrow: 1,
     },
-    topRight: {
+    topLeft: {
       position: 'absolute',
       top: 6,
-      right: 6,
+      left: 6,
       zIndex: 2,
-      alignItems: 'flex-end',
-      // Never let a long server-defined label run under the discount badge opposite.
-      maxWidth: '62%',
+      alignItems: 'flex-start',
+      // Bound a long server-defined label so it cannot span the whole photo.
+      maxWidth: '80%',
+    },
+    /**
+     * Pushed clear of the discount badge, which owns the same corner and stays flush
+     * against it (top: 0, left: -1) — an offset here keeps that badge's shape intact
+     * rather than pulling it into a shared inset stack.
+     */
+    topLeftBelowDiscount: {
+      top: 30,
     },
     // Diagonally opposite the veg mark, and clear of the discount badge above it.
     ratingBottomLeft: {
@@ -510,7 +518,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
              repeated element rather than two distinct pieces of information. */
           <>
             {tagLabel ? (
-              <View style={styles.topRight}>
+              <View style={[styles.topLeft, showDiscount && styles.topLeftBelowDiscount]}>
                 <View style={styles.tagChip}>
                   <Text style={styles.tagChipText} numberOfLines={1}>
                     {tagLabel}
