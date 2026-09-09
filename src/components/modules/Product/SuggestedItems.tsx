@@ -102,8 +102,10 @@ const SuggestedItems: React.FC<SuggestedItemsProps> = ({
     container: {
       paddingVertical: 20,
       backgroundColor: getColor('card'),
+      // Even inset all round. This carried marginBottom: 100 to clear the PDP's
+      // sticky Add-to-cart bar, which the scroll container now pads for properly —
+      // keeping both meant ~100px of dead space under the last card.
       margin: 16,
-      marginBottom: 100,
       borderRadius: theme.borderRadius.md,
       borderWidth: 1,
       borderColor: getColor('border'),
