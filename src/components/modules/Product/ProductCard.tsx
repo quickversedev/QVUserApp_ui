@@ -172,9 +172,15 @@ const createStyles = (
       right: 6,
       zIndex: 2,
       alignItems: 'flex-end',
-      gap: 4,
       // Never let a long server-defined label run under the discount badge opposite.
       maxWidth: '62%',
+    },
+    // Diagonally opposite the veg mark, and clear of the discount badge above it.
+    ratingBottomLeft: {
+      position: 'absolute',
+      left: 6,
+      bottom: 4,
+      zIndex: 2,
     },
     tagChip: {
       backgroundColor: getColor('primary'),
@@ -498,20 +504,26 @@ const ProductCard: React.FC<ProductCardProps> = ({
         />
 
         {isGrid ? (
-          /* One stack in the top-right corner rather than two elements competing for
-             it. RatingBadge returns null at 0 — and no product currently carries a
-             rating — so today only the tag shows; stacking means a rating arriving
-             later pushes the tag down instead of landing on top of it. */
-          <View style={styles.topRight}>
-            {rating > 0 ? <RatingBadge rating={rating} size="medium" /> : null}
+          /* Each corner of the photo carries one thing: discount top-left, tag
+             top-right, rating bottom-left, veg mark bottom-right. The rating and the
+             tag are both amber, so stacking them in one corner read as a single
+             repeated element rather than two distinct pieces of information. */
+          <>
             {tagLabel ? (
-              <View style={styles.tagChip}>
-                <Text style={styles.tagChipText} numberOfLines={1}>
-                  {tagLabel}
-                </Text>
+              <View style={styles.topRight}>
+                <View style={styles.tagChip}>
+                  <Text style={styles.tagChipText} numberOfLines={1}>
+                    {tagLabel}
+                  </Text>
+                </View>
               </View>
             ) : null}
-          </View>
+            {rating > 0 ? (
+              <View style={styles.ratingBottomLeft}>
+                <RatingBadge rating={rating} size="medium" />
+              </View>
+            ) : null}
+          </>
         ) : (
           showRating && (
             <View style={styles.ratingBadge}>
