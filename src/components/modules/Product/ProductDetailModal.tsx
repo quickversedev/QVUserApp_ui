@@ -129,12 +129,24 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const excludeSkus = useMemo(() => [displaySku, product.sku], [displaySku, product.sku]);
 
   /**
-   * Everything below is rendered only when the catalogue actually carries it. For the
-   * Beed vendors today that means the discount, veg marker, tag and rating appear;
-   * pack sizes, gallery dots, a breadcrumb and a description do not, because no
-   * product has more than one variant, additional images, a readable category or any
-   * product_attributes row. Each stays conditional so it lights up if data arrives
-   * rather than needing another change here.
+   * Everything below is rendered only when the catalogue actually carries it. Each
+   * stays conditional so it lights up when data arrives rather than needing another
+   * change here.
+   *
+   * Measured against the live `qv` schema, for the Beed vendors specifically: the
+   * discount, veg marker, tag, rating and breadcrumb all appear; pack sizes, a
+   * gallery and a description do not, because none of the 5,063 Beed products has a
+   * second variant or a `product_attributes` row at all.
+   *
+   * That is a Beed gap, not a platform one — worth knowing before deciding this code
+   * is dead. Platform-wide there are 419 real variant groups (939 SKUs) across 15
+   * shops, every one of them carrying a non-null `size` — "250 ml", "750 ml", "1 L",
+   * "2.25 L" for a four-pack of Thums Up — and since every group's variants share one
+   * name, that size is the only thing distinguishing them, which is exactly what a
+   * pack-size selector needs. `/v3/product/{primarySKU}?variant=true` returns them
+   * with those sizes today, so this path works; it simply cannot be exercised from a
+   * Beed vendor. `qv.product_images` holds one row in the entire platform, so the
+   * gallery really is unreachable everywhere.
    */
   /**
    * Category breadcrumb, as the design pairs with the rating.
