@@ -47,6 +47,8 @@ const CTA_H = 54;
  * content and split the bar 124/254 instead of evenly.
  */
 const CTA_CONTROL_W = 160;
+/** Horizontal gutter for the page body, shared by `sheet` and the blocks below it. */
+const SHEET_GUTTER = 20;
 
 interface SuggestedItem {
   id: string;
@@ -290,7 +292,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         backgroundColor: getColor('background'),
       },
       sheet: {
-        paddingHorizontal: 20,
+        paddingHorizontal: SHEET_GUTTER,
         paddingTop: 16,
       },
       productName: {
@@ -309,7 +311,10 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       priceText: {
         fontSize: 28,
         fontWeight: '700',
-        color: getColor('primary'),
+        // Near-black, not the amber primary. The design prices in its darkest text
+        // colour (#0b1c30) and spends colour only on the savings; theme `text`
+        // (#1f2937) is that role here. Amber made the price compete with the CTA.
+        color: getColor('text'),
       },
       mrpText: {
         color: getColor('subText'),
@@ -411,6 +416,12 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         right: 16,
         maxWidth: '55%',
       },
+      // Inset far enough to clear the hero's bottom-right corner radius.
+      heroBadgeVeg: {
+        position: 'absolute',
+        bottom: 16,
+        right: 16,
+      },
       pill: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -462,6 +473,9 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         borderRadius: 12,
         padding: 12,
         marginTop: 16,
+        // Matches `sheet`'s gutter. This block renders after the sheet closes, so it
+        // does not inherit that padding and would otherwise sit on the screen edge.
+        marginHorizontal: SHEET_GUTTER,
       },
       etaIcon: {
         width: 34,
@@ -478,6 +492,8 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         flexWrap: 'wrap',
         gap: 8,
         marginTop: 16,
+        // Outside `sheet` as well — see etaBanner.
+        marginHorizontal: SHEET_GUTTER,
       },
       trustPill: {
         flexDirection: 'row',
@@ -670,24 +686,27 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 </ThemeText>
               </View>
             ) : null}
-            {typeof product.veg === 'boolean' ? (
-              <View style={[styles.pill, styles.pillVeg]}>
-                <MaterialCommunityIcons
-                  name="circle"
-                  size={9}
-                  color={product.veg ? CATALOGUE_ACCENT : getColor('error')}
-                />
-                <ThemeText
-                  style={[
-                    styles.pillLabel,
-                    { color: product.veg ? CATALOGUE_ACCENT : getColor('error') },
-                  ]}
-                >
-                  {product.veg ? '100% Veg' : 'Non-veg'}
-                </ThemeText>
-              </View>
-            ) : null}
           </View>
+
+          {/* Bottom-right of the photo, the same corner the PLP grid card uses for
+              this marker, so the two screens agree on where to look for it. */}
+          {typeof product.veg === 'boolean' ? (
+            <View style={[styles.pill, styles.pillVeg, styles.heroBadgeVeg]} pointerEvents="none">
+              <MaterialCommunityIcons
+                name="circle"
+                size={9}
+                color={product.veg ? CATALOGUE_ACCENT : getColor('error')}
+              />
+              <ThemeText
+                style={[
+                  styles.pillLabel,
+                  { color: product.veg ? CATALOGUE_ACCENT : getColor('error') },
+                ]}
+              >
+                {product.veg ? '100% Veg' : 'Non-veg'}
+              </ThemeText>
+            </View>
+          ) : null}
 
           {tagLabel ? (
             <View style={styles.heroBadgeRight} pointerEvents="none">
