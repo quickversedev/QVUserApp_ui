@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
-import { CATALOGUE_ACCENT } from '../../../constants/catalogue';
+import { CATALOGUE_ACCENT, CATALOGUE_GUTTER } from '../../../constants/catalogue';
 import { useAuth } from '../../../contexts/login/AuthProvider';
 import productDetailsService from '../../../services/productDetailsService';
 import useCartStore from '../../../store/cart/cartStore';
@@ -48,16 +48,12 @@ const CTA_H = 54;
  * content and split the bar 124/254 instead of evenly.
  */
 const CTA_CONTROL_W = 160;
-/** Horizontal gutter for the page body, shared by `sheet` and the blocks below it. */
-const SHEET_GUTTER = 20;
-
 interface SuggestedItem {
   id: string;
   name: string;
   price: number;
   mrp: number;
-  rating: number;
-  image: number;
+  image: string;
   quantity: number;
 }
 
@@ -315,7 +311,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         backgroundColor: getColor('background'),
       },
       sheet: {
-        paddingHorizontal: SHEET_GUTTER,
+        paddingHorizontal: CATALOGUE_GUTTER,
         paddingTop: 16,
       },
       productName: {
@@ -510,7 +506,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         marginTop: 16,
         // Matches `sheet`'s gutter. This block renders after the sheet closes, so it
         // does not inherit that padding and would otherwise sit on the screen edge.
-        marginHorizontal: SHEET_GUTTER,
+        marginHorizontal: CATALOGUE_GUTTER,
       },
       etaIcon: {
         width: 34,
@@ -528,7 +524,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         gap: 8,
         marginTop: 16,
         // Outside `sheet` as well — see etaBanner.
-        marginHorizontal: SHEET_GUTTER,
+        marginHorizontal: CATALOGUE_GUTTER,
       },
       trustPill: {
         flexDirection: 'row',
@@ -603,7 +599,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       name: item.name,
       price: item.price,
       mrp: item.mrp,
-      image: item.image.toString(),
+      image: item.image,
       veg: true,
     };
     addToCart(cartId, cartProduct, authData?.jwt || '', authData?.phone || '');
@@ -893,6 +889,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           <SuggestedItems
             categories={product.division || ''}
             excludeSkus={excludeSkus}
+            cartId={cartId}
             onItemPress={handleSuggestedItemPress}
             onAdd={handleSuggestedItemAdd}
             onIncrement={handleSuggestedItemIncrement}

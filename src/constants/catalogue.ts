@@ -13,3 +13,12 @@
  */
 export const CATALOGUE_ACCENT = '#006D30';
 export const ON_CATALOGUE_ACCENT = '#FFFFFF';
+
+/**
+ * Horizontal gutter for the catalogue detail body.
+ *
+ * Shared because the PDP's sheet and the blocks rendered outside it — the ETA
+ * banner, the trust pills, the suggestions grid — have to line up, and they live in
+ * different files. A literal in each was how two of them ended up on the screen edge.
+ */
+export const CATALOGUE_GUTTER = 20;
