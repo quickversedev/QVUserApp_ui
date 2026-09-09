@@ -241,12 +241,8 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           shadowRadius: theme.colors.shadow.radius,
           elevation: 3,
         },
-        headerTitle: {
-          flex: 1,
-          textAlign: 'center',
-          fontWeight: '700',
-        },
-        // Keeps the title optically centred without absolute positioning.
+        // Holds the slot the design fills with share and favourite actions, neither of
+        // which the app implements. Keeps the back button hard left when they arrive.
         headerSpacer: {
           width: HEADER_BTN,
         },
@@ -345,7 +341,15 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           paddingBottom: Math.max(12, insets.bottom),
           backgroundColor: getColor('background'),
         },
+        // The bar itself stays a column so an out-of-stock or closed-store notice can
+        // sit above; the price and the button share this row beneath it.
+        ctaRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 14,
+        },
         ctaButton: {
+          flex: 1,
           height: CTA_H,
           borderRadius: 14,
           backgroundColor: getColor('primary'),
@@ -428,12 +432,15 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           textTransform: 'uppercase',
         },
         /* ---- info card ------------------------------------------------------ */
-        infoTopRow: {
+        // Title and rating share a line. The design pairs the rating with a category
+        // breadcrumb on the left; with no readable category the badge would otherwise
+        // float alone against the right edge.
+        titleRow: {
           flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
-          marginBottom: 6,
+          alignItems: 'flex-start',
+          gap: 10,
         },
+        titleFlex: { flex: 1 },
         saveRow: {
           flexDirection: 'row',
           alignItems: 'baseline',
@@ -536,12 +543,17 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const renderHeader = () => (
     // box-none: without it this full-width transparent strip swallows taps on the hero.
     <View style={styles.header} pointerEvents="box-none">
-      <TouchableOpacity style={styles.headerBtn} onPress={onClose} accessibilityRole="button">
+      {/* No title: the design has none, and dark label text sitting directly on the
+          product photo was unreadable. The back button carries the accessible name
+          instead. */}
+      <TouchableOpacity
+        style={styles.headerBtn}
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel="Close product details"
+      >
         <MaterialCommunityIcons name="chevron-left" size={26} color={getColor('text')} />
       </TouchableOpacity>
-      <ThemeText variant="subtitle" color={getColor('text')} style={styles.headerTitle}>
-        Details
-      </ThemeText>
       <View style={styles.headerSpacer} />
     </View>
   );
@@ -671,24 +683,23 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
         <View style={styles.body}>
           <View style={styles.sheet}>
-            {/* The design pairs a category breadcrumb with the rating here. The
-                breadcrumb is omitted: `category` and `division` are UUIDs and
-                `subDivision` is null across the catalogue, so there is nothing
-                readable to show. */}
-            {(product.rating ?? 0) > 0 ? (
-              <View style={styles.infoTopRow}>
+            {/* The design pairs a category breadcrumb with the rating on this line.
+                The breadcrumb is omitted — `category` and `division` are UUIDs and
+                `subDivision` is null across the catalogue — so the title takes its
+                place and the rating keeps its position on the right. */}
+            <View style={styles.titleRow}>
+              <ThemeText
+                variant="h2"
+                color={getColor('text')}
+                style={[styles.productName, styles.titleFlex]}
+                numberOfLines={2}
+              >
+                {displayName}
+              </ThemeText>
+              {(product.rating ?? 0) > 0 ? (
                 <RatingBadge rating={product.rating as number} size="medium" />
-              </View>
-            ) : null}
-
-            <ThemeText
-              variant="h2"
-              color={getColor('text')}
-              style={styles.productName}
-              numberOfLines={2}
-            >
-              {displayName}
-            </ThemeText>
+              ) : null}
+            </View>
 
             {subtitle ? (
               <ThemeText variant="small" color={getColor('subText')} style={styles.subtitle}>
@@ -814,36 +825,38 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             Out of stock
           </ThemeText>
         )}
-        {!isUnavailable ? (
-          <View style={styles.ctaPriceBlock}>
-            <ThemeText style={styles.ctaPrice}>₹{displayPrice}</ThemeText>
-            {savings > 0 ? (
-              <ThemeText variant="small" style={styles.saveLabel}>
-                Save ₹{savings}
-              </ThemeText>
-            ) : null}
-          </View>
-        ) : null}
-        <TouchableOpacity
-          style={[styles.ctaButton, isUnavailable && styles.ctaButtonDisabled]}
-          disabled={isUnavailable}
-          activeOpacity={0.85}
-          onPress={handleCtaPress}
-          accessibilityRole="button"
-        >
-          <MaterialCommunityIcons
-            name="cart-outline"
-            size={20}
-            color={isUnavailable ? getButtonColor('disabled', 'text') : getColor('text')}
-          />
-          <ThemeText
-            variant="body"
-            color={isUnavailable ? getButtonColor('disabled', 'text') : getColor('text')}
-            style={styles.ctaLabel}
+        <View style={styles.ctaRow}>
+          {!isUnavailable ? (
+            <View style={styles.ctaPriceBlock}>
+              <ThemeText style={styles.ctaPrice}>₹{displayPrice}</ThemeText>
+              {savings > 0 ? (
+                <ThemeText variant="small" style={styles.saveLabel}>
+                  Save ₹{savings}
+                </ThemeText>
+              ) : null}
+            </View>
+          ) : null}
+          <TouchableOpacity
+            style={[styles.ctaButton, isUnavailable && styles.ctaButtonDisabled]}
+            disabled={isUnavailable}
+            activeOpacity={0.85}
+            onPress={handleCtaPress}
+            accessibilityRole="button"
           >
-            {isOutOfStock ? 'Out of stock' : 'Add to cart'}
-          </ThemeText>
-        </TouchableOpacity>
+            <MaterialCommunityIcons
+              name="cart-outline"
+              size={20}
+              color={isUnavailable ? getButtonColor('disabled', 'text') : getColor('text')}
+            />
+            <ThemeText
+              variant="body"
+              color={isUnavailable ? getButtonColor('disabled', 'text') : getColor('text')}
+              style={styles.ctaLabel}
+            >
+              {isOutOfStock ? 'Out of stock' : 'Add to cart'}
+            </ThemeText>
+          </TouchableOpacity>
+        </View>
       </View>
     </>
   );
