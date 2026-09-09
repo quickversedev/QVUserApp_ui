@@ -210,298 +210,316 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     decrement(cartId, displaySku, authData?.jwt || '', authData?.phone || '');
   };
 
-  const styles = useMemo(
-    () =>
-      StyleSheet.create({
-        // Card-coloured so the band behind the status bar matches the hero rather
-        // than showing a white gap above it. The sheet below repaints its own bg.
-        screen: {
-          flex: 1,
-          backgroundColor: getColor('card'),
-        },
-        header: {
-          position: 'absolute',
-          top: insets.top + 8,
-          left: 16,
-          right: 16,
-          flexDirection: 'row',
-          alignItems: 'center',
-          zIndex: 10,
-        },
-        headerBtn: {
-          width: HEADER_BTN,
-          height: HEADER_BTN,
-          borderRadius: HEADER_BTN / 2,
-          backgroundColor: getColor('card'),
-          alignItems: 'center',
-          justifyContent: 'center',
-          shadowColor: theme.colors.shadow.color,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: theme.colors.shadow.opacity,
-          shadowRadius: theme.colors.shadow.radius,
-          elevation: 3,
-        },
-        // Holds the slot the design fills with share and favourite actions, neither of
-        // which the app implements. Keeps the back button hard left when they arrive.
-        headerSpacer: {
-          width: HEADER_BTN,
-        },
-        scroll: {
-          flex: 1,
-        },
-        scrollContent: {
-          paddingBottom: CTA_H + 32,
-        },
-        // Must never get overflow:'hidden' — the stepper pill overhangs its edge.
-        heroWrap: {
-          position: 'relative',
-          zIndex: 2,
-        },
-        /**
-         * Rounded only at the bottom — the top corners sit on the screen edge.
-         * The card background here (and on `screen`) is what makes the hero read as
-         * edge-to-edge: any strip above it, including behind the status bar, is
-         * painted the same colour rather than white.
-         */
-        heroClip: {
-          overflow: 'hidden',
-          borderBottomLeftRadius: HERO_RADIUS,
-          borderBottomRightRadius: HERO_RADIUS,
-          backgroundColor: getColor('card'),
-        },
-        stepperFloat: {
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          bottom: -(STEPPER_H / 2),
-          alignItems: 'center',
-        },
-        stepperPill: {
-          position: 'relative',
-          right: undefined,
-          bottom: undefined,
-          height: STEPPER_H,
-          borderRadius: STEPPER_H / 2,
-          paddingHorizontal: 6,
-          backgroundColor: getColor('card'),
-          borderWidth: 1,
-          borderColor: getColor('border'),
-          // Load-bearing on Android: the sheet is a later sibling and would
-          // otherwise paint over the pill's overhang.
-          elevation: 6,
-        },
-        // Everything below the hero sits on the page background, so the card colour
-        // on `screen` only ever shows above/behind the hero.
-        body: {
-          backgroundColor: getColor('background'),
-        },
-        sheet: {
-          paddingHorizontal: 20,
-          // Clears the pill's lower half plus breathing room. Constant whether or
-          // not the pill renders, so nothing shifts on first add.
-          paddingTop: STEPPER_H / 2 + 18,
-        },
-        productName: {
-          fontWeight: '700',
-        },
-        subtitle: {
-          marginTop: 4,
-        },
-        priceRow: {
-          flexDirection: 'row',
-          alignItems: 'flex-end',
-          marginTop: 12,
-          marginBottom: 18,
-        },
-        priceText: {
-          fontSize: 28,
-          fontWeight: '700',
-          color: getColor('primary'),
-        },
-        mrpText: {
-          color: getColor('subText'),
-          textDecorationLine: 'line-through',
-          marginLeft: 10,
-          marginBottom: 4,
-        },
-        sectionHeading: {
-          fontWeight: '700',
-          marginBottom: 8,
-        },
-        descriptionText: {
-          lineHeight: 20,
-        },
-        ctaBar: {
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          paddingHorizontal: 20,
-          paddingTop: 10,
-          paddingBottom: Math.max(12, insets.bottom),
-          backgroundColor: getColor('background'),
-        },
-        // The bar itself stays a column so an out-of-stock or closed-store notice can
-        // sit above; the price and the button share this row beneath it.
-        ctaRow: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 14,
-        },
-        ctaButton: {
-          flex: 1,
-          height: CTA_H,
-          borderRadius: 14,
-          backgroundColor: getColor('primary'),
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-        },
-        ctaButtonDisabled: {
-          backgroundColor: getButtonColor('disabled', 'background'),
-        },
-        ctaLabel: {
-          fontWeight: '700',
-          fontSize: 17,
-        },
-        storeClosedText: {
-          textAlign: 'center',
-          marginBottom: 8,
-        },
-        loadingContainer: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 40,
-        },
-        loadingText: {
-          marginTop: 16,
-        },
-        errorContainer: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 40,
-        },
-        errorText: {
-          color: getColor('error'),
-          textAlign: 'center',
-          marginBottom: 16,
-        },
-        retryButton: {
-          backgroundColor: getColor('primary'),
-          paddingHorizontal: 16,
-          paddingVertical: 8,
-          borderRadius: theme.borderRadius.sm,
-        },
-        retryButtonText: {
-          color: getColor('white'),
-        },
+  const styles = useMemo(() => {
+    /**
+     * The sticky bar's height and the scroll padding that clears it are derived from
+     * the same numbers. They were independent before — paddingBottom was CTA_H + 32
+     * while the bar measured paddingTop + CTA_H + the bottom inset — so on any device
+     * with gesture navigation the last strip of content could never be scrolled out
+     * from behind the bar.
+     */
+    const barPadBottom = Math.max(12, insets.bottom);
+    const barPadTop = 10;
+    const barHeight = barPadTop + CTA_H + barPadBottom;
 
-        /* ---- QV PDP design: badges over the hero ---------------------------- */
-        heroBadgesLeft: {
-          position: 'absolute',
-          top: insets.top + HEADER_BTN + 12,
-          left: 16,
-          gap: 6,
-          alignItems: 'flex-start',
-        },
-        heroBadgeRight: {
-          position: 'absolute',
-          top: insets.top + HEADER_BTN + 12,
-          right: 16,
-          maxWidth: '55%',
-        },
-        pill: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 4,
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-          borderRadius: 6,
-        },
-        pillDiscount: { backgroundColor: getColor('primary') },
-        pillVeg: { backgroundColor: getColor('white') },
-        pillTag: { backgroundColor: getColor('primary') },
-        pillLabel: {
-          fontSize: 10,
-          lineHeight: 12,
-          fontWeight: '800',
-          letterSpacing: 0.4,
-          textTransform: 'uppercase',
-        },
-        /* ---- info card ------------------------------------------------------ */
-        // Title and rating share a line. The design pairs the rating with a category
-        // breadcrumb on the left; with no readable category the badge would otherwise
-        // float alone against the right edge.
-        titleRow: {
-          flexDirection: 'row',
-          alignItems: 'flex-start',
-          gap: 10,
-        },
-        titleFlex: { flex: 1 },
-        // Price on the left, tax note trailing on the right, as the design has them.
-        priceLine: {
-          flexDirection: 'row',
-          alignItems: 'flex-end',
-          justifyContent: 'space-between',
-          gap: 10,
-        },
-        saveRow: {
-          flexDirection: 'row',
-          alignItems: 'baseline',
-          flexWrap: 'wrap',
-          gap: 8,
-          marginTop: 2,
-        },
-        saveLabel: { fontSize: 13, fontWeight: '700', color: CATALOGUE_ACCENT },
-        taxNote: { paddingBottom: 3 },
-        /* ---- delivery ETA banner -------------------------------------------- */
-        etaBanner: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 10,
-          // Tinted with the delivery accent at low alpha rather than the flat grey
-          // `overlay`. The design uses a tinted surface here; the theme has no such
-          // token, and grey read as a disabled panel beside the green icon.
-          backgroundColor: `${CATALOGUE_ACCENT}12`,
-          borderRadius: 12,
-          padding: 12,
-          marginTop: 16,
-        },
-        etaIcon: {
-          width: 34,
-          height: 34,
-          borderRadius: 17,
-          backgroundColor: CATALOGUE_ACCENT,
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
-        etaTitle: { fontSize: 14, fontWeight: '700', color: CATALOGUE_ACCENT },
-        /* ---- trust badges ---------------------------------------------------- */
-        trustRow: {
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          gap: 8,
-          marginTop: 16,
-        },
-        trustPill: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 5,
-          borderWidth: 1,
-          borderColor: getColor('border'),
-          borderRadius: 999,
-          paddingHorizontal: 10,
-          paddingVertical: 5,
-        },
-        /* ---- sticky purchase bar -------------------------------------------- */
-        ctaPriceBlock: { flex: 1 },
-        ctaPrice: { fontSize: 18, fontWeight: '800', color: getColor('text') },
-      }),
-    [getColor, getButtonColor, theme, insets.top, insets.bottom]
-  );
+    return StyleSheet.create({
+      // Card-coloured so the band behind the status bar matches the hero rather
+      // than showing a white gap above it. The sheet below repaints its own bg.
+      screen: {
+        flex: 1,
+        backgroundColor: getColor('card'),
+      },
+      header: {
+        position: 'absolute',
+        top: insets.top + 8,
+        left: 16,
+        right: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        zIndex: 10,
+      },
+      headerBtn: {
+        width: HEADER_BTN,
+        height: HEADER_BTN,
+        borderRadius: HEADER_BTN / 2,
+        backgroundColor: getColor('card'),
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: theme.colors.shadow.color,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: theme.colors.shadow.opacity,
+        shadowRadius: theme.colors.shadow.radius,
+        elevation: 3,
+      },
+      // Holds the slot the design fills with share and favourite actions, neither of
+      // which the app implements. Keeps the back button hard left when they arrive.
+      headerSpacer: {
+        width: HEADER_BTN,
+      },
+      scroll: {
+        flex: 1,
+      },
+      scrollContent: {
+        paddingBottom: barHeight + 20,
+      },
+      // Must never get overflow:'hidden' — the stepper pill overhangs its edge.
+      heroWrap: {
+        position: 'relative',
+        zIndex: 2,
+      },
+      /**
+       * Rounded only at the bottom — the top corners sit on the screen edge.
+       * The card background here (and on `screen`) is what makes the hero read as
+       * edge-to-edge: any strip above it, including behind the status bar, is
+       * painted the same colour rather than white.
+       */
+      heroClip: {
+        overflow: 'hidden',
+        borderBottomLeftRadius: HERO_RADIUS,
+        borderBottomRightRadius: HERO_RADIUS,
+        backgroundColor: getColor('card'),
+      },
+      stepperFloat: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: -(STEPPER_H / 2),
+        alignItems: 'center',
+      },
+      stepperPill: {
+        position: 'relative',
+        right: undefined,
+        bottom: undefined,
+        height: STEPPER_H,
+        borderRadius: STEPPER_H / 2,
+        paddingHorizontal: 6,
+        backgroundColor: getColor('card'),
+        borderWidth: 1,
+        borderColor: getColor('border'),
+        // Load-bearing on Android: the sheet is a later sibling and would
+        // otherwise paint over the pill's overhang.
+        elevation: 6,
+      },
+      // Everything below the hero sits on the page background, so the card colour
+      // on `screen` only ever shows above/behind the hero.
+      body: {
+        backgroundColor: getColor('background'),
+      },
+      sheet: {
+        paddingHorizontal: 20,
+        // Clears the pill's lower half plus breathing room. Constant whether or
+        // not the pill renders, so nothing shifts on first add.
+        paddingTop: STEPPER_H / 2 + 18,
+      },
+      productName: {
+        fontWeight: '700',
+      },
+      subtitle: {
+        marginTop: 4,
+      },
+      priceRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        marginTop: 12,
+        marginBottom: 18,
+      },
+      priceText: {
+        fontSize: 28,
+        fontWeight: '700',
+        color: getColor('primary'),
+      },
+      mrpText: {
+        color: getColor('subText'),
+        textDecorationLine: 'line-through',
+        marginLeft: 10,
+        marginBottom: 4,
+      },
+      sectionHeading: {
+        fontWeight: '700',
+        marginBottom: 8,
+      },
+      descriptionText: {
+        lineHeight: 20,
+      },
+      ctaBar: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        paddingHorizontal: 20,
+        paddingTop: barPadTop,
+        paddingBottom: barPadBottom,
+        backgroundColor: getColor('background'),
+        // "Elevated above main navigation" in the design. Without it, content
+        // scrolls under an untinted bar with no separation at all.
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: getColor('border'),
+        shadowColor: theme.colors.shadow.color,
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: theme.colors.shadow.opacity,
+        shadowRadius: theme.colors.shadow.radius,
+        elevation: 8,
+      },
+      // The bar itself stays a column so an out-of-stock or closed-store notice can
+      // sit above; the price and the button share this row beneath it.
+      ctaRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 14,
+      },
+      ctaButton: {
+        flex: 1,
+        height: CTA_H,
+        borderRadius: 14,
+        backgroundColor: getColor('primary'),
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+      },
+      ctaButtonDisabled: {
+        backgroundColor: getButtonColor('disabled', 'background'),
+      },
+      ctaLabel: {
+        fontWeight: '700',
+        fontSize: 17,
+      },
+      storeClosedText: {
+        textAlign: 'center',
+        marginBottom: 8,
+      },
+      loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 40,
+      },
+      loadingText: {
+        marginTop: 16,
+      },
+      errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 40,
+      },
+      errorText: {
+        color: getColor('error'),
+        textAlign: 'center',
+        marginBottom: 16,
+      },
+      retryButton: {
+        backgroundColor: getColor('primary'),
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: theme.borderRadius.sm,
+      },
+      retryButtonText: {
+        color: getColor('white'),
+      },
+
+      /* ---- QV PDP design: badges over the hero ---------------------------- */
+      heroBadgesLeft: {
+        position: 'absolute',
+        top: insets.top + HEADER_BTN + 12,
+        left: 16,
+        gap: 6,
+        alignItems: 'flex-start',
+      },
+      heroBadgeRight: {
+        position: 'absolute',
+        top: insets.top + HEADER_BTN + 12,
+        right: 16,
+        maxWidth: '55%',
+      },
+      pill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+      },
+      pillDiscount: { backgroundColor: getColor('primary') },
+      pillVeg: { backgroundColor: getColor('white') },
+      pillTag: { backgroundColor: getColor('primary') },
+      pillLabel: {
+        fontSize: 10,
+        lineHeight: 12,
+        fontWeight: '800',
+        letterSpacing: 0.4,
+        textTransform: 'uppercase',
+      },
+      /* ---- info card ------------------------------------------------------ */
+      // Title and rating share a line. The design pairs the rating with a category
+      // breadcrumb on the left; with no readable category the badge would otherwise
+      // float alone against the right edge.
+      titleRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: 10,
+      },
+      titleFlex: { flex: 1 },
+      // Price on the left, tax note trailing on the right, as the design has them.
+      priceLine: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        gap: 10,
+      },
+      saveRow: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginTop: 2,
+      },
+      saveLabel: { fontSize: 13, fontWeight: '700', color: CATALOGUE_ACCENT },
+      taxNote: { paddingBottom: 3 },
+      /* ---- delivery ETA banner -------------------------------------------- */
+      etaBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        // Tinted with the delivery accent at low alpha rather than the flat grey
+        // `overlay`. The design uses a tinted surface here; the theme has no such
+        // token, and grey read as a disabled panel beside the green icon.
+        backgroundColor: `${CATALOGUE_ACCENT}12`,
+        borderRadius: 12,
+        padding: 12,
+        marginTop: 16,
+      },
+      etaIcon: {
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        backgroundColor: CATALOGUE_ACCENT,
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      etaTitle: { fontSize: 14, fontWeight: '700', color: CATALOGUE_ACCENT },
+      /* ---- trust badges ---------------------------------------------------- */
+      trustRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginTop: 16,
+      },
+      trustPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        borderWidth: 1,
+        borderColor: getColor('border'),
+        borderRadius: 999,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+      },
+      /* ---- sticky purchase bar -------------------------------------------- */
+      ctaPriceBlock: { flex: 1 },
+      ctaPrice: { fontSize: 18, fontWeight: '800', color: getColor('text') },
+    });
+  }, [getColor, getButtonColor, theme, insets.top, insets.bottom]);
 
   const handleVariantSelect = (variantId: string) => {
     const variant = variants.find(v => v.sku === variantId);
