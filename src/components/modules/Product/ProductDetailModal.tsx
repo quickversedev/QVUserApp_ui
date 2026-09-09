@@ -426,12 +426,18 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       },
 
       /* ---- QV PDP design: badges over the hero ---------------------------- */
-      // Discount above tag, both right-aligned. The back button owns the top-left
-      // corner, so stacking them here keeps either badge clear of it.
+      /**
+       * Discount above tag, both right-aligned, sharing the back button's band so
+       * the two read as one row. `top` and `right` mirror `header`'s, and the
+       * HEADER_BTN floor plus centring lines a single chip up with the button's
+       * middle; a second chip grows the stack downward from that same top edge.
+       */
       heroBadgeRight: {
         position: 'absolute',
-        top: insets.top + HEADER_BTN + 12,
+        top: insets.top + 8,
         right: 16,
+        minHeight: HEADER_BTN,
+        justifyContent: 'center',
         maxWidth: '55%',
         gap: 6,
         alignItems: 'flex-end',
