@@ -10,9 +10,16 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TabBarVisibilityContext } from '../../../navigation/TabNavigation';
+import { CATALOGUE_ACCENT } from '../../../constants/catalogue';
 import { useTheme } from '../../../theme/ThemeContext';
 
 interface CartFooterProps {
+  /** Amount the customer will actually be charged, from the checkout summary. */
+  total?: number;
+  /** Total saved on this order; drives the design's savings line. */
+  savings?: number;
+  /** Opens the bill. The design pairs the total with a "View Bill" affordance. */
+  onViewBill?: () => void;
   address: string;
   addressTag?: string;
   addressId?: string;
@@ -24,6 +31,9 @@ interface CartFooterProps {
 }
 
 const CartFooter: React.FC<CartFooterProps> = ({
+  total = 0,
+  savings = 0,
+  onViewBill,
   address,
   addressTag,
   addressId,
@@ -74,6 +84,31 @@ const CartFooter: React.FC<CartFooterProps> = ({
         },
       }),
     },
+    totalRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+    totalBlock: { flex: 1 },
+    totalLine: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
+    totalAmount: {
+      fontSize: 20,
+      lineHeight: 26,
+      fontWeight: '800',
+      color: getColor('text'),
+    },
+    viewBill: {
+      fontSize: 12,
+      lineHeight: 16,
+      fontWeight: '700',
+      color: CATALOGUE_ACCENT,
+      textDecorationLine: 'underline',
+    },
+    savingsLine: {
+      fontSize: 10,
+      lineHeight: 13,
+      fontWeight: '800',
+      letterSpacing: 0.6,
+      textTransform: 'uppercase',
+      color: CATALOGUE_ACCENT,
+      marginTop: 2,
+    },
     addressBox: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -106,7 +141,7 @@ const CartFooter: React.FC<CartFooterProps> = ({
       fontWeight: '500',
     },
     checkoutBtn: {
-      backgroundColor: getButtonColor('default', 'background'),
+      backgroundColor: CATALOGUE_ACCENT,
       borderRadius: theme.borderRadius.md,
       paddingVertical: 16,
       flexDirection: 'row',
@@ -156,10 +191,11 @@ const CartFooter: React.FC<CartFooterProps> = ({
 
   const getButtonText = () => {
     if (loading) return 'Processing...';
-    if (isGuest) return 'Login to Place Order';
+    if (isGuest) return 'Login to Continue';
     if (!isAddressSelected) return 'Select Address to Continue';
-    if (disabled) return 'Select Payment Method';
-    return 'Place Order';
+    // "Proceed to Pay", not "Place Order": the payment method is chosen in the step
+    // this opens, so nothing is ordered by tapping it.
+    return 'Proceed to Pay';
   };
 
   return (
@@ -189,6 +225,24 @@ const CartFooter: React.FC<CartFooterProps> = ({
         </View>
         <MaterialCommunityIcons name="chevron-right" size={24} color={getColor('primary')} />
       </TouchableOpacity>
+
+      {total > 0 ? (
+        <View style={styles.totalRow}>
+          <View style={styles.totalBlock}>
+            <View style={styles.totalLine}>
+              <Text style={styles.totalAmount}>₹{total.toFixed(2)}</Text>
+              {onViewBill ? (
+                <TouchableOpacity onPress={onViewBill} accessibilityRole="button">
+                  <Text style={styles.viewBill}>View Bill</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+            {savings > 0 ? (
+              <Text style={styles.savingsLine}>Total savings ₹{savings.toFixed(2)}</Text>
+            ) : null}
+          </View>
+        </View>
+      ) : null}
 
       <TouchableOpacity
         style={[styles.checkoutBtn, disabled && styles.checkoutBtnDisabled]}

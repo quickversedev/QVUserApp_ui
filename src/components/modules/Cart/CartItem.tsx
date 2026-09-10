@@ -1,10 +1,32 @@
-import React, { useCallback } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { Image, ImageSourcePropType, StyleSheet, View } from 'react-native';
+import { CATALOGUE_ACCENT } from '../../../constants/catalogue';
 import { CartProduct } from '../../../store/cart/cartStore';
 import { useTheme } from '../../../theme/ThemeContext';
 import { ThemeText } from '../../common/theme/ThemeText';
 import AddButton from '../Product/AddButton';
 import QuantitySelector from '../Product/QuantitySelector';
+
+/**
+ * One cart line, in the QV Cart design: a raised white card holding a contained
+ * thumbnail, the pack size and name, the line total with its struck MRP, and a filled
+ * green stepper.
+ *
+ * Two things the design shows are deliberately absent.
+ *
+ * The veg dot: `CartProduct.veg` is overwritten with `true` on every server sync
+ * because the cart upstream sends no diet flag, so a marker here would tell every
+ * signed-in customer that every line is vegetarian.
+ *
+ * The "From <store>" line: a QuickVerse cart is keyed `vendor_<shopId>` and holds one
+ * vendor, so attributing each row to a store would repeat the same name down the
+ * list. It belongs to the vendor header above them, and lives there instead.
+ */
+
+const THUMB = 64;
+/** Stepper and the Add fallback share this, so the row cannot change height. */
+const CONTROL_H = 32;
+const CONTROL_W = 96;
 
 interface CartItemProps extends CartProduct {
   tag?: string;
@@ -13,131 +35,175 @@ interface CartItemProps extends CartProduct {
 }
 
 const CartItem: React.FC<CartItemProps> = React.memo(
-  ({ name, price, mrp, quantity, tag, onInc, onDec, image }) => {
-    const { getColor, theme, getButtonColor } = useTheme();
+  ({ name, price, mrp, quantity, packSize, tag, onInc, onDec, image }) => {
+    const { getColor, theme } = useTheme();
 
-    const styles = StyleSheet.create({
-      cartItemRow: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        marginBottom: 18,
-      },
-      cartItemImg: {
-        width: 56,
-        height: 56,
-        borderRadius: theme.borderRadius.md,
-        backgroundColor: getButtonColor('default', 'background'),
-        marginRight: 12,
-        alignSelf: 'center',
-      },
-      cartItemName: {
-        color: getColor('text'),
-        width: '75%',
-        // marginRight: 8,
-      },
-      cartItemMRP: {
-        color: getColor('subText'),
-        textDecorationLine: 'line-through',
-        marginRight: 6,
-      },
-      cartItemPrice: {
-        color: getButtonColor('default', 'background'),
-      },
-      qtyCol: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minWidth: 70,
-        alignSelf: 'center',
-        marginLeft: 35,
-      },
-      cartItemTag: {
-        backgroundColor: getColor('card'),
-        borderColor: getButtonColor('default', 'background'),
-        borderWidth: 1,
-        borderRadius: theme.borderRadius.md,
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        marginTop: 6,
-        alignSelf: 'flex-end',
-      },
-      cartItemTagText: {
-        color: getButtonColor('default', 'background'),
-      },
-    });
+    const styles = useMemo(
+      () =>
+        StyleSheet.create({
+          card: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+            backgroundColor: getColor('white'),
+            borderRadius: 16,
+            padding: 12,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderColor: getColor('border'),
+            shadowColor: theme.colors.shadow.color,
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: theme.colors.shadow.opacity,
+            shadowRadius: 3,
+            elevation: 2,
+          },
+          thumbWrap: {
+            width: THUMB,
+            height: THUMB,
+            borderRadius: 12,
+            backgroundColor: getColor('overlay'),
+            borderWidth: StyleSheet.hairlineWidth,
+            borderColor: getColor('border'),
+            padding: 4,
+          },
+          // `contain`, not `cover`: at 64px these are packshots, and cropping one to
+          // fill the square cuts the product out of its own thumbnail.
+          thumb: { width: '100%', height: '100%' },
+          text: { flex: 1, minWidth: 0 },
+          packSize: {
+            fontSize: 11,
+            lineHeight: 14,
+            color: getColor('subText'),
+          },
+          name: {
+            fontSize: 14,
+            lineHeight: 18,
+            fontWeight: '700',
+            color: getColor('text'),
+          },
+          priceRow: {
+            flexDirection: 'row',
+            alignItems: 'baseline',
+            flexWrap: 'wrap',
+            gap: 6,
+            marginTop: 4,
+          },
+          price: {
+            fontSize: 14,
+            lineHeight: 18,
+            fontWeight: '800',
+            color: getColor('text'),
+          },
+          mrp: {
+            fontSize: 12,
+            lineHeight: 16,
+            color: getColor('subText'),
+            textDecorationLine: 'line-through',
+          },
+          // Only earns its place on a multi-unit line, where the line total alone
+          // does not say what one costs.
+          unitPrice: {
+            fontSize: 11,
+            lineHeight: 14,
+            color: getColor('subText'),
+          },
+          /**
+           * Filled green, matching the PDP purchase bar, the PLP grid and the PDP
+           * suggestions. position/right/bottom undo QuantitySelector's default, which
+           * absolutely positions itself inside a ProductCard image.
+           */
+          control: {
+            position: 'relative',
+            right: 0,
+            bottom: 0,
+            width: CONTROL_W,
+            height: CONTROL_H,
+            minWidth: 0,
+            borderRadius: 12,
+            backgroundColor: CATALOGUE_ACCENT,
+            borderColor: CATALOGUE_ACCENT,
+            paddingHorizontal: 0,
+          },
+          tag: {
+            alignSelf: 'flex-end',
+            marginTop: 6,
+            paddingHorizontal: 8,
+            paddingVertical: 2,
+            borderRadius: 6,
+            backgroundColor: `${CATALOGUE_ACCENT}14`,
+          },
+          tagText: {
+            fontSize: 10,
+            lineHeight: 12,
+            fontWeight: '800',
+            letterSpacing: 0.4,
+            textTransform: 'uppercase',
+            color: CATALOGUE_ACCENT,
+          },
+        }),
+      [getColor, theme]
+    );
 
-    const handleIncrement = useCallback(() => {
-      onInc();
-    }, [onInc]);
+    const handleIncrement = useCallback(() => onInc(), [onInc]);
+    const handleDecrement = useCallback(() => onDec(), [onDec]);
 
-    const handleDecrement = useCallback(() => {
-      onDec();
-    }, [onDec]);
-
-    const handleAdd = useCallback(() => {
-      onInc();
-    }, [onInc]);
-
-    const imageSource = React.useMemo(
+    const imageSource: ImageSourcePropType = useMemo(
       () => (typeof image === 'number' ? image : { uri: image }),
       [image]
     );
 
-    const showMRP = React.useMemo(() => mrp !== price, [mrp, price]);
+    const lineTotal = price * quantity;
+    const lineMrp = mrp * quantity;
+    const showMrp = mrp > price;
+    const showUnitPrice = quantity > 1;
 
     return (
-      <View style={styles.cartItemRow}>
-        <Image source={imageSource} style={styles.cartItemImg} />
-        <View style={{ flex: 1, minWidth: 120, justifyContent: 'center' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 4 }}>
-            <ThemeText
-              variant="body"
-              color={getColor('text')}
-              style={[styles.cartItemName, { width: undefined, flex: 1 }]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {name}
+      <View style={styles.card}>
+        <View style={styles.thumbWrap}>
+          <Image source={imageSource} style={styles.thumb} resizeMode="contain" />
+        </View>
+
+        <View style={styles.text}>
+          {packSize ? (
+            <ThemeText style={styles.packSize} numberOfLines={1}>
+              {packSize}
             </ThemeText>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            {showMRP && (
-              <ThemeText variant="caption" color={getColor('subText')} style={styles.cartItemMRP}>
-                ₹{(mrp * quantity).toFixed(2)}
-              </ThemeText>
-            )}
-            <ThemeText
-              variant="body"
-              color={getButtonColor('default', 'background')}
-              style={styles.cartItemPrice}
-            >
-              ₹{(price * quantity).toFixed(2)}
-            </ThemeText>
+          ) : null}
+          <ThemeText style={styles.name} numberOfLines={2}>
+            {name}
+          </ThemeText>
+          <View style={styles.priceRow}>
+            <ThemeText style={styles.price}>₹{lineTotal.toFixed(2)}</ThemeText>
+            {showMrp ? <ThemeText style={styles.mrp}>₹{lineMrp.toFixed(2)}</ThemeText> : null}
+            {showUnitPrice ? (
+              <ThemeText style={styles.unitPrice}>₹{price.toFixed(2)} each</ThemeText>
+            ) : null}
           </View>
         </View>
-        <View style={styles.qtyCol}>
+
+        <View>
           {quantity > 0 ? (
             <QuantitySelector
               quantity={quantity}
               onIncrement={handleIncrement}
               onDecrement={handleDecrement}
-              size="regular"
+              size="small"
+              containerStyle={styles.control}
+              tintColor={getColor('white')}
+              quantityColor={getColor('white')}
             />
           ) : (
-            <AddButton onPress={handleAdd} size="regular" />
+            <AddButton
+              onPress={handleIncrement}
+              size="small"
+              containerStyle={styles.control}
+              tintColor={getColor('white')}
+            />
           )}
-
-          {tag && (
-            <View style={styles.cartItemTag}>
-              <ThemeText
-                variant="caption"
-                color={getButtonColor('default', 'background')}
-                style={styles.cartItemTagText}
-              >
-                {tag}
-              </ThemeText>
+          {tag ? (
+            <View style={styles.tag}>
+              <ThemeText style={styles.tagText}>{tag}</ThemeText>
             </View>
-          )}
+          ) : null}
         </View>
       </View>
     );

@@ -19,6 +19,40 @@ const mmkvStorage = {
   },
 };
 
+/**
+ * Pack size for a cart line, from the two fields the upstream splits it across.
+ *
+ * `uom` is a unit-of-measure code, not display text — live carts return "EA" (each),
+ * which said nothing and rendered as a stray label above the product name. The
+ * quantity that gives it meaning arrives separately as `weightOrQuantity`, so the two
+ * are composed here: 500 + "ML" becomes "500 ML".
+ *
+ * Count-style units are dropped even when a quantity is present, because "1 EA" is
+ * noise where "500 ML" is information. A `uom` that already carries its own digits is
+ * taken as-is, since it is display text rather than a code.
+ */
+const COUNT_UNITS = new Set([
+  'EA',
+  'PC',
+  'PCS',
+  'PIECE',
+  'PIECES',
+  'UNIT',
+  'UNITS',
+  'NOS',
+  'NO',
+  'ITEM',
+  'ITEMS',
+]);
+
+const toPackSize = (uom?: string, quantity?: number): string | undefined => {
+  const unit = uom?.trim();
+  if (!unit) return undefined;
+  if (/\d/.test(unit)) return unit;
+  if (COUNT_UNITS.has(unit.toUpperCase())) return undefined;
+  return quantity && quantity > 0 ? `${quantity} ${unit}` : undefined;
+};
+
 export type CartProduct = {
   sku: string;
   shopId: string;
@@ -27,7 +61,15 @@ export type CartProduct = {
   mrp: number;
   image: string; // require() returns number, uri is string
   quantity: number;
+  /**
+   * Only meaningful for guest/local carts, where the caller passes the real value.
+   * Every server sync overwrites it with `true` because the cart upstream carries no
+   * diet flag — see syncCartWithApi. Do not render a veg/non-veg marker from this:
+   * on any signed-in cart it would mark every line vegetarian.
+   */
   veg: boolean;
+  /** Pack size as the catalogue words it ("500 ml", "75 g"). Absent for most SKUs. */
+  packSize?: string;
 };
 
 export type Cart = {
@@ -39,6 +81,8 @@ export type Cart = {
   totalCartAmount?: number;
   totalDiscountOnItems?: number;
   deliveryFee?: number;
+  /** Subtotal above which delivery is free; 0 or absent means none is offered. */
+  freeDeliveryAboveAmount?: number;
   totalCartAmountWithDeliveryFee?: number;
   totalCartAmountWithDeliveryFeeAndBenefit?: number;
   smartBizOffer?: {
@@ -516,6 +560,7 @@ const useCartStore = create<CartStore>()(
                 image: apiProduct.productDetails.productImageUrl,
                 quantity: apiProduct.itemCount,
                 veg: true, // Default to vegetarian, can be updated when API provides this data
+                packSize: toPackSize(apiProduct.productDetails.uom, apiProduct.weightOrQuantity),
               };
             });
 
@@ -566,6 +611,7 @@ const useCartStore = create<CartStore>()(
               totalCartAmount: apiData.totalCartAmount || apiData.totalCartAmountWithBenefit,
               totalDiscountOnItems: apiData.totalDiscountOnItems || 0,
               deliveryFee: apiData.deliveryFee,
+              freeDeliveryAboveAmount: apiData.freeDeliveryAboveAmount,
               totalCartAmountWithDeliveryFee: apiData.totalCartAmountWithDeliveryFee,
               totalCartAmountWithDeliveryFeeAndBenefit:
                 apiData.totalCartAmountWithDeliveryFeeAndBenefit,

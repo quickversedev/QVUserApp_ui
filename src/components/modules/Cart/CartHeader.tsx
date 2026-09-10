@@ -1,15 +1,18 @@
 import React, { useCallback, useState } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
+import { CATALOGUE_GUTTER } from '../../../constants/catalogue';
 import { useTheme } from '../../../theme/ThemeContext';
 import { ThemeText } from '../../common/theme/ThemeText';
 
 interface CartHeaderProps {
   onBack: () => void;
   onClearCart: () => void;
+  /** Total units in the cart; drives the design's count pill beside the title. */
+  itemCount?: number;
 }
 
-const CartHeader: React.FC<CartHeaderProps> = ({ onBack, onClearCart }) => {
+const CartHeader: React.FC<CartHeaderProps> = ({ onBack, onClearCart, itemCount = 0 }) => {
   const { getColor, getTypography, theme } = useTheme();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -17,22 +20,49 @@ const CartHeader: React.FC<CartHeaderProps> = ({ onBack, onClearCart }) => {
     headerRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'flex-start',
-      padding: 16,
+      justifyContent: 'space-between',
+      paddingHorizontal: CATALOGUE_GUTTER,
+      paddingTop: 12,
+      paddingBottom: 4,
+    },
+    // Title and count travel together and own the free space, so the title is never
+    // squeezed by a sibling — a flex spacer beside it clipped "Your Cart" to "Your".
+    titleGroup: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     headerBackBtn: { marginRight: 8 },
     headerTitle: {
       color: getColor('text'),
-      fontWeight: 'bold',
-      fontSize: getTypography('h2'),
+      fontWeight: '800',
+      fontSize: 20,
+      lineHeight: 26,
+      marginLeft: 4,
+      // Never let a sibling squeeze this below its own width: at flexShrink 1 the
+      // row compressed it until "Your Cart" wrapped and rendered as "Your".
+      flexShrink: 0,
+    },
+    // "3 Items" beside the title, as the design has it.
+    countPill: {
       marginLeft: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 999,
+      backgroundColor: getColor('overlay'),
+    },
+    countText: {
+      fontSize: 11,
+      lineHeight: 14,
+      fontWeight: '700',
+      color: getColor('subText'),
     },
     clearCartBtn: {
       flexDirection: 'row',
       alignItems: 'center',
-      // backgroundColor: '#F6285F',
+      gap: 4,
       borderRadius: theme.borderRadius.md,
-      paddingHorizontal: 12,
+      paddingHorizontal: 8,
       paddingVertical: 6,
       marginLeft: 'auto',
     },
@@ -104,11 +134,21 @@ const CartHeader: React.FC<CartHeaderProps> = ({ onBack, onClearCart }) => {
         <TouchableOpacity onPress={handleBackPress} style={styles.headerBackBtn}>
           <MaterialCommunityIcons name="arrow-left" size={26} color={getColor('text')} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Cart</Text>
-        <View style={{ flex: 1 }} />
+        <View style={styles.titleGroup}>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            Your Cart
+          </Text>
+          {itemCount > 0 ? (
+            <View style={styles.countPill}>
+              <ThemeText style={styles.countText}>
+                {itemCount} {itemCount === 1 ? 'Item' : 'Items'}
+              </ThemeText>
+            </View>
+          ) : null}
+        </View>
         <TouchableOpacity style={styles.clearCartBtn} onPress={handleClearCartPress}>
-          <MaterialCommunityIcons name="close-circle" size={22} color={getColor('error')} />
-          <Text style={styles.clearCartText}>Clear Cart</Text>
+          <MaterialCommunityIcons name="delete-sweep" size={18} color={getColor('error')} />
+          <Text style={styles.clearCartText}>Clear</Text>
         </TouchableOpacity>
       </View>
 

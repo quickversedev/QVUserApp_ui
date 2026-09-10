@@ -1,7 +1,8 @@
 import { StackNavigationProp } from '@react-navigation/stack';
 import React, { useCallback, useMemo } from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
+import { CATALOGUE_ACCENT, CATALOGUE_GUTTER } from '../../../constants/catalogue';
 import { RootStackParamList } from '../../../routes/AppStack';
 import { CartProduct } from '../../../store/cart/cartStore';
 import { useTheme } from '../../../theme/ThemeContext';
@@ -16,83 +17,128 @@ interface CartItemListProps {
   onInc: (sku: string) => void;
   onDec: (sku: string) => void;
   vendor?: Vendor;
+  /** "1.2 km away", computed by the screen from vendor and customer coordinates. */
+  distanceText?: string | null;
   navigation: CartScreenNavigationProp;
 }
 
-const CartItemList: React.FC<CartItemListProps> = ({ items, onInc, onDec, vendor, navigation }) => {
-  const { getColor, getTypography, theme } = useTheme();
+/**
+ * The cart's items, in the QV Cart design: a section heading, a store header, then one
+ * raised card per line.
+ *
+ * The single bordered panel that used to wrap all of this is gone — in the design each
+ * row is its own surface sitting on the page, so the outer box was a box around boxes.
+ *
+ * The design's store header belongs to its multi-store sourcing banner, which does not
+ * apply: a QuickVerse cart is keyed `vendor_<shopId>` and always holds exactly one
+ * vendor. What survives is the part that is true for one store — who it is, how far,
+ * and how long it takes.
+ */
+const CartItemList: React.FC<CartItemListProps> = ({
+  items,
+  onInc,
+  onDec,
+  vendor,
+  distanceText,
+  navigation,
+}) => {
+  const { getColor, theme } = useTheme();
 
-  const preparationTime = useMemo(
-    () => vendor?.preparationTime || '30 mins',
-    [vendor?.preparationTime],
-  );
+  // The API sends this as free text, not minutes, so it is rendered as given.
+  const preparationTime = useMemo(() => vendor?.preparationTime || '30 mins', [vendor]);
 
-  const styles = StyleSheet.create({
-    cartItemListBox: {
-      borderColor: getColor('border'),
-      borderWidth: 1,
-      borderRadius: theme.borderRadius.md,
-      margin: 16,
-      marginTop: 8,
-      backgroundColor: getColor('card'),
-      overflow: 'visible',
-      ...Platform.select({
-        ios: {
-          shadowColor: theme.colors.shadow.color,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.12,
-          shadowRadius: 8,
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        section: {
+          marginHorizontal: CATALOGUE_GUTTER,
+          marginTop: 14,
         },
-        android: {
-          elevation: 4,
+        sectionHeading: {
+          fontSize: 12,
+          lineHeight: 16,
+          fontWeight: '700',
+          letterSpacing: 0.8,
+          textTransform: 'uppercase',
+          color: getColor('subText'),
+          marginBottom: 8,
+        },
+        storeCard: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 10,
+          backgroundColor: getColor('white'),
+          borderRadius: 16,
+          padding: 12,
+          marginBottom: 10,
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: getColor('border'),
+          shadowColor: theme.colors.shadow.color,
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: theme.colors.shadow.opacity,
+          shadowRadius: 3,
+          elevation: 2,
+        },
+        storeIcon: {
+          width: 32,
+          height: 32,
+          borderRadius: 10,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: `${getColor('primary')}1F`,
+        },
+        storeText: { flex: 1, minWidth: 0 },
+        storeName: {
+          fontSize: 13,
+          lineHeight: 17,
+          fontWeight: '700',
+          color: getColor('text'),
+        },
+        storeMeta: {
+          fontSize: 11,
+          lineHeight: 14,
+          color: getColor('subText'),
+        },
+        // The design's filled-green time pill, bolt and all.
+        etaPill: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 3,
+          paddingHorizontal: 8,
+          paddingVertical: 4,
+          borderRadius: 999,
+          backgroundColor: CATALOGUE_ACCENT,
+        },
+        etaLabel: {
+          fontSize: 10,
+          lineHeight: 12,
+          fontWeight: '800',
+          letterSpacing: 0.4,
+          textTransform: 'uppercase',
+          color: getColor('white'),
+        },
+        items: { gap: 10 },
+        addMoreButton: {
+          marginTop: 10,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 6,
+          borderRadius: 12,
+          paddingVertical: 12,
+          borderWidth: 1.5,
+          borderColor: getColor('primary'),
+          borderStyle: 'dashed',
+        },
+        addMoreText: {
+          fontSize: 13,
+          lineHeight: 17,
+          fontWeight: '700',
+          color: getColor('primary'),
         },
       }),
-    },
-    vendorHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 16,
-      paddingTop: 14,
-      paddingBottom: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: getColor('border'),
-    },
-    deliveryBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderColor: getColor('primary'),
-      borderWidth: 1.5,
-      borderRadius: theme.borderRadius.md,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-    },
-    itemsContainer: {
-      padding: 16,
-    },
-    addMoreButton: {
-      marginTop: 12,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: getColor('background'),
-      borderRadius: theme.borderRadius.sm,
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      borderWidth: 1.5,
-      borderColor: getColor('primary'),
-      borderStyle: 'dashed',
-    },
-    addMoreIcon: {
-      marginRight: 8,
-    },
-    addMoreText: {
-      color: getColor('primary'),
-      fontWeight: '600',
-      fontSize: getTypography('body'),
-      fontFamily: theme.typography.fontFamily,
-    },
-  });
+    [getColor, theme]
+  );
 
   const handleAddMore = useCallback(() => {
     if (vendor) {
@@ -105,46 +151,45 @@ const CartItemList: React.FC<CartItemListProps> = ({ items, onInc, onDec, vendor
       <CartItem
         key={item.sku}
         {...item}
-        tag={item.sku === 'sku2' ? '250 ML' : undefined}
         onInc={() => onInc(item.sku)}
         onDec={() => onDec(item.sku)}
       />
     ),
-    [onInc, onDec],
+    [onInc, onDec]
   );
 
   return (
-    <View style={styles.cartItemListBox}>
-      {vendor && (
-        <View style={styles.vendorHeader}>
-          <ThemeText variant="caption" color={getColor('text')} style={{ fontWeight: 'bold' }}>
-            {vendor.name}
-          </ThemeText>
-          <View style={styles.deliveryBadge}>
-            <MaterialCommunityIcons
-              name="flash"
-              size={16}
-              color={getColor('primary')}
-              style={{ marginRight: 4 }}
-            />
-            <ThemeText variant="caption" color={getColor('primary')} style={{ fontWeight: 'bold' }}>
-              {preparationTime}
+    <View style={styles.section}>
+      <ThemeText style={styles.sectionHeading}>Cart Items</ThemeText>
+
+      {vendor ? (
+        <View style={styles.storeCard}>
+          <View style={styles.storeIcon}>
+            <MaterialCommunityIcons name="storefront" size={18} color={getColor('primary')} />
+          </View>
+          <View style={styles.storeText}>
+            <ThemeText style={styles.storeName} numberOfLines={1}>
+              {vendor.name}
             </ThemeText>
+            {distanceText ? (
+              <ThemeText style={styles.storeMeta} numberOfLines={1}>
+                {distanceText}
+              </ThemeText>
+            ) : null}
+          </View>
+          <View style={styles.etaPill}>
+            <MaterialCommunityIcons name="flash" size={12} color={getColor('white')} />
+            <ThemeText style={styles.etaLabel}>{preparationTime}</ThemeText>
           </View>
         </View>
-      )}
-      <View style={styles.itemsContainer}>
-        {items.map(renderCartItem)}
-        <TouchableOpacity style={styles.addMoreButton} onPress={handleAddMore} activeOpacity={0.7}>
-          <MaterialCommunityIcons
-            name="plus"
-            size={18}
-            color={getColor('primary')}
-            style={styles.addMoreIcon}
-          />
-          <Text style={styles.addMoreText}>Add More Items</Text>
-        </TouchableOpacity>
-      </View>
+      ) : null}
+
+      <View style={styles.items}>{items.map(renderCartItem)}</View>
+
+      <TouchableOpacity style={styles.addMoreButton} onPress={handleAddMore} activeOpacity={0.7}>
+        <MaterialCommunityIcons name="plus" size={16} color={getColor('primary')} />
+        <ThemeText style={styles.addMoreText}>Add More Items</ThemeText>
+      </TouchableOpacity>
     </View>
   );
 };

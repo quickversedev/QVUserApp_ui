@@ -294,6 +294,7 @@ class CouponService {
           itemCount: skuDetail.itemCount,
           appliedOffers: skuDetail.appliedOffers,
           productDetails: skuDetail.productDetails,
+          weightOrQuantity: skuDetail.weightOrQuantity,
           shopPrice: skuDetail.shopPrice,
           productMRP: skuDetail.productMRP,
           finalPrice: skuDetail.finalPrice,
@@ -323,6 +324,10 @@ class CouponService {
       totalCartAmount: apiResponse.totalCartAmount || 0,
       totalDiscountOnItems: apiResponse.totalDiscountOnItems || 0,
       deliveryFee: apiResponse.deliveryFee || 0,
+      // Kept in step with cartApiService.transformCartResponse — this file holds a
+      // copy of it, so a field added there and not here is silently wiped the next
+      // time a coupon is applied.
+      freeDeliveryAboveAmount: apiResponse.freeDeliveryAboveAmount || 0,
       totalCartAmountWithDeliveryFee: apiResponse.totalCartAmountWithDeliveryFee || 0,
       totalCartAmountWithDeliveryFeeAndBenefit:
         apiResponse.totalCartAmountWithDeliveryFeeAndBenefit || 0,

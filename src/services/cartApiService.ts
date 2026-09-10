@@ -152,6 +152,13 @@ export interface TransformedCartData {
   totalCartAmount?: number;
   totalDiscountOnItems?: number;
   deliveryFee?: number;
+  /**
+   * Cart subtotal above which delivery is free, as sent by the cart upstream.
+   * Carried through so the cart screen can show progress toward it; it arrives
+   * from SmartBiz rather than the QuickVerse backend, so treat 0/absent as
+   * "no threshold offered" and render nothing.
+   */
+  freeDeliveryAboveAmount?: number;
   totalCartAmountWithDeliveryFee?: number;
   totalCartAmountWithDeliveryFeeAndBenefit?: number;
   smartBizOffer?: SmartBizOffer | null;
@@ -170,6 +177,8 @@ export interface TransformedCartProduct {
   itemCount: number;
   appliedOffers: AppliedOffer[];
   productDetails: ProductDetails;
+  /** Pairs with `productDetails.uom` to make a pack size; alone it means nothing. */
+  weightOrQuantity: number;
   shopPrice: number;
   productMRP: number;
   finalPrice: number;
@@ -317,6 +326,7 @@ class CartApiService {
           itemCount: skuDetail.itemCount,
           appliedOffers: skuDetail.appliedOffers,
           productDetails: skuDetail.productDetails,
+          weightOrQuantity: skuDetail.weightOrQuantity,
           shopPrice: skuDetail.shopPrice,
           productMRP: skuDetail.productMRP,
           finalPrice: skuDetail.finalPrice,
@@ -346,6 +356,7 @@ class CartApiService {
       totalCartAmount: apiResponse.totalCartAmount || 0,
       totalDiscountOnItems: apiResponse.totalDiscountOnItems || 0,
       deliveryFee: apiResponse.deliveryFee || 0,
+      freeDeliveryAboveAmount: apiResponse.freeDeliveryAboveAmount || 0,
       totalCartAmountWithDeliveryFee: apiResponse.totalCartAmountWithDeliveryFee || 0,
       totalCartAmountWithDeliveryFeeAndBenefit:
         apiResponse.totalCartAmountWithDeliveryFeeAndBenefit || 0,

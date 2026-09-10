@@ -1,7 +1,24 @@
 import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
-import React from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useMemo } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { CATALOGUE_ACCENT, CATALOGUE_GUTTER } from '../../../constants/catalogue';
 import { useTheme } from '../../../theme/ThemeContext';
+import { ThemeText } from '../../common/theme/ThemeText';
+
+/**
+ * Coupons in the QV Cart design: a heading with "View All", then a green-bordered card
+ * per applied coupon and a muted row prompting the ones still available.
+ *
+ * Applying is not done here — tapping through goes to CouponsScreen, and the discount
+ * itself is computed server-side when the coupon id reaches checkout-summary. This
+ * component only reflects what is selected.
+ *
+ * The design shows a "Saved ₹25" badge on the applied card. That number is only
+ * knowable for a FIXED coupon; a percentage's real saving depends on the basket and
+ * its cap, and the authoritative figure arrives as `couponDiscount` on the summary,
+ * which this component is not given. So the badge states the coupon's own terms
+ * ("Flat ₹50 OFF", "10% OFF") rather than a total it would have to guess at.
+ */
 
 interface AvailableCoupon {
   id: string;
@@ -22,101 +39,17 @@ interface CouponSectionProps {
   onRemoveDeliveryCoupon: () => void;
 }
 
-const getAppliedLabel = (coupon: AvailableCoupon): string => {
-  if (coupon.type === 'FREE_DELIVERY') {
-    return 'Free Delivery Applied';
-  }
+const getBenefitLabel = (coupon: AvailableCoupon): string => {
+  if (coupon.type === 'FREE_DELIVERY') return 'Free Delivery';
   if (coupon.type === 'FIXED' && coupon.discountValue != null) {
-    return `Flat ₹${coupon.discountValue} OFF Applied`;
+    return `Flat ₹${coupon.discountValue} OFF`;
   }
   if (coupon.type === 'PERCENTAGE' && coupon.discountValue != null) {
-    const uptoText = coupon.uptoValue ? ` (Up to ₹${coupon.uptoValue})` : '';
-    return `${coupon.discountValue}% OFF Applied${uptoText}`;
+    return coupon.uptoValue
+      ? `${coupon.discountValue}% OFF up to ₹${coupon.uptoValue}`
+      : `${coupon.discountValue}% OFF`;
   }
-  return 'Coupon Applied';
-};
-
-interface AppliedCouponCardProps {
-  coupon: AvailableCoupon;
-  icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
-  onRemove: () => void;
-}
-
-const AppliedCouponCard: React.FC<AppliedCouponCardProps> = ({ coupon, icon, onRemove }) => {
-  const { getColor, getTypography, theme } = useTheme();
-  const ff = theme.typography.fontFamily;
-
-  return (
-    <View
-      style={[
-        styles.couponBox,
-        {
-          backgroundColor: getColor('card'),
-          borderColor: getColor('primary'),
-          borderRadius: theme.borderRadius.md,
-        },
-        Platform.select({
-          ios: {
-            shadowColor: theme.colors.shadow.color,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.12,
-            shadowRadius: 8,
-          },
-          android: { elevation: 4 },
-        }),
-      ]}
-    >
-      <View style={styles.couponLeft}>
-        <View style={[styles.iconBadge, { backgroundColor: `${getColor('primary')}18` }]}>
-          <MaterialCommunityIcons name={icon} size={22} color={getColor('primary')} />
-        </View>
-        <View style={styles.labelContainer}>
-          <Text
-            style={{
-              color: getColor('primary'),
-              fontWeight: '700',
-              fontSize: getTypography('body'),
-              fontFamily: ff,
-              letterSpacing: 0.5,
-            }}
-          >
-            {coupon.code}
-          </Text>
-          <Text
-            style={{
-              color: getColor('primary'),
-              fontSize: getTypography('caption'),
-              fontFamily: ff,
-              marginTop: 3,
-              fontWeight: '500',
-              lineHeight: 16,
-            }}
-          >
-            {getAppliedLabel(coupon)}
-          </Text>
-        </View>
-      </View>
-      <TouchableOpacity
-        onPress={onRemove}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        style={[styles.removeBtn, { borderColor: getColor('error') }]}
-        activeOpacity={0.7}
-      >
-        <MaterialCommunityIcons name="close" size={13} color={getColor('error')} />
-        <Text
-          style={{
-            color: getColor('error'),
-            fontSize: getTypography('small'),
-            fontFamily: ff,
-            fontWeight: '700',
-            marginLeft: 3,
-          }}
-        >
-          Remove
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
+  return 'Applied';
 };
 
 const CouponSection: React.FC<CouponSectionProps> = ({
@@ -128,182 +61,182 @@ const CouponSection: React.FC<CouponSectionProps> = ({
   onRemoveDiscountCoupon,
   onRemoveDeliveryCoupon,
 }) => {
-  const { getColor, getTypography, theme } = useTheme();
-  const ff = theme.typography.fontFamily;
+  const { getColor, theme } = useTheme();
 
-  if (selectedDiscountCoupon || selectedDeliveryCoupon) {
-    return (
-      <View style={styles.appliedContainer}>
-        {selectedDiscountCoupon && (
-          <AppliedCouponCard
-            coupon={selectedDiscountCoupon}
-            icon="ticket-percent-outline"
-            onRemove={onRemoveDiscountCoupon}
-          />
-        )}
-        {selectedDeliveryCoupon && (
-          <AppliedCouponCard
-            coupon={selectedDeliveryCoupon}
-            icon="truck-outline"
-            onRemove={onRemoveDeliveryCoupon}
-          />
-        )}
-        <TouchableOpacity
-          style={styles.changeLink}
-          onPress={onCouponNavigation}
-          activeOpacity={0.7}
-        >
-          <Text
-            style={{
-              color: getColor('primary'),
-              fontSize: getTypography('caption'),
-              fontFamily: ff,
-              fontWeight: '600',
-            }}
-          >
-            View / Change Coupons
-          </Text>
-          <MaterialCommunityIcons name="chevron-right" size={16} color={getColor('primary')} />
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        section: { marginTop: 14, marginHorizontal: CATALOGUE_GUTTER },
+        headingRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 8,
+        },
+        heading: {
+          fontSize: 12,
+          lineHeight: 16,
+          fontWeight: '700',
+          letterSpacing: 0.8,
+          textTransform: 'uppercase',
+          color: getColor('subText'),
+        },
+        viewAll: {
+          fontSize: 12,
+          lineHeight: 16,
+          fontWeight: '700',
+          color: getColor('primary'),
+        },
+        card: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 10,
+          backgroundColor: getColor('white'),
+          borderRadius: 16,
+          padding: 12,
+          marginBottom: 8,
+          borderWidth: 1,
+          borderColor: `${CATALOGUE_ACCENT}4D`,
+          shadowColor: theme.colors.shadow.color,
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: theme.colors.shadow.opacity,
+          shadowRadius: 3,
+          elevation: 2,
+        },
+        badge: {
+          width: 32,
+          height: 32,
+          borderRadius: 999,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: `${CATALOGUE_ACCENT}26`,
+        },
+        cardText: { flex: 1, minWidth: 0 },
+        codeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+        code: {
+          fontSize: 12,
+          lineHeight: 16,
+          fontWeight: '700',
+          letterSpacing: 0.6,
+          color: getColor('text'),
+        },
+        benefit: {
+          fontSize: 10,
+          lineHeight: 13,
+          fontWeight: '800',
+          textTransform: 'uppercase',
+          color: CATALOGUE_ACCENT,
+          backgroundColor: `${CATALOGUE_ACCENT}26`,
+          paddingHorizontal: 6,
+          paddingVertical: 2,
+          borderRadius: 4,
+          overflow: 'hidden',
+        },
+        appliedNote: { fontSize: 11, lineHeight: 14, color: CATALOGUE_ACCENT },
+        action: {
+          fontSize: 12,
+          lineHeight: 16,
+          fontWeight: '800',
+          letterSpacing: 0.6,
+          textTransform: 'uppercase',
+          color: getColor('primary'),
+          paddingHorizontal: 4,
+          paddingVertical: 4,
+        },
+        // Muted, so an unapplied offer never competes with an applied one.
+        offerRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
+          backgroundColor: getColor('overlay'),
+          borderRadius: 16,
+          padding: 12,
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: getColor('border'),
+        },
+        offerText: { flex: 1, minWidth: 0 },
+        offerTitle: {
+          fontSize: 12,
+          lineHeight: 16,
+          fontWeight: '700',
+          color: getColor('text'),
+        },
+        offerSub: { fontSize: 11, lineHeight: 14, color: getColor('subText') },
+      }),
+    [getColor, theme]
+  );
+
+  const applied = [
+    selectedDiscountCoupon
+      ? { coupon: selectedDiscountCoupon, onRemove: onRemoveDiscountCoupon }
+      : null,
+    selectedDeliveryCoupon
+      ? { coupon: selectedDeliveryCoupon, onRemove: onRemoveDeliveryCoupon }
+      : null,
+  ].filter(Boolean) as { coupon: AvailableCoupon; onRemove: () => void }[];
+
+  const offerCount = availableCoupons.length;
 
   return (
-    <TouchableOpacity
-      style={[
-        styles.couponBox,
-        {
-          backgroundColor: getColor('card'),
-          borderColor: getColor('border'),
-          borderRadius: theme.borderRadius.md,
-        },
-        Platform.select({
-          ios: {
-            shadowColor: theme.colors.shadow.color,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.12,
-            shadowRadius: 8,
-          },
-          android: { elevation: 4 },
-        }),
-      ]}
-      onPress={onCouponNavigation}
-      disabled={couponLoading}
-      activeOpacity={0.7}
-    >
-      <View style={styles.couponLeft}>
-        <View style={[styles.iconBadge, { backgroundColor: `${getColor('primary')}15` }]}>
-          <MaterialCommunityIcons
-            name="ticket-percent-outline"
-            size={22}
-            color={getColor('primary')}
-          />
-        </View>
-        <View style={styles.labelContainer}>
-          <Text
-            style={{
-              color: getColor('text'),
-              fontWeight: 'bold',
-              fontSize: getTypography('body'),
-              fontFamily: ff,
-            }}
-          >
-            Apply Coupon
-          </Text>
-          {couponLoading && (
-            <Text
-              style={{
-                color: getColor('subText'),
-                fontSize: getTypography('caption'),
-                fontFamily: ff,
-                marginTop: 3,
-              }}
-            >
-              Loading offers...
-            </Text>
-          )}
-          {!couponLoading && availableCoupons.length > 0 && (
-            <Text
-              style={{
-                color: getColor('primary'),
-                fontSize: getTypography('caption'),
-                fontFamily: ff,
-                marginTop: 3,
-                fontWeight: '600',
-              }}
-            >
-              {availableCoupons.length} offer{availableCoupons.length > 1 ? 's' : ''} available
-            </Text>
-          )}
-          {!couponLoading && availableCoupons.length === 0 && (
-            <Text
-              style={{
-                color: getColor('subText'),
-                fontSize: getTypography('caption'),
-                fontFamily: ff,
-                marginTop: 3,
-              }}
-            >
-              No coupons available right now
-            </Text>
-          )}
-        </View>
+    <View style={styles.section}>
+      <View style={styles.headingRow}>
+        <ThemeText style={styles.heading}>Coupons &amp; Offers</ThemeText>
+        {offerCount > 0 ? (
+          <TouchableOpacity onPress={onCouponNavigation} accessibilityRole="button">
+            <ThemeText style={styles.viewAll}>View All</ThemeText>
+          </TouchableOpacity>
+        ) : null}
       </View>
-      <MaterialCommunityIcons name="chevron-right" size={24} color={getColor('primary')} />
-    </TouchableOpacity>
+
+      {applied.map(({ coupon, onRemove }) => (
+        <View key={coupon.id} style={styles.card}>
+          <View style={styles.badge}>
+            <MaterialCommunityIcons name="check-decagram" size={18} color={CATALOGUE_ACCENT} />
+          </View>
+          <View style={styles.cardText}>
+            <View style={styles.codeRow}>
+              <ThemeText style={styles.code} numberOfLines={1}>
+                {coupon.code}
+              </ThemeText>
+              <ThemeText style={styles.benefit}>{getBenefitLabel(coupon)}</ThemeText>
+            </View>
+            <ThemeText style={styles.appliedNote}>Coupon applied successfully!</ThemeText>
+          </View>
+          <TouchableOpacity onPress={onRemove} accessibilityRole="button">
+            <ThemeText style={styles.action}>Remove</ThemeText>
+          </TouchableOpacity>
+        </View>
+      ))}
+
+      <TouchableOpacity
+        style={styles.offerRow}
+        onPress={onCouponNavigation}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+      >
+        <MaterialCommunityIcons name="tag-outline" size={18} color={getColor('primary')} />
+        <View style={styles.offerText}>
+          <ThemeText style={styles.offerTitle}>
+            {couponLoading
+              ? 'Checking offers…'
+              : offerCount > 0
+                ? applied.length > 0
+                  ? 'Try another coupon'
+                  : 'Apply a coupon'
+                : 'No coupons available'}
+          </ThemeText>
+          {!couponLoading && offerCount > 0 ? (
+            <ThemeText style={styles.offerSub}>
+              {offerCount} offer{offerCount === 1 ? '' : 's'} available
+            </ThemeText>
+          ) : null}
+        </View>
+        {offerCount > 0 ? (
+          <ThemeText style={styles.action}>{applied.length > 0 ? 'Change' : 'Apply'}</ThemeText>
+        ) : null}
+      </TouchableOpacity>
+    </View>
   );
 };
-
-const styles = StyleSheet.create({
-  appliedContainer: {
-    marginHorizontal: 16,
-    marginTop: 20,
-    gap: 8,
-  },
-  couponBox: {
-    paddingHorizontal: 16,
-    marginHorizontal: 16,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-  },
-  couponLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: 16,
-  },
-  iconBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  labelContainer: {
-    marginLeft: 12,
-    flex: 1,
-    flexDirection: 'column',
-    justifyContent: 'center',
-  },
-  removeBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    alignSelf: 'center',
-  },
-  changeLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 6,
-  },
-});
 
 export default CouponSection;

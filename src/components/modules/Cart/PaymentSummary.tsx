@@ -10,8 +10,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { CATALOGUE_GUTTER } from '../../../constants/catalogue';
 import { useTheme } from '../../../theme/ThemeContext';
 import { ThemeText } from '../../common/theme/ThemeText';
+import { TIP_IS_CHARGEABLE, tipContribution } from './TipSelector';
 
 interface Coupon {
   id: string;
@@ -66,6 +68,12 @@ interface PaymentSummaryProps {
   selectedDeliveryCoupon?: Coupon;
   platformFeeOriginal?: number;
   packagingChargesOriginal?: number;
+  /**
+   * Selected tip. Shown as a bill row, but it only reaches the total while
+   * TIP_IS_CHARGEABLE is true — the backend cannot carry a tip yet, so by default the
+   * total here stays equal to what is actually charged. See TipSelector.
+   */
+  tipAmount?: number;
 }
 
 const PaymentSummary: React.FC<PaymentSummaryProps> = ({
@@ -77,6 +85,7 @@ const PaymentSummary: React.FC<PaymentSummaryProps> = ({
   selectedCoupon,
   platformFeeOriginal,
   packagingChargesOriginal,
+  tipAmount = 0,
 }) => {
   const { getColor, theme } = useTheme();
   const [showTaxBreakdown, setShowTaxBreakdown] = useState(false);
@@ -136,14 +145,15 @@ const PaymentSummary: React.FC<PaymentSummaryProps> = ({
   const codGst = summary?.codGst ?? 0;
   const isCod = selectedPaymentOption === 'COD';
   // const extraPaymentCharges = isCod ? codCharges : razorpayCharges;
-  const finalTotal = payableAmount;
+  const tipOnBill = tipContribution(tipAmount);
+  const finalTotal = payableAmount + tipOnBill;
 
   const styles = StyleSheet.create({
     paymentSummaryBox: {
-      backgroundColor: getColor('card'),
-      borderRadius: theme.borderRadius.md,
-      marginHorizontal: 16,
-      marginTop: 20,
+      backgroundColor: getColor('white'),
+      borderRadius: 16,
+      marginHorizontal: CATALOGUE_GUTTER,
+      marginTop: 14,
       marginBottom: 0,
       paddingHorizontal: 16,
       paddingVertical: 12,
@@ -198,6 +208,13 @@ const PaymentSummary: React.FC<PaymentSummaryProps> = ({
     billLabel: {
       color: getColor('text'),
     },
+    tipNote: {
+      fontSize: 11,
+      lineHeight: 14,
+      color: getColor('subText'),
+      marginTop: -2,
+      marginBottom: 2,
+    },
     billAmount: {
       color: getColor('text'),
       fontWeight: '500',
@@ -233,9 +250,13 @@ const PaymentSummary: React.FC<PaymentSummaryProps> = ({
       fontWeight: '700',
     },
     paymentSummaryAmount: {
-      color: getColor('primary'),
+      // Near-black, not amber: the design prices in its darkest text colour and
+      // spends colour only on savings, the same rule the PDP follows.
+      color: getColor('text'),
       marginTop: 2,
-      fontWeight: '700',
+      fontSize: 20,
+      lineHeight: 26,
+      fontWeight: '800',
     },
     paymentSummaryDetails: { marginTop: 12 },
     crossedText: {
@@ -388,20 +409,42 @@ const PaymentSummary: React.FC<PaymentSummaryProps> = ({
                 </View>
               </View>
 
+              {tipAmount > 0 && (
+                <View style={styles.billRow}>
+                  <ThemeText variant="body" style={styles.billLabel}>
+                    Delivery Partner Tip
+                  </ThemeText>
+                  <ThemeText variant="body" style={styles.billAmount}>
+                    ₹{tipAmount.toFixed(2)}
+                    {TIP_IS_CHARGEABLE ? '' : ' *'}
+                  </ThemeText>
+                </View>
+              )}
+
+              {/* The tip cannot be charged yet, so it is excluded from the total the
+                  customer is asked to pay. Saying so beats a total that disagrees with
+                  the amount taken. Remove with TIP_IS_CHARGEABLE — see QV-17. */}
+              {tipAmount > 0 && !TIP_IS_CHARGEABLE && (
+                <ThemeText variant="caption" style={styles.tipNote}>
+                  * Tip is not charged with this order yet
+                </ThemeText>
+              )}
+
               {packagingCharges > 0 && (
                 <View style={styles.billRow}>
                   <ThemeText variant="body" style={styles.billLabel}>
                     Packaging Charges
                   </ThemeText>
                   <View style={styles.feeRow}>
-                    {packagingChargesOriginal != null && packagingChargesOriginal > packagingCharges && (
-                      <ThemeText
-                        variant="body"
-                        style={[styles.crossedText, { color: getColor('text') }]}
-                      >
-                        ₹{packagingChargesOriginal.toFixed(2)}
-                      </ThemeText>
-                    )}
+                    {packagingChargesOriginal != null &&
+                      packagingChargesOriginal > packagingCharges && (
+                        <ThemeText
+                          variant="body"
+                          style={[styles.crossedText, { color: getColor('text') }]}
+                        >
+                          ₹{packagingChargesOriginal.toFixed(2)}
+                        </ThemeText>
+                      )}
                     <ThemeText variant="body" style={styles.billAmount}>
                       ₹{packagingCharges.toFixed(2)}
                     </ThemeText>

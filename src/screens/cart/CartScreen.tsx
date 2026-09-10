@@ -21,8 +21,12 @@ import {
   CartHeader,
   CartItemList,
   CouponSection,
-  PaymentOptions,
+  DeliveryInstructions,
+  DeliveryInstructionId,
+  FreeDeliveryProgress,
   PaymentSummary,
+  TipSelector,
+  tipContribution,
   TotalSavingsCard,
 } from '../../components/modules/Cart';
 import {
@@ -80,7 +84,24 @@ const CartScreen: React.FC = () => {
   const [selectedSmartBizAddress, setSelectedSmartBizAddress] = React.useState<Address | null>(
     selectedAddress || null
   );
-  const [paymentExpanded, setPaymentExpanded] = React.useState(false);
+  // The design shows the bill open rather than behind a disclosure.
+  const [paymentExpanded, setPaymentExpanded] = React.useState(true);
+
+  /**
+   * Tip and delivery instructions are presentational. Neither has anywhere to go:
+   * `CreateOrderRequest` carries no field for either, so they are held here, rendered,
+   * and dropped when the order is placed. See QV-17 / QV-18.
+   */
+  const [tipAmount, setTipAmount] = React.useState(0);
+  const [deliveryInstructions, setDeliveryInstructions] = React.useState<DeliveryInstructionId[]>(
+    []
+  );
+
+  const handleToggleInstruction = useCallback((id: DeliveryInstructionId) => {
+    setDeliveryInstructions(current =>
+      current.includes(id) ? current.filter(x => x !== id) : [...current, id]
+    );
+  }, []);
   const [showPaymentModal, setShowPaymentModal] = React.useState(false);
   const [selectedPaymentOption, setSelectedPaymentOption] = React.useState<string | undefined>(
     'PREPAID'
@@ -389,7 +410,9 @@ const CartScreen: React.FC = () => {
     const couponDiscount = Number(checkoutSummary?.couponDiscount ?? 0);
     const actualFee = Number(checkoutSummary?.actualDeliveryFee ?? 0);
     const fee = Number(checkoutSummary?.deliveryFee ?? 0);
-    const freeDeliverySavings = checkoutSummary?.isFreeDelivery ? actualFee : Math.max(0, actualFee - fee);
+    const freeDeliverySavings = checkoutSummary?.isFreeDelivery
+      ? actualFee
+      : Math.max(0, actualFee - fee);
 
     let itemSavings = 0;
     if (cartItems && Array.isArray(cartItems)) {
@@ -503,11 +526,6 @@ const CartScreen: React.FC = () => {
       return;
     }
 
-    if (!selectedPaymentOption || selectedPaymentOption.trim() === '') {
-      setShowPaymentModal(true);
-      return;
-    }
-
     if (vendor) {
       const storeStatus = isStoreOpen({
         openingTime: vendor.openingTime,
@@ -528,130 +546,156 @@ const CartScreen: React.FC = () => {
       }
     }
 
-    if (!cart || !vendor || !selectedAddress || !authData?.jwt || !authData?.phone) {
-      navigation.navigate('OrderFailure', {
-        errorMessage: 'Missing required information. Please try again.',
-      });
-      return;
-    }
-
-    setIsOrderLoading(true);
-
-    try {
-      const calculatedTotal = cart?.totalCartAmount ?? 0;
-
-      const orderRequest: CreateOrderRequest = {
-        shopId: parseInt(vendor.shopId, 10),
-        cartId: cart.smartBizCartId,
-        orderSource: 'CONSTELLATION',
-        customerAddressId: selectedSmartBizAddress?.addressID || '',
-        fulfillmentOption: 'DELIVERY',
-        notificationMobileNumber: authData?.phone || selectedAddress.phone,
-        notificationEmail: null,
-        customerName: selectedAddress.name || 'Customer',
-        paymentMethod: selectedPaymentOption?.toUpperCase() || 'PREPAID',
-        orderAmount: calculatedTotal,
-      };
-
-      const orderPayload = {
-        createOrderRequest: orderRequest,
-        checkoutSummaryRequest: {
-          shopId: cartItems?.[0]?.shopId ?? null,
-          customerAddressId: selectedSmartBizAddress?.addressID ?? null,
-          couponId: selectedDiscountCoupon?.id ?? null,
-          couponCode: selectedDiscountCoupon?.code ?? null,
-          deliveryCouponId: selectedDeliveryCoupon?.id ?? null,
-          paymentMethod: selectedPaymentOption?.toUpperCase() ?? 'PREPAID',
-          customerCoordinates: {
-            latitude: selectedSmartBizAddress?.coordinates?.latitude ?? null,
-            longitude: selectedSmartBizAddress?.coordinates?.longitude ?? null,
-          },
-          cartItems:
-            cartItems?.map((item: any) => ({
-              sku: item?.sku ?? null,
-              quantity: item?.quantity ?? null,
-            })) ?? [],
-        },
-      };
-
-      const orderResponse = await orderService.createOrder(
-        orderPayload,
-        authData.jwt,
-        authData.phone
-      );
-
-      if (selectedPaymentOption === 'PREPAID') {
-        await handleRazorpayPayment(orderResponse, calculatedTotal, vendor);
-      } else {
-        if (cart && authData?.jwt && authData?.phone) {
-          await clearCart(cart.cartId, authData.jwt, authData.phone);
-        }
-        navigation.navigate('OrderSuccess', {
-          orderId: orderResponse.orderId,
-          amount: calculatedTotal,
-          date: new Date().toLocaleDateString(),
-          shopId: vendor.shopId,
-        });
-      }
-    } catch (error: unknown) {
-      if (
-        error &&
-        typeof error === 'object' &&
-        'code' in error &&
-        error.code === 'STORE_NOT_ACTIVE_UNSUPPORTED_OPERATION'
-      ) {
-        const status = vendor
-          ? isStoreOpen({
-              openingTime: vendor.openingTime,
-              closingTime: vendor.closingTime,
-              storeActive: vendor.storeActive,
-            })
-          : null;
-
-        const nextOpenTime = status?.nextOpeningTime;
-        const isTimeBased = vendor?.storeActive !== false && nextOpenTime;
-        const opensAtText = isTimeBased ? ` Opens at ${formatTimeToAMPM(nextOpenTime)}.` : '';
-
-        setStoreClosedModal({
-          visible: true,
-          message: `The store is closed at the moment.${opensAtText} Please try again later.`,
-        });
-        return;
-      }
-
-      const errorMessage =
-        (error as any)?.message ||
-        (error instanceof Error ? error.message : 'Order creation failed. Please try again.');
-
-      const errorCode = (error as any)?.code;
-
-      if (
-        errorCode === 'COUPON_NOT_FOUND' ||
-        errorCode === 'COUPON_INACTIVE' ||
-        errorCode === 'COUPON_MOV_NOT_MET'
-      ) {
-        setSelectedDiscountCoupon(null);
-        setSelectedDeliveryCoupon(null);
-      }
-      navigation.navigate('OrderFailure', { errorMessage });
-    } finally {
-      setIsOrderLoading(false);
-    }
+    // Everything above is a precondition for ordering at all. The method itself is
+    // chosen in the step this opens, and the order is placed from there.
+    setShowPaymentModal(true);
   }, [
     permissionDataInAuth?.permission,
     selectedAddress,
-    selectedPaymentOption,
     cart,
     vendor,
     authData?.jwt,
     authData?.phone,
     selectedSmartBizAddress,
     navigation,
-    clearCart,
     distanceKm,
     deliveryRadiusKm,
-    checkoutSummary,
   ]);
+
+  /**
+   * Places the order for an explicitly chosen payment method.
+   *
+   * The method is a parameter rather than read from state because the payment step
+   * calls this immediately after selecting it, and a state update would not have
+   * landed in this closure yet. It also reaches the server on the request, which
+   * recomputes the summary, so the charged amount never depends on the client copy.
+   */
+  const placeOrder = useCallback(
+    async (paymentMethod: string) => {
+      // Kept here rather than in handleCheckout so the payload below is built on
+      // narrowed, non-null values.
+      if (!cart || !vendor || !selectedAddress || !authData?.jwt || !authData?.phone) {
+        navigation.navigate('OrderFailure', {
+          errorMessage: 'Missing required information. Please try again.',
+        });
+        return;
+      }
+
+      setIsOrderLoading(true);
+
+      try {
+        const calculatedTotal = cart?.totalCartAmount ?? 0;
+
+        const orderRequest: CreateOrderRequest = {
+          shopId: parseInt(vendor.shopId, 10),
+          cartId: cart.smartBizCartId,
+          orderSource: 'CONSTELLATION',
+          customerAddressId: selectedSmartBizAddress?.addressID || '',
+          fulfillmentOption: 'DELIVERY',
+          notificationMobileNumber: authData?.phone || selectedAddress.phone,
+          notificationEmail: null,
+          customerName: selectedAddress.name || 'Customer',
+          paymentMethod: paymentMethod.toUpperCase(),
+          orderAmount: calculatedTotal,
+        };
+
+        const orderPayload = {
+          createOrderRequest: orderRequest,
+          checkoutSummaryRequest: {
+            shopId: cartItems?.[0]?.shopId ?? null,
+            customerAddressId: selectedSmartBizAddress?.addressID ?? null,
+            couponId: selectedDiscountCoupon?.id ?? null,
+            couponCode: selectedDiscountCoupon?.code ?? null,
+            deliveryCouponId: selectedDeliveryCoupon?.id ?? null,
+            paymentMethod: paymentMethod.toUpperCase(),
+            customerCoordinates: {
+              latitude: selectedSmartBizAddress?.coordinates?.latitude ?? null,
+              longitude: selectedSmartBizAddress?.coordinates?.longitude ?? null,
+            },
+            cartItems:
+              cartItems?.map((item: any) => ({
+                sku: item?.sku ?? null,
+                quantity: item?.quantity ?? null,
+              })) ?? [],
+          },
+        };
+
+        const orderResponse = await orderService.createOrder(
+          orderPayload,
+          authData.jwt,
+          authData.phone
+        );
+
+        if (selectedPaymentOption === 'PREPAID') {
+          await handleRazorpayPayment(orderResponse, calculatedTotal, vendor);
+        } else {
+          if (cart && authData?.jwt && authData?.phone) {
+            await clearCart(cart.cartId, authData.jwt, authData.phone);
+          }
+          navigation.navigate('OrderSuccess', {
+            orderId: orderResponse.orderId,
+            amount: calculatedTotal,
+            date: new Date().toLocaleDateString(),
+            shopId: vendor.shopId,
+          });
+        }
+      } catch (error: unknown) {
+        if (
+          error &&
+          typeof error === 'object' &&
+          'code' in error &&
+          error.code === 'STORE_NOT_ACTIVE_UNSUPPORTED_OPERATION'
+        ) {
+          const status = vendor
+            ? isStoreOpen({
+                openingTime: vendor.openingTime,
+                closingTime: vendor.closingTime,
+                storeActive: vendor.storeActive,
+              })
+            : null;
+
+          const nextOpenTime = status?.nextOpeningTime;
+          const isTimeBased = vendor?.storeActive !== false && nextOpenTime;
+          const opensAtText = isTimeBased ? ` Opens at ${formatTimeToAMPM(nextOpenTime)}.` : '';
+
+          setStoreClosedModal({
+            visible: true,
+            message: `The store is closed at the moment.${opensAtText} Please try again later.`,
+          });
+          return;
+        }
+
+        const errorMessage =
+          (error as any)?.message ||
+          (error instanceof Error ? error.message : 'Order creation failed. Please try again.');
+
+        const errorCode = (error as any)?.code;
+
+        if (
+          errorCode === 'COUPON_NOT_FOUND' ||
+          errorCode === 'COUPON_INACTIVE' ||
+          errorCode === 'COUPON_MOV_NOT_MET'
+        ) {
+          setSelectedDiscountCoupon(null);
+          setSelectedDeliveryCoupon(null);
+        }
+        navigation.navigate('OrderFailure', { errorMessage });
+      } finally {
+        setIsOrderLoading(false);
+      }
+    },
+    [
+      selectedAddress,
+      cart,
+      vendor,
+      authData?.jwt,
+      authData?.phone,
+      selectedSmartBizAddress,
+      navigation,
+      clearCart,
+      checkoutSummary,
+    ]
+  );
 
   const handleAddressSelect = useCallback(
     (address: Address) => {
@@ -674,10 +718,16 @@ const CartScreen: React.FC = () => {
     setShowPaymentModal(false);
   }, []);
 
-  const handlePaymentConfirm = useCallback((selectedOption: string, _upiId?: string) => {
-    setSelectedPaymentOption(selectedOption);
-    setShowPaymentModal(false);
-  }, []);
+  const handlePaymentConfirm = useCallback(
+    (selectedOption: string, _upiId?: string) => {
+      setSelectedPaymentOption(selectedOption);
+      setShowPaymentModal(false);
+      // Chosen method goes straight through, rather than being read back from state
+      // that has not re-rendered yet.
+      placeOrder(selectedOption);
+    },
+    [placeOrder]
+  );
 
   const getFormattedAddress = useCallback(() => {
     if (!selectedSmartBizAddress) return 'Select delivery address';
@@ -687,8 +737,10 @@ const CartScreen: React.FC = () => {
   }, [selectedSmartBizAddress, distanceText]);
 
   const isCheckoutDisabled = useMemo(() => {
-    return !selectedPaymentOption || Boolean(paymentMethodsError) || isOrderLoading;
-  }, [selectedPaymentOption, paymentMethodsError, isOrderLoading]);
+    // No longer gated on a payment method: it is chosen in the step this button
+    // opens, so requiring one first would disable the button permanently.
+    return Boolean(paymentMethodsError) || isOrderLoading;
+  }, [paymentMethodsError, isOrderLoading]);
 
   React.useEffect(() => {
     const initializeCart = async () => {
@@ -884,15 +936,24 @@ const CartScreen: React.FC = () => {
           }
         }}
         onClearCart={handleClearCart}
+        itemCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
       />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 240 }}>
         <AnimatedCard delay={0}>
+          <FreeDeliveryProgress
+            cartAmount={checkoutSummary?.itemTotalAmount ?? 0}
+            threshold={cart?.freeDeliveryAboveAmount}
+          />
+        </AnimatedCard>
+
+        <AnimatedCard delay={50}>
           <CartItemList
             items={cartItems}
             onInc={handleInc}
             onDec={handleDec}
             vendor={vendor}
+            distanceText={distanceText}
             navigation={navigation}
           />
         </AnimatedCard>
@@ -915,15 +976,22 @@ const CartScreen: React.FC = () => {
           </AnimatedCard>
         )}
 
+        {/* Payment method moved off the cart: the design's bar goes straight to
+            "Proceed to Pay", and the choice is made in the step that follows. */}
         <AnimatedCard delay={200}>
-          <PaymentOptions
-            selectedOption={selectedPaymentOption as 'COD' | 'PREPAID'}
-            onSelect={option => setSelectedPaymentOption(option)}
+          <DeliveryInstructions
+            selected={deliveryInstructions}
+            onToggle={handleToggleInstruction}
           />
+        </AnimatedCard>
+
+        <AnimatedCard delay={250}>
+          <TipSelector tip={tipAmount} onChange={setTipAmount} />
         </AnimatedCard>
 
         <AnimatedCard delay={300}>
           <PaymentSummary
+            tipAmount={tipAmount}
             expanded={paymentExpanded}
             onToggle={() => setPaymentExpanded(e => !e)}
             summary={checkoutSummary}
@@ -938,6 +1006,9 @@ const CartScreen: React.FC = () => {
       </ScrollView>
 
       <CartFooter
+        total={(checkoutSummary?.payableAmount ?? 0) + tipContribution(tipAmount)}
+        savings={totalSavingsAmount}
+        onViewBill={() => setPaymentExpanded(true)}
         addressId={selectedSmartBizAddress?.addressID || ''}
         address={getFormattedAddress()}
         addressTag={selectedSmartBizAddress?.tag || selectedSmartBizAddress?.name || ''}
