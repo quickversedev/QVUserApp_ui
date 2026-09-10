@@ -3,6 +3,7 @@ export { default as CartHeader } from './CartHeader';
 export { default as CartItem } from './CartItem';
 export { default as CartItemList } from './CartItemList';
 export { default as CouponSection } from './CouponSection';
+export { default as CouponSheet } from './CouponSheet';
 export { default as DeliveryInstructions } from './DeliveryInstructions';
 export type { DeliveryInstructionId } from './DeliveryInstructions';
 export { default as FreeDeliveryProgress } from './FreeDeliveryProgress';

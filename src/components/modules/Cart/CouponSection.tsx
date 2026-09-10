@@ -4,6 +4,7 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { CATALOGUE_ACCENT, CATALOGUE_GUTTER } from '../../../constants/catalogue';
 import { useTheme } from '../../../theme/ThemeContext';
 import { ThemeText } from '../../common/theme/ThemeText';
+import { couponTerms } from './CouponSheet';
 
 /**
  * Coupons in the QV Cart design: a heading with "View All", then a green-bordered card
@@ -13,11 +14,11 @@ import { ThemeText } from '../../common/theme/ThemeText';
  * itself is computed server-side when the coupon id reaches checkout-summary. This
  * component only reflects what is selected.
  *
- * The design shows a "Saved ₹25" badge on the applied card. That number is only
- * knowable for a FIXED coupon; a percentage's real saving depends on the basket and
- * its cap, and the authoritative figure arrives as `couponDiscount` on the summary,
- * which this component is not given. So the badge states the coupon's own terms
- * ("Flat ₹50 OFF", "10% OFF") rather than a total it would have to guess at.
+ * The "SAVED ₹25" badge shows the real figure: the caller passes `couponDiscount`
+ * from the checkout summary, and for a delivery coupon the fee actually waived. Those
+ * are server-computed, so the badge never guesses — a percentage coupon's saving
+ * depends on the basket and its cap, which this component could not work out. With no
+ * figure yet the badge falls back to the coupon's own terms.
  */
 
 interface AvailableCoupon {
@@ -31,6 +32,10 @@ interface AvailableCoupon {
 
 interface CouponSectionProps {
   couponLoading: boolean;
+  /** Server-computed discount for the applied coupon, from the checkout summary. */
+  appliedDiscount?: number;
+  /** Delivery fee actually waived by the applied delivery coupon. */
+  appliedDeliverySaving?: number;
   availableCoupons: AvailableCoupon[];
   selectedDiscountCoupon: AvailableCoupon | null;
   selectedDeliveryCoupon: AvailableCoupon | null;
@@ -54,6 +59,8 @@ const getBenefitLabel = (coupon: AvailableCoupon): string => {
 
 const CouponSection: React.FC<CouponSectionProps> = ({
   couponLoading,
+  appliedDiscount = 0,
+  appliedDeliverySaving = 0,
   availableCoupons,
   selectedDiscountCoupon,
   selectedDeliveryCoupon,
@@ -148,6 +155,7 @@ const CouponSection: React.FC<CouponSectionProps> = ({
           flexDirection: 'row',
           alignItems: 'center',
           gap: 8,
+          marginBottom: 8,
           backgroundColor: getColor('overlay'),
           borderRadius: 16,
           padding: 12,
@@ -162,19 +170,43 @@ const CouponSection: React.FC<CouponSectionProps> = ({
           color: getColor('text'),
         },
         offerSub: { fontSize: 11, lineHeight: 14, color: getColor('subText') },
+        // Code and its terms on one line, as the design lays each offer out.
+        offerRowText: { flex: 1, minWidth: 0 },
+        offerCode: {
+          fontSize: 13,
+          lineHeight: 17,
+          fontWeight: '800',
+          color: getColor('text'),
+        },
+        offerTerms: { fontSize: 11, lineHeight: 15, color: getColor('subText'), marginTop: 1 },
       }),
     [getColor, theme]
   );
 
   const applied = [
     selectedDiscountCoupon
-      ? { coupon: selectedDiscountCoupon, onRemove: onRemoveDiscountCoupon }
+      ? {
+          coupon: selectedDiscountCoupon,
+          onRemove: onRemoveDiscountCoupon,
+          saved: appliedDiscount,
+        }
       : null,
     selectedDeliveryCoupon
-      ? { coupon: selectedDeliveryCoupon, onRemove: onRemoveDeliveryCoupon }
+      ? {
+          coupon: selectedDeliveryCoupon,
+          onRemove: onRemoveDeliveryCoupon,
+          saved: appliedDeliverySaving,
+        }
       : null,
-  ].filter(Boolean) as { coupon: AvailableCoupon; onRemove: () => void }[];
+  ].filter(Boolean) as { coupon: AvailableCoupon; onRemove: () => void; saved: number }[];
 
+  const appliedIds = applied.map(a => a.coupon.id);
+  /**
+   * The design lists each offer as its own row rather than a count. Capped so a shop
+   * running a dozen promotions does not bury the bill under them — "View All" opens
+   * the rest.
+   */
+  const unapplied = availableCoupons.filter(c => !appliedIds.includes(c.id)).slice(0, 3);
   const offerCount = availableCoupons.length;
 
   return (
@@ -188,7 +220,7 @@ const CouponSection: React.FC<CouponSectionProps> = ({
         ) : null}
       </View>
 
-      {applied.map(({ coupon, onRemove }) => (
+      {applied.map(({ coupon, onRemove, saved }) => (
         <View key={coupon.id} style={styles.card}>
           <View style={styles.badge}>
             <MaterialCommunityIcons name="check-decagram" size={18} color={CATALOGUE_ACCENT} />
@@ -198,43 +230,57 @@ const CouponSection: React.FC<CouponSectionProps> = ({
               <ThemeText style={styles.code} numberOfLines={1}>
                 {coupon.code}
               </ThemeText>
-              <ThemeText style={styles.benefit}>{getBenefitLabel(coupon)}</ThemeText>
+              <ThemeText style={styles.benefit}>
+                {saved > 0 ? `Saved ₹${Math.round(saved)}` : getBenefitLabel(coupon)}
+              </ThemeText>
             </View>
             <ThemeText style={styles.appliedNote}>Coupon applied successfully!</ThemeText>
           </View>
-          <TouchableOpacity onPress={onRemove} accessibilityRole="button">
-            <ThemeText style={styles.action}>Remove</ThemeText>
+          <TouchableOpacity onPress={onCouponNavigation} accessibilityRole="button">
+            <ThemeText style={styles.action}>Change</ThemeText>
           </TouchableOpacity>
         </View>
       ))}
 
-      <TouchableOpacity
-        style={styles.offerRow}
-        onPress={onCouponNavigation}
-        activeOpacity={0.8}
-        accessibilityRole="button"
-      >
-        <MaterialCommunityIcons name="tag-outline" size={18} color={getColor('primary')} />
-        <View style={styles.offerText}>
-          <ThemeText style={styles.offerTitle}>
-            {couponLoading
-              ? 'Checking offers…'
-              : offerCount > 0
-                ? applied.length > 0
-                  ? 'Try another coupon'
-                  : 'Apply a coupon'
-                : 'No coupons available'}
-          </ThemeText>
-          {!couponLoading && offerCount > 0 ? (
-            <ThemeText style={styles.offerSub}>
-              {offerCount} offer{offerCount === 1 ? '' : 's'} available
-            </ThemeText>
-          ) : null}
+      {couponLoading && applied.length === 0 ? (
+        <View style={styles.offerRow}>
+          <MaterialCommunityIcons name="tag-outline" size={18} color={getColor('primary')} />
+          <View style={styles.offerText}>
+            <ThemeText style={styles.offerTitle}>Checking offers…</ThemeText>
+          </View>
         </View>
-        {offerCount > 0 ? (
-          <ThemeText style={styles.action}>{applied.length > 0 ? 'Change' : 'Apply'}</ThemeText>
-        ) : null}
-      </TouchableOpacity>
+      ) : null}
+
+      {unapplied.map(coupon => (
+        <TouchableOpacity
+          key={coupon.id}
+          style={styles.offerRow}
+          onPress={onCouponNavigation}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={`Apply coupon ${coupon.code}`}
+        >
+          <MaterialCommunityIcons name="tag-outline" size={18} color={getColor('primary')} />
+          <View style={styles.offerRowText}>
+            <ThemeText style={styles.offerCode} numberOfLines={1}>
+              {coupon.code}
+            </ThemeText>
+            <ThemeText style={styles.offerTerms} numberOfLines={1}>
+              {couponTerms(coupon)}
+            </ThemeText>
+          </View>
+          <ThemeText style={styles.action}>Apply</ThemeText>
+        </TouchableOpacity>
+      ))}
+
+      {!couponLoading && offerCount === 0 && applied.length === 0 ? (
+        <View style={styles.offerRow}>
+          <MaterialCommunityIcons name="tag-outline" size={18} color={getColor('subText')} />
+          <View style={styles.offerText}>
+            <ThemeText style={styles.offerTitle}>No coupons available</ThemeText>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 };

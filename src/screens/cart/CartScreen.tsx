@@ -21,6 +21,7 @@ import {
   CartHeader,
   CartItemList,
   CouponSection,
+  CouponSheet,
   DeliveryInstructions,
   DeliveryInstructionId,
   FreeDeliveryProgress,
@@ -99,6 +100,7 @@ const CartScreen: React.FC = () => {
    * and the old fixed 240 left the bill card's last rows stuck behind it.
    */
   const [footerHeight, setFooterHeight] = React.useState(240);
+  const [showCouponSheet, setShowCouponSheet] = React.useState(false);
   const [deliveryInstructions, setDeliveryInstructions] = React.useState<DeliveryInstructionId[]>(
     []
   );
@@ -351,36 +353,23 @@ const CartScreen: React.FC = () => {
     [cart]
   );
 
+  /**
+   * Opens the coupon picker in place. This used to push CouponsScreen, which took the
+   * customer away from the bill the coupon changes; the sheet keeps both on screen.
+   */
   const handleCouponNavigation = useCallback(() => {
-    discountCouponCallbackRef.current = (coupon: any) => {
-      setSelectedDiscountCoupon(coupon);
-    };
-    deliveryCouponCallbackRef.current = (coupon: any) => {
-      setSelectedDeliveryCoupon(coupon);
-    };
+    setShowCouponSheet(true);
+  }, []);
+
+  /** Cart subtotal a coupon's minimum order is tested against. */
+  const couponCartTotal = useMemo(() => {
     const apiSubtotal = cart?.totalCartAmount ?? 0;
-    const localSubtotal = cartItems.reduce(
+    if (apiSubtotal > 0) return apiSubtotal;
+    return cartItems.reduce(
       (sum: number, product: any) => sum + product.price * product.quantity,
       0
     );
-    const calculatedSubtotal = apiSubtotal > 0 ? apiSubtotal : localSubtotal;
-    navigation.navigate('Coupons', {
-      cartTotal: calculatedSubtotal,
-      coupons: availableCoupons,
-      loading: couponLoading,
-      selectedDiscountCoupon: selectedDiscountCoupon,
-      selectedDeliveryCoupon: selectedDeliveryCoupon,
-      onApplyDiscount: discountCouponCallbackRef.current,
-      onApplyDelivery: deliveryCouponCallbackRef.current,
-    } as any);
-  }, [
-    navigation,
-    availableCoupons,
-    couponLoading,
-    selectedDiscountCoupon,
-    selectedDeliveryCoupon,
-    cart,
-  ]);
+  }, [cart?.totalCartAmount, cartItems]);
 
   const handleCalculateCheckoutSummary = useCallback(async () => {
     if (!cartItems || cartItems.length === 0) {
@@ -992,6 +981,10 @@ const CartScreen: React.FC = () => {
           <CouponSection
             couponLoading={couponLoading}
             availableCoupons={availableCoupons}
+            appliedDiscount={checkoutSummary?.couponDiscount ?? 0}
+            appliedDeliverySaving={
+              checkoutSummary?.isFreeDelivery ? (checkoutSummary?.actualDeliveryFee ?? 0) : 0
+            }
             onCouponNavigation={handleCouponNavigation}
             selectedDiscountCoupon={selectedDiscountCoupon}
             selectedDeliveryCoupon={selectedDeliveryCoupon}
@@ -1064,6 +1057,18 @@ const CartScreen: React.FC = () => {
         onAddressSelect={handleSmartBizAddressSelect}
         selectedAddress={selectedSmartBizAddress}
         vendorId={vendor?.shopId || ''}
+      />
+
+      <CouponSheet
+        visible={showCouponSheet}
+        onClose={() => setShowCouponSheet(false)}
+        coupons={availableCoupons}
+        loading={couponLoading}
+        cartTotal={couponCartTotal}
+        selectedDiscountCoupon={selectedDiscountCoupon}
+        selectedDeliveryCoupon={selectedDeliveryCoupon}
+        onApplyDiscount={setSelectedDiscountCoupon}
+        onApplyDelivery={setSelectedDeliveryCoupon}
       />
 
       <Modal
