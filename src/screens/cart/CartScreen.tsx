@@ -93,6 +93,12 @@ const CartScreen: React.FC = () => {
    * and dropped when the order is placed. See QV-17 / QV-18.
    */
   const [tipAmount, setTipAmount] = React.useState(0);
+  /**
+   * Measured height of the floating footer. The scroll pads by this rather than a
+   * constant: the bar grows with the address line, the savings line and the tab bar,
+   * and the old fixed 240 left the bill card's last rows stuck behind it.
+   */
+  const [footerHeight, setFooterHeight] = React.useState(240);
   const [deliveryInstructions, setDeliveryInstructions] = React.useState<DeliveryInstructionId[]>(
     []
   );
@@ -939,7 +945,7 @@ const CartScreen: React.FC = () => {
         itemCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
       />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 240 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: footerHeight + 24 }}>
         <AnimatedCard delay={0}>
           <FreeDeliveryProgress
             cartAmount={checkoutSummary?.itemTotalAmount ?? 0}
@@ -992,6 +998,7 @@ const CartScreen: React.FC = () => {
         <AnimatedCard delay={300}>
           <PaymentSummary
             tipAmount={tipAmount}
+            savings={totalSavingsAmount}
             expanded={paymentExpanded}
             onToggle={() => setPaymentExpanded(e => !e)}
             summary={checkoutSummary}
@@ -1009,6 +1016,7 @@ const CartScreen: React.FC = () => {
         total={(checkoutSummary?.payableAmount ?? 0) + tipContribution(tipAmount)}
         savings={totalSavingsAmount}
         onViewBill={() => setPaymentExpanded(true)}
+        onHeightChange={setFooterHeight}
         addressId={selectedSmartBizAddress?.addressID || ''}
         address={getFormattedAddress()}
         addressTag={selectedSmartBizAddress?.tag || selectedSmartBizAddress?.name || ''}

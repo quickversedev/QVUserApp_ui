@@ -20,6 +20,13 @@ interface CartFooterProps {
   savings?: number;
   /** Opens the bill. The design pairs the total with a "View Bill" affordance. */
   onViewBill?: () => void;
+  /**
+   * Reports the height of the strip this bar obscures — its own measured height plus
+   * the tab-bar offset it floats above — so the list can pad by exactly that much.
+   * The height varies with the address line and the savings line, and a fixed guess
+   * left the bill card's last rows unreachable behind it.
+   */
+  onHeightChange?: (height: number) => void;
   address: string;
   addressTag?: string;
   addressId?: string;
@@ -34,6 +41,7 @@ const CartFooter: React.FC<CartFooterProps> = ({
   total = 0,
   savings = 0,
   onViewBill,
+  onHeightChange,
   address,
   addressTag,
   addressId,
@@ -199,7 +207,12 @@ const CartFooter: React.FC<CartFooterProps> = ({
   };
 
   return (
-    <View style={styles.footerBar}>
+    <View
+      style={styles.footerBar}
+      // Reports the whole obscured strip, not just this bar: it floats at
+      // `bottom: extraBottom` above the tab bar, so the list has to clear both.
+      onLayout={e => onHeightChange?.(e.nativeEvent.layout.height + extraBottom)}
+    >
       <TouchableOpacity style={styles.addressBox} onPress={handleAddressPress} activeOpacity={0.7}>
         <View
           style={[
