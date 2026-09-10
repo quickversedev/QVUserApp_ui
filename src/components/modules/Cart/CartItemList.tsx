@@ -118,17 +118,32 @@ const CartItemList: React.FC<CartItemListProps> = ({
           color: getColor('white'),
         },
         items: { gap: 10 },
+        /**
+         * A muted surface rather than the dashed amber outline it replaced. Nothing
+         * else in the QV design is dashed, and a 1.5px amber rule spanning the full
+         * width pulled more attention than "add more" deserves sitting under the
+         * items — it read louder than the products themselves.
+         */
         addMoreButton: {
           marginTop: 10,
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 6,
+          gap: 8,
           borderRadius: 12,
-          paddingVertical: 12,
-          borderWidth: 1.5,
-          borderColor: getColor('primary'),
-          borderStyle: 'dashed',
+          paddingVertical: 11,
+          backgroundColor: getColor('overlay'),
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: getColor('border'),
+        },
+        // Small tinted disc, echoing the store and tip cards' leading icons.
+        addMoreIcon: {
+          width: 22,
+          height: 22,
+          borderRadius: 999,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: `${getColor('primary')}1F`,
         },
         addMoreText: {
           fontSize: 13,
@@ -186,9 +201,17 @@ const CartItemList: React.FC<CartItemListProps> = ({
 
       <View style={styles.items}>{items.map(renderCartItem)}</View>
 
-      <TouchableOpacity style={styles.addMoreButton} onPress={handleAddMore} activeOpacity={0.7}>
-        <MaterialCommunityIcons name="plus" size={16} color={getColor('primary')} />
-        <ThemeText style={styles.addMoreText}>Add More Items</ThemeText>
+      <TouchableOpacity
+        style={styles.addMoreButton}
+        onPress={handleAddMore}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel={vendor ? `Add more items from ${vendor.name}` : 'Add more items'}
+      >
+        <View style={styles.addMoreIcon}>
+          <MaterialCommunityIcons name="plus" size={14} color={getColor('primary')} />
+        </View>
+        <ThemeText style={styles.addMoreText}>Add more items</ThemeText>
       </TouchableOpacity>
     </View>
   );
