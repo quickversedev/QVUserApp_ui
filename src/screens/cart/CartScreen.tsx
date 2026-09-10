@@ -175,6 +175,30 @@ const CartScreen: React.FC = () => {
     return undefined;
   }, [cartId, activeCartId, carts]);
 
+  /**
+   * Threshold the free-delivery bar counts toward.
+   *
+   * `freeDeliveryAboveAmount` comes back on the cart and is preferred, but it is a
+   * SmartBiz field our own backend never populates — on live Beed carts it is absent,
+   * which would have left the bar permanently invisible. The threshold customers
+   * actually face is the minimum order on the shop's free-delivery coupon, which is
+   * already loaded here and is what CouponsScreen counts against too. Cheapest one
+   * wins, since that is the first free delivery reachable.
+   *
+   * Undefined once a delivery coupon is applied: the bar exists to chase a free
+   * delivery, not to nag about one already won.
+   */
+  const freeDeliveryThreshold = useMemo(() => {
+    if (selectedDeliveryCoupon) return undefined;
+    if (cart?.freeDeliveryAboveAmount && cart.freeDeliveryAboveAmount > 0) {
+      return cart.freeDeliveryAboveAmount;
+    }
+    const movs = availableCoupons
+      .filter(c => c?.type === 'FREE_DELIVERY' && typeof c?.mov === 'number' && c.mov > 0)
+      .map(c => c.mov as number);
+    return movs.length > 0 ? Math.min(...movs) : undefined;
+  }, [selectedDeliveryCoupon, cart?.freeDeliveryAboveAmount, availableCoupons]);
+
   const cartItems = useMemo(() => {
     return cart ? Object.values(cart.products) : [];
   }, [cart]);
@@ -949,7 +973,7 @@ const CartScreen: React.FC = () => {
         <AnimatedCard delay={0}>
           <FreeDeliveryProgress
             cartAmount={checkoutSummary?.itemTotalAmount ?? 0}
-            threshold={cart?.freeDeliveryAboveAmount}
+            threshold={freeDeliveryThreshold}
           />
         </AnimatedCard>
 

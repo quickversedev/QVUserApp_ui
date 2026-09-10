@@ -8,14 +8,13 @@ import { ThemeText } from '../../common/theme/ThemeText';
 /**
  * Progress toward the cart's free-delivery threshold.
  *
- * The threshold is `freeDeliveryAboveAmount` from the cart response. It was arriving
- * from the upstream and being discarded in the transform — nothing in the app had ever
- * read it — so this is the first thing to render it.
+ * The caller decides the threshold — see `freeDeliveryThreshold` in CartScreen. In
+ * practice it comes from the shop's free-delivery coupon, because the cart's own
+ * `freeDeliveryAboveAmount` is a SmartBiz field our backend never populates and is
+ * absent on live carts.
  *
- * It is not a QuickVerse-computed value: the cart is proxied from SmartBiz and our own
- * backend has no such field, so it may legitimately be absent or zero for a given
- * shop. Rather than invent a threshold, the whole card disappears in that case, and
- * likewise once the cart has cleared the bar and the free delivery is already won.
+ * Nothing is invented: with no threshold the card disappears entirely, as it does once
+ * the cart has cleared the bar and the free delivery is already won.
  */
 interface FreeDeliveryProgressProps {
   /** Cart subtotal to compare against the threshold. */
