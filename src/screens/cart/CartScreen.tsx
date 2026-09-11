@@ -25,6 +25,7 @@ import {
   DeliveryInstructions,
   DeliveryInstructionId,
   FreeDeliveryProgress,
+  PaymentSheet,
   PaymentSummary,
   TipSelector,
   tipContribution,
@@ -55,7 +56,6 @@ import { Product } from '../../types/product';
 import { Vendor } from '../../types/vendor';
 import { formatDistanceKm, getDistanceInKm } from '../../utils/distance';
 import { formatTimeToAMPM, isStoreOpen } from '../../utils/storeUtils';
-import PaymentScreen from './PaymentScreen';
 
 type CartScreenRouteProp = RouteProp<RootStackParamList, 'Cart'>;
 type CartScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Cart'>;
@@ -1071,22 +1071,17 @@ const CartScreen: React.FC = () => {
         onApplyDelivery={setSelectedDeliveryCoupon}
       />
 
-      <Modal
+      <PaymentSheet
         visible={showPaymentModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={handlePaymentModalClose}
-      >
-        <PaymentScreen
-          onClose={handlePaymentModalClose}
-          onConfirm={handlePaymentConfirm}
-          paymentMethods={paymentMethods}
-          selectedOption={selectedPaymentOption as 'COD' | 'PREPAID'}
-          error={paymentMethodsError}
-          loading={paymentMethodsLoading}
-          onRetry={refetchPaymentMethods}
-        />
-      </Modal>
+        onClose={handlePaymentModalClose}
+        onConfirm={handlePaymentConfirm}
+        paymentMethods={paymentMethods}
+        selectedOption={selectedPaymentOption as 'COD' | 'PREPAID'}
+        error={paymentMethodsError}
+        loading={paymentMethodsLoading}
+        onRetry={refetchPaymentMethods}
+        total={(checkoutSummary?.payableAmount ?? 0) + tipContribution(tipAmount)}
+      />
 
       <Modal
         visible={showDistanceModal}
