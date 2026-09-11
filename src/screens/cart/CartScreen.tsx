@@ -101,6 +101,18 @@ const CartScreen: React.FC = () => {
    */
   const [footerHeight, setFooterHeight] = React.useState(240);
   const [showCouponSheet, setShowCouponSheet] = React.useState(false);
+  /**
+   * Lets "View Bill" in the footer jump to the bill card. Without it that control
+   * only set `paymentExpanded`, which is already true — it looked live and did
+   * nothing on a page long enough that the bill is usually off-screen.
+   */
+  const scrollRef = React.useRef<ScrollView>(null);
+  const [billOffsetY, setBillOffsetY] = React.useState(0);
+
+  const handleViewBill = useCallback(() => {
+    setPaymentExpanded(true);
+    scrollRef.current?.scrollTo({ y: Math.max(0, billOffsetY - 12), animated: true });
+  }, [billOffsetY]);
   const [deliveryInstructions, setDeliveryInstructions] = React.useState<DeliveryInstructionId[]>(
     []
   );
@@ -958,7 +970,7 @@ const CartScreen: React.FC = () => {
         itemCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
       />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: footerHeight + 24 }}>
+      <ScrollView ref={scrollRef} contentContainerStyle={{ paddingBottom: footerHeight + 24 }}>
         <AnimatedCard delay={0}>
           <FreeDeliveryProgress
             cartAmount={checkoutSummary?.itemTotalAmount ?? 0}
@@ -1012,27 +1024,32 @@ const CartScreen: React.FC = () => {
           <TipSelector tip={tipAmount} onChange={setTipAmount} />
         </AnimatedCard>
 
-        <AnimatedCard delay={300}>
-          <PaymentSummary
-            tipAmount={tipAmount}
-            savings={totalSavingsAmount}
-            expanded={paymentExpanded}
-            onToggle={() => setPaymentExpanded(e => !e)}
-            summary={checkoutSummary}
-            summaryLoading={checkoutSummaryLoading}
-            selectedPaymentOption={selectedPaymentOption}
-            selectedCoupon={selectedDiscountCoupon}
-            selectedDeliveryCoupon={selectedDeliveryCoupon}
-            platformFeeOriginal={currentPricing.platformFeeOriginal}
-            packagingChargesOriginal={currentPricing.packagingChargesOriginal}
-          />
-        </AnimatedCard>
+        {/* Plain wrapper purely to measure: AnimatedCard does not forward onLayout,
+            and this sits directly in the scroll content so its y is the offset the
+            footer's "View Bill" scrolls to. */}
+        <View onLayout={e => setBillOffsetY(e.nativeEvent.layout.y)}>
+          <AnimatedCard delay={300}>
+            <PaymentSummary
+              tipAmount={tipAmount}
+              savings={totalSavingsAmount}
+              expanded={paymentExpanded}
+              onToggle={() => setPaymentExpanded(e => !e)}
+              summary={checkoutSummary}
+              summaryLoading={checkoutSummaryLoading}
+              selectedPaymentOption={selectedPaymentOption}
+              selectedCoupon={selectedDiscountCoupon}
+              selectedDeliveryCoupon={selectedDeliveryCoupon}
+              platformFeeOriginal={currentPricing.platformFeeOriginal}
+              packagingChargesOriginal={currentPricing.packagingChargesOriginal}
+            />
+          </AnimatedCard>
+        </View>
       </ScrollView>
 
       <CartFooter
         total={(checkoutSummary?.payableAmount ?? 0) + tipContribution(tipAmount)}
         savings={totalSavingsAmount}
-        onViewBill={() => setPaymentExpanded(true)}
+        onViewBill={handleViewBill}
         onHeightChange={setFooterHeight}
         addressId={selectedSmartBizAddress?.addressID || ''}
         address={getFormattedAddress()}
